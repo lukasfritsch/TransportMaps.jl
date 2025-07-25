@@ -3,6 +3,11 @@ uuid = "6fd49bf0-03ac-4dd1-b9b3-42e511274d6e"
 authors = ["Lukas Fritsch"]
 version = "1.0.0-DEV"
 
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
+
 [compat]
 julia = "1.6.7"
 
