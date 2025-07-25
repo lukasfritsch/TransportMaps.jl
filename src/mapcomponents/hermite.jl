@@ -1,9 +1,8 @@
-
 # Concrete type for Hermite polynomials
 struct HermiteBasis <: AbstractPolynomialBasis end
 
-# Constructor for MVBasis with default Hermite basis
-MVBasis(multi_index::Vector{Int}) = MVBasis(multi_index, HermiteBasis())
+# Constructor for MultivariateBasis with default Hermite basis
+MultivariateBasis(multi_index::Vector{Int}) = MultivariateBasis(multi_index, HermiteBasis())
 
 # Univariate Hermite polynomial evaluation
 # Using probabilist's Hermite polynomials (physical polynomials)
@@ -34,22 +33,22 @@ function Psi(alpha::Vector{Float64}, x::Vector{Float64})
     return prod(Psi(alpha_i, x_i) for (alpha_i, x_i) in zip(alpha, x))
 end
 
-# Evaluate MVBasis at point x
-function evaluate(mvb::MVBasis, x::Vector{Float64})
+# Evaluate MultivariateBasis at point x
+function evaluate(mvb::MultivariateBasis, x::Vector{Float64})
     @assert length(mvb.multi_index) == length(x) "Dimension mismatch: multi_index and x must have same length"
     alpha = Float64.(mvb.multi_index)
     return Psi(alpha, x)
 end
 
-# Multivariate function f(Psi::Vector{MVBasis}, coefficients::Vector{Float64})
-function f(Psi_vec::Vector{MVBasis}, coefficients::Vector{Float64}, x::Vector{Float64})
-    @assert length(Psi_vec) == length(coefficients) "Number of basis functions must equal number of coefficients"
-    return sum(coeff * evaluate(mvb, x) for (coeff, mvb) in zip(coefficients, Psi_vec))
+# Multivariate function f(Psi::Vector{MultivariateBasis}, coefficients::Vector{Float64})
+function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64}, x::Vector{Float64})
+    @assert length(Ψ) == length(coefficients) "Number of basis functions must equal number of coefficients"
+    return sum(coeff * evaluate(mvb, x) for (coeff, mvb) in zip(coefficients, Ψ))
 end
 
 # Alternative interface matching the exact specification
-function f(Psi_vec::Vector{MVBasis}, coefficients::Vector{Float64})
-    return (x::Vector{Float64}) -> f(Psi_vec, coefficients, x)
+function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64})
+    return (x::Vector{Float64}) -> f(Ψ, coefficients, x)
 end
 
 # Derivative of univariate Hermite polynomial
@@ -62,7 +61,7 @@ function hermite_derivative(n::Int, x::Float64)
 end
 
 # Partial derivative of multivariate basis w.r.t. x_j
-function partial_derivative_x(mvb::MVBasis, x::Vector{Float64}, j::Int)
+function partial_derivative_x(mvb::MultivariateBasis, x::Vector{Float64}, j::Int)
     @assert 1 <= j <= length(x) "Index j must be within bounds of x"
     @assert length(mvb.multi_index) == length(x) "Dimension mismatch"
 
@@ -76,23 +75,23 @@ function partial_derivative_x(mvb::MVBasis, x::Vector{Float64}, j::Int)
     return result
 end
 
-# Gradient of MVBasis w.r.t. x
-function gradient_x(mvb::MVBasis, x::Vector{Float64})
+# Gradient of MultivariateBasis w.r.t. x
+function gradient_x(mvb::MultivariateBasis, x::Vector{Float64})
     return [partial_derivative_x(mvb, x, j) for j in 1:length(x)]
 end
 
 # Partial derivative of f w.r.t. x_j
-function partial_derivative_x(Psi_vec::Vector{MVBasis}, coefficients::Vector{Float64}, x::Vector{Float64}, j::Int)
-    @assert length(Psi_vec) == length(coefficients) "Number of basis functions must equal number of coefficients"
-    return sum(coeff * partial_derivative_x(mvb, x, j) for (coeff, mvb) in zip(coefficients, Psi_vec))
+function partial_derivative_x(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64}, x::Vector{Float64}, j::Int)
+    @assert length(Ψ) == length(coefficients) "Number of basis functions must equal number of coefficients"
+    return sum(coeff * partial_derivative_x(mvb, x, j) for (coeff, mvb) in zip(coefficients, Ψ))
 end
 
 # Gradient of f w.r.t. x
-function gradient_x(Psi_vec::Vector{MVBasis}, coefficients::Vector{Float64}, x::Vector{Float64})
-    return [partial_derivative_x(Psi_vec, coefficients, x, j) for j in 1:length(x)]
+function gradient_x(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64}, x::Vector{Float64})
+    return [partial_derivative_x(Ψ, coefficients, x, j) for j in 1:length(x)]
 end
 
 # Derivative of f w.r.t. coefficients (this is just the basis function values)
-function gradient_coefficients(Psi_vec::Vector{MVBasis}, x::Vector{Float64})
-    return [evaluate(mvb, x) for mvb in Psi_vec]
+function gradient_coefficients(Ψ::Vector{MultivariateBasis}, x::Vector{Float64})
+    return [evaluate(mvb, x) for mvb in Ψ]
 end

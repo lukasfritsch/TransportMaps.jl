@@ -1,10 +1,21 @@
+struct Softplus <: AbstractRectifierFunction
+end
 
-# Softplus rectifier
-function softplus(ξ)
+function (r::Softplus)(ξ)
     return log1p(exp(ξ))  # log(1 + exp(ξ)) for numerical stability
 end
 
+struct ShiftedELU <: AbstractRectifierFunction
+end
+
 # Shifted exponential linear unit (ELU)
-function shifted_elu(ξ)
+function (r::ShiftedELU)(ξ)
     return ξ <= 0 ? exp(ξ) : ξ + 1
+end
+
+mutable struct IdentityRectifier <: AbstractRectifierFunction
+end
+
+function (r::IdentityRectifier)(ξ)
+    return ξ
 end
