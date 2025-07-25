@@ -1,15 +1,33 @@
 module TransportMaps
 
-# Include existing components
-include("mapcomponents/components.jl")
+using LinearAlgebra
+using QuadGK
+using Random
+using StatsFuns
 
-# Include new Hermite polynomial interface
-include("hermite.jl")
+# Abstract type definitions
+abstract type AbstractBasisFunction end
+abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
 
-# Export the main interface functions
-export Psi, f, MVBasis, HermiteBasis
-export AbstractBasisFunction, AbstractPolynomialBasis
-export evaluate, gradient_x, gradient_coefficients, partial_derivative_x
-export hermite_polynomial, hermite_derivative
+# Export abstract types
+export AbstractBasisFunction
+export AbstractPolynomialBasis
+
+# Export functions/methods
+export Psi
+export evaluate
+export f
+export gradient_coefficients
+export gradient_x
+export hermite_derivative
+export hermite_polynomial
+export partial_derivative_x
+
+# Export structs/types
+export HermiteBasis
+export MVBasis
+
+# Include files
+include("mapcomponents/hermite.jl")
 
 end

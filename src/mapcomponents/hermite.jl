@@ -1,9 +1,5 @@
 # Hermite polynomial implementation with the specific interface requested
 
-# Abstract types for basis functions
-abstract type AbstractBasisFunction end
-abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
-
 # Concrete type for Hermite polynomials
 struct HermiteBasis <: AbstractPolynomialBasis end
 
@@ -76,7 +72,7 @@ end
 function partial_derivative_x(mvb::MVBasis, x::Vector{Float64}, j::Int)
     @assert 1 <= j <= length(x) "Index j must be within bounds of x"
     @assert length(mvb.multi_index) == length(x) "Dimension mismatch"
-    
+
     # Compute the product of all terms except the j-th, times the derivative of the j-th term
     result = hermite_derivative(mvb.multi_index[j], x[j])
     for (i, (alpha_i, x_i)) in enumerate(zip(mvb.multi_index, x))
