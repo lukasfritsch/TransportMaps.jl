@@ -1,8 +1,3 @@
-# Required packages
-using LinearAlgebra
-using StatsFuns   # for hermite function
-using QuadGK
-
 # Struct to represent a multi-index α
 struct MultiIndex
     indices::Vector{Int}
