@@ -27,7 +27,17 @@ export partial_derivative_x
 export HermiteBasis
 export MVBasis
 
+# Export fruit functionality
+export AbstractFruit
+export Banana
+export ripeness
+export name
+export is_implemented
+export implemented_fruits
+export all_fruits
+
 # Include files
 include("mapcomponents/hermite.jl")
+include("mapcomponents/fruit.jl")
 
 end

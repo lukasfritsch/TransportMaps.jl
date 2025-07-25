@@ -127,4 +127,53 @@ using Test
         @test HermiteBasis() isa AbstractBasisFunction
         @test AbstractPolynomialBasis <: AbstractBasisFunction
     end
+    
+    @testset "Fruit Functionality" begin
+        @testset "Banana Implementation" begin
+            # Test default constructor
+            banana = Banana()
+            @test banana isa AbstractFruit
+            @test ripeness(banana) == 0.5
+            @test name(banana) == "banana"
+            
+            # Test custom ripeness
+            ripe_banana = Banana(0.8)
+            @test ripeness(ripe_banana) == 0.8
+            @test name(ripe_banana) == "banana"
+            
+            # Test green banana
+            green_banana = Banana(0.0)
+            @test ripeness(green_banana) == 0.0
+            
+            # Test fully ripe banana
+            yellow_banana = Banana(1.0)
+            @test ripeness(yellow_banana) == 1.0
+        end
+        
+        @testset "Banana Evaluation" begin
+            # Test evaluation function
+            banana = Banana(0.5)
+            x = π/4
+            expected = 0.5 * sin(x) + 0.5 * cos(x)
+            @test evaluate(banana, x) ≈ expected
+            
+            # Test with different ripeness
+            green_banana = Banana(0.0)
+            @test evaluate(green_banana, π/2) ≈ cos(π/2) atol=1e-15
+            
+            ripe_banana = Banana(1.0)
+            @test evaluate(ripe_banana, π/2) ≈ sin(π/2) ≈ 1.0
+        end
+        
+        @testset "Fruit Checklist" begin
+            # Test checklist functionality
+            @test is_implemented("banana") == true
+            @test "banana" in implemented_fruits()
+            @test "banana" in all_fruits()
+            
+            # Test non-implemented fruit
+            @test is_implemented("apple") == false
+            @test !("apple" in implemented_fruits())
+        end
+    end
 end
