@@ -1,29 +1,33 @@
 module TransportMaps
 
-using DataFrames
 using LinearAlgebra
 using QuadGK
 using Random
+using StatsFuns
 
-# Todo : add definitions of abstract types
+# Abstract type definitions
+abstract type AbstractBasisFunction end
+abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
 
-# Types
+# Export abstract types
+export AbstractBasisFunction
+export AbstractPolynomialBasis
 
-# Structs
-export BasisFunction
-export MultiIndex
-export PolynomialFunction
-export VectorPolynomialMap
-
-# Methods
-export hermite_poly
-export evaluate_basis
+# Export functions/methods
+export Psi
 export evaluate
-export df_dxk
-export compute_Mk
-export dMk_dxk
+export f
+export gradient_coefficients
+export gradient_x
+export hermite_derivative
+export hermite_polynomial
+export partial_derivative_x
 
-include("mapcomponents/components.jl")
-include("mapcomponents/optimization.jl")
+# Export structs/types
+export HermiteBasis
+export MVBasis
+
+# Include files
+include("mapcomponents/hermite.jl")
 
 end
