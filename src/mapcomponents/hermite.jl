@@ -1,13 +1,6 @@
-# Hermite polynomial implementation with the specific interface requested
 
 # Concrete type for Hermite polynomials
 struct HermiteBasis <: AbstractPolynomialBasis end
-
-# MVBasis struct for multi-indices as requested
-struct MVBasis
-    multi_index::Vector{Int}
-    basis_type::AbstractPolynomialBasis
-end
 
 # Constructor for MVBasis with default Hermite basis
 MVBasis(multi_index::Vector{Int}) = MVBasis(multi_index, HermiteBasis())
