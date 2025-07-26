@@ -17,13 +17,13 @@ mutable struct PolynomialMap <: AbstractTriangularMap
 end
 
 # Evaluate the polynomial map at x
-function evaluate(M::PolynomialMap, x::Vector{Float64})
+function evaluate(M::PolynomialMap, x::Vector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
     return [evaluate(component, x[1:i]) for (i, component) in enumerate(M.components)]
 end
 
 # Compute the Jacobian of the polynomial map at x
-function jacobian(M::PolynomialMap, x::Vector{Float64})
+function jacobian(M::PolynomialMap, x::Vector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
     return [jacobian(component, x[1:i]) for (i, component) in enumerate(M.components)]
 end

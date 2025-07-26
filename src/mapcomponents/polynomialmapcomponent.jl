@@ -20,7 +20,7 @@ mutable struct PolynomialMapComponent <: AbstractMapComponent # mutable due to c
         return new(basisfunctions, coefficients, rectifier, index)
     end
 
-    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis}, coefficients::Vector{Float64}, rectifier::AbstractRectifierFunction, index::Int)
+    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, rectifier::AbstractRectifierFunction, index::Int)
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
 
@@ -29,13 +29,13 @@ mutable struct PolynomialMapComponent <: AbstractMapComponent # mutable due to c
 end
 
 # Compute Mᵏ according to Eq. (4.13)
-function evaluate(map_component::PolynomialMapComponent, x::Vector{Float64})
+function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
     @assert map_component.index <= length(x) "index must not exceed the dimension of x"
     @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
 
-    # f(x₁, ..., x_{k-1}, 0, a)
+    # First part: f(x₁, ..., x_{k-1}, 0, a)
     x₀ = copy(x)
     x₀[map_component.index] = 0.0
     f₀ = f(map_component.basisfunctions, map_component.coefficients, x₀)
@@ -48,27 +48,33 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{Float64})
         return map_component.rectifier(∂f)
     end
 
-    # Compute the integral using quadgk
+    # Second part: ∫g∂f
     ∫g∂f, _ = quadgk(integrand, 0.0, x[map_component.index])
 
     return f₀ + ∫g∂f
 end
 
-# Todo : Implement jacobian for PolynomialMapComponent
-function jacobian(map_component::PolynomialMapComponent, x::Vector{Float64})
-    @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
-    @assert map_component.index > 0 "index must be a positive integer"
-    @assert map_component.index <= length(x) "index must not exceed the dimension of x"
+# Todo: Implement partial derivative of Mᵏ w.r.t. xₖ for jacobian
+# Partial derivative ∂Mᵏ/∂xₖ
+function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
 
-    # Compute the Jacobian as the gradient of the evaluated map component
-    gradient = gradient_x(map_component.basisfunctions, map_component.coefficients, x)
+    # Define the integrand for the partial derivative
+    integrand(xₖ) = begin
+        x_temp = copy(x)
+        x_temp[map_component.index] = xₖ
+        return evaluate(map_component, x_temp)
+    end
+    #! does not work with ForwardDiff due to integral with upper bound that is differentiated
+    # Compute the partial derivative using automatic differentiation
+    ∂Mᵏ = ForwardDiff.derivative(integrand, x[map_component.index])
 
+    return ∂Mᵏ
 end
 
 
 # Todo: Implement inverse map for PolynomialMapComponent
-function inverse(map_component::PolynomialMapComponent, y::Vector{Float64})
+function inverse(map_component::PolynomialMapComponent, y::Vector{<:Real})
     @assert length(y) == length(map_component.basisfunctions) "Dimension mismatch: y and basisfunctions must have same length"
     @assert map_component.index > 0 "index must be a positive integer"
     @assert map_component.index <= length(y) "index must not exceed the dimension of y"

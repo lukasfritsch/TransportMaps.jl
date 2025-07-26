@@ -6,7 +6,7 @@ MultivariateBasis(multi_index::Vector{Int}) = MultivariateBasis(multi_index, Her
 
 # Univariate Hermite polynomial evaluation
 # Using probabilist's Hermite polynomials (physical polynomials)
-function hermite_polynomial(n::Int, x::Float64)
+function hermite_polynomial(n::Int, x::Real)
     if n == 0
         return 1.0
     elseif n == 1
@@ -22,37 +22,37 @@ function hermite_polynomial(n::Int, x::Float64)
     end
 end
 
-# Univariate basis function Psi(alpha_i::Float64, x_i::Float64)
-function Psi(alpha_i::Float64, x_i::Float64)
+# Univariate basis function Psi(alpha_i::Real, x_i::Real)
+function Psi(alpha_i::Real, x_i::Real)
     return hermite_polynomial(Int(alpha_i), x_i)
 end
 
-# Multivariate basis function Psi(alpha::Vector{Float64}, x::Vector{Float64})
-function Psi(alpha::Vector{Float64}, x::Vector{Float64})
+# Multivariate basis function Psi(alpha::Vector{<:Real}, x::Vector{<:Real})
+function Psi(alpha::Vector{<:Real}, x::Vector{<:Real})
     @assert length(alpha) == length(x) "Dimension mismatch: alpha and x must have same length"
     return prod(Psi(alpha_i, x_i) for (alpha_i, x_i) in zip(alpha, x))
 end
 
 # Evaluate MultivariateBasis at point x
-function evaluate(mvb::MultivariateBasis, x::Vector{Float64})
+function evaluate(mvb::MultivariateBasis, x::Vector{<:Real})
     @assert length(mvb.multi_index) == length(x) "Dimension mismatch: multi_index and x must have same length"
-    alpha = Float64.(mvb.multi_index)
+    alpha = Real.(mvb.multi_index)
     return Psi(alpha, x)
 end
 
-# Multivariate function f(Psi::Vector{MultivariateBasis}, coefficients::Vector{Float64})
-function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64}, x::Vector{Float64})
+# Multivariate function f(Psi::Vector{MultivariateBasis}, coefficients::Vector{<:Real})
+function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, x::Vector{<:Real})
     @assert length(Ψ) == length(coefficients) "Number of basis functions must equal number of coefficients"
     return sum(coeff * evaluate(mvb, x) for (coeff, mvb) in zip(coefficients, Ψ))
 end
 
 # Alternative interface matching the exact specification
-function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64})
-    return (x::Vector{Float64}) -> f(Ψ, coefficients, x)
+function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real})
+    return (x::Vector{<:Real}) -> f(Ψ, coefficients, x)
 end
 
 # Derivative of univariate Hermite polynomial
-function hermite_derivative(n::Int, x::Float64)
+function hermite_derivative(n::Int, x::Real)
     if n == 0
         return 0.0
     else
@@ -61,7 +61,7 @@ function hermite_derivative(n::Int, x::Float64)
 end
 
 # Partial derivative of multivariate basis w.r.t. x_j
-function partial_derivative_x(mvb::MultivariateBasis, x::Vector{Float64}, j::Int)
+function partial_derivative_x(mvb::MultivariateBasis, x::Vector{<:Real}, j::Int)
     @assert 1 <= j <= length(x) "Index j must be within bounds of x"
     @assert length(mvb.multi_index) == length(x) "Dimension mismatch"
 
@@ -76,22 +76,22 @@ function partial_derivative_x(mvb::MultivariateBasis, x::Vector{Float64}, j::Int
 end
 
 # Gradient of MultivariateBasis w.r.t. x
-function gradient_x(mvb::MultivariateBasis, x::Vector{Float64})
+function gradient_x(mvb::MultivariateBasis, x::Vector{<:Real})
     return [partial_derivative_x(mvb, x, j) for j in 1:length(x)]
 end
 
 # Partial derivative of f w.r.t. x_j
-function partial_derivative_x(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64}, x::Vector{Float64}, j::Int)
+function partial_derivative_x(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, x::Vector{<:Real}, j::Int)
     @assert length(Ψ) == length(coefficients) "Number of basis functions must equal number of coefficients"
     return sum(coeff * partial_derivative_x(mvb, x, j) for (coeff, mvb) in zip(coefficients, Ψ))
 end
 
 # Gradient of f w.r.t. x
-function gradient_x(Ψ::Vector{MultivariateBasis}, coefficients::Vector{Float64}, x::Vector{Float64})
+function gradient_x(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, x::Vector{<:Real})
     return [partial_derivative_x(Ψ, coefficients, x, j) for j in 1:length(x)]
 end
 
 # Derivative of f w.r.t. coefficients (this is just the basis function values)
-function gradient_coefficients(Ψ::Vector{MultivariateBasis}, x::Vector{Float64})
+function gradient_coefficients(Ψ::Vector{MultivariateBasis}, x::Vector{<:Real})
     return [evaluate(mvb, x) for mvb in Ψ]
 end

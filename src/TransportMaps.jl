@@ -2,6 +2,7 @@ module TransportMaps
 
 using Distributions
 using FastGaussQuadrature
+using ForwardDiff
 using LinearAlgebra
 using QuadGK
 using QuasiMonteCarlo
@@ -36,6 +37,7 @@ export hermite_polynomial
 export jacobian
 export partial_derivative_x
 export multivariate_indices
+export partial_derivative_xk
 
 # Export structs/types
 export IdentityRectifier
