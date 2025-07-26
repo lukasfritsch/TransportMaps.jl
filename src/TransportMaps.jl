@@ -35,8 +35,10 @@ export hermite_derivative
 export hermite_polynomial
 export jacobian
 export partial_derivative_x
+export multivariate_indices
 
 # Export structs/types
+export IdentityRectifier
 export HermiteBasis
 export MultivariateBasis
 export PolynomialMapComponent
@@ -49,10 +51,12 @@ export LatinHypercubeWeights
 
 # Include files
 include("mapcomponents/multivariatebasis.jl")
-include("mapcomponents/hermite.jl")
-include("mapcomponents/mapcomponent.jl")
+include("mapcomponents/hermitebasis.jl")
+include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
-include("map/triangularmap.jl")
+include("triangularmap/polynomialmap.jl")
+include("triangularmap/optimization.jl")
+
 include("util/quadrature.jl")
 
 end

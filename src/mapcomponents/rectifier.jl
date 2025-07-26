@@ -13,7 +13,7 @@ function (r::ShiftedELU)(ξ)
     return ξ <= 0 ? exp(ξ) : ξ + 1
 end
 
-mutable struct IdentityRectifier <: AbstractRectifierFunction
+struct IdentityRectifier <: AbstractRectifierFunction
 end
 
 function (r::IdentityRectifier)(ξ)

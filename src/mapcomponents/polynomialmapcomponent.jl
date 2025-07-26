@@ -40,7 +40,7 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{Float64})
     x₀[map_component.index] = 0.0
     f₀ = f(map_component.basisfunctions, map_component.coefficients, x₀)
 
-    # Integrand for the integral over \bar{x}
+    # Integrand for the integral over x̄
     integrand(x̄) = begin
         x_temp = copy(x)
         x_temp[map_component.index] = x̄
@@ -48,7 +48,31 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{Float64})
         return map_component.rectifier(∂f)
     end
 
-    ∫g∂f, _ = quadgk(integrand, 0.0, x₀[map_component.index])
+    # Compute the integral using quadgk
+    ∫g∂f, _ = quadgk(integrand, 0.0, x[map_component.index])
 
     return f₀ + ∫g∂f
+end
+
+# Todo : Implement jacobian for PolynomialMapComponent
+function jacobian(map_component::PolynomialMapComponent, x::Vector{Float64})
+    @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
+    @assert map_component.index > 0 "index must be a positive integer"
+    @assert map_component.index <= length(x) "index must not exceed the dimension of x"
+    @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
+
+    # Compute the Jacobian as the gradient of the evaluated map component
+    gradient = gradient_x(map_component.basisfunctions, map_component.coefficients, x)
+
+end
+
+
+# Todo: Implement inverse map for PolynomialMapComponent
+function inverse(map_component::PolynomialMapComponent, y::Vector{Float64})
+    @assert length(y) == length(map_component.basisfunctions) "Dimension mismatch: y and basisfunctions must have same length"
+    @assert map_component.index > 0 "index must be a positive integer"
+    @assert map_component.index <= length(y) "index must not exceed the dimension of y"
+
+    # This is a placeholder; actual implementation would require solving the inverse problem
+    return y
 end
