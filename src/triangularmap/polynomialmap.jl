@@ -22,10 +22,11 @@ function evaluate(M::PolynomialMap, x::Vector{<:Real})
     return [evaluate(component, x[1:i]) for (i, component) in enumerate(M.components)]
 end
 
-# Compute the Jacobian of the polynomial map at x
+# Compute the Jacobian determinant of the polynomial map at x
 function jacobian(M::PolynomialMap, x::Vector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
-    return [jacobian(component, x[1:i]) for (i, component) in enumerate(M.components)]
+    diagonal_derivatives = [partial_derivative_xk(component, x[1:i]) for (i, component) in enumerate(M.components)]
+    return prod(diagonal_derivatives)
 end
 
 # Todo: Add inverse map

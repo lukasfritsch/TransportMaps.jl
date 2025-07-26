@@ -56,7 +56,7 @@ end
 
 # Todo: Implement partial derivative of Mᵏ w.r.t. xₖ for jacobian
 # Partial derivative ∂Mᵏ/∂xₖ
-function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{<:Real})
+function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{<:Real}; δ::Float64 = 1e-10)
     @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
 
     # Define the integrand for the partial derivative
@@ -66,8 +66,10 @@ function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{
         return evaluate(map_component, x_temp)
     end
     #! does not work with ForwardDiff due to integral with upper bound that is differentiated
-    # Compute the partial derivative using automatic differentiation
-    ∂Mᵏ = ForwardDiff.derivative(integrand, x[map_component.index])
+    #∂Mᵏ = ForwardDiff.derivative(integrand, x[map_component.index])
+
+    # Finite difference approximation for the derivative
+    ∂Mᵏ = (integrand(x[map_component.index] + δ) - integrand(x[map_component.index] - δ)) / (2δ)
 
     return ∂Mᵏ
 end
