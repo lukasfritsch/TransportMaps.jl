@@ -20,11 +20,11 @@ function gausshermite_weights(numberpoints::Int64, dimension::Int64)
     indices = collect(Iterators.product(ntuple(_ -> 1:numberpoints, dimension)...))
 
     # Allocate arrays for points and weights
-    points = Matrix{Float64}(undef, dimension, length(indices))
+    points = Matrix{Float64}(undef, length(indices), dimension)
     weights = Vector{Float64}(undef, length(indices))
 
     for (k, idx) in enumerate(indices)
-        points[:, k] = [x1d[i] for i in idx]
+        points[k, :] = [x1d[i] for i in idx]
         weights[k] = prod(w1d[i] for i in idx)
     end
 
@@ -42,7 +42,7 @@ struct MonteCarloWeights <: AbstractQuadratureWeights
 end
 
 function montecarlo_weights(numberpoints::Int64, dimension::Int64)
-    points = randn(dimension, numberpoints)
+    points = randn(numberpoints, dimension)
     weights = 1/numberpoints*ones(numberpoints)
     return points, weights
 end
@@ -58,7 +58,7 @@ struct LatinHypercubeWeights <: AbstractQuadratureWeights
 end
 
 function latinhypercube_weights(numberpoints::Int64, dimension::Int64)
-    points = [quantile(Normal(), u) for u in QuasiMonteCarlo.sample(numberpoints, dimension, LatinHypercubeSample())]
+    points = reshape([quantile(Normal(), u) for u in QuasiMonteCarlo.sample(numberpoints, dimension, LatinHypercubeSample())], numberpoints, dimension)
     weights = 1/numberpoints*ones(numberpoints)
     return points, weights
 end
