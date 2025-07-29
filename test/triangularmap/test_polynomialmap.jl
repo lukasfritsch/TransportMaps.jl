@@ -5,6 +5,9 @@ using Test
     @testset "Construction" begin
         # Test basic construction
         pm = PolynomialMap(2, 2)  # 2D map, degree 2
+        # Set manual coefficients to avoid undefined/NaN values
+        pm.components[1].coefficients = [1.0, 0.5, 0.2]  # 3 coefficients for 1D degree 2
+        pm.components[2].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]  # 6 coefficients for 2D degree 2
         @test length(pm.components) == 2
         @test all(comp.rectifier isa Softplus for comp in pm.components)
         @test pm.components[1].index == 1
@@ -12,26 +15,43 @@ using Test
         
         # Test construction with custom rectifier
         pm_identity = PolynomialMap(3, 1, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_identity.components[1].coefficients = [1.0, 0.5]  # 2 coefficients for 1D degree 1
+        pm_identity.components[2].coefficients = [1.0, 0.3, 0.2]  # 3 coefficients for 2D degree 1
+        pm_identity.components[3].coefficients = [1.0, 0.2, 0.15, 0.1]  # 4 coefficients for 3D degree 1
         @test length(pm_identity.components) == 3
         @test all(comp.rectifier isa IdentityRectifier for comp in pm_identity.components)
         
         # Test construction with custom basis
         pm_hermite = PolynomialMap(2, 2, Softplus(), HermiteBasis())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_hermite.components[1].coefficients = [1.0, 0.4, 0.15]  # 3 coefficients for 1D degree 2
+        pm_hermite.components[2].coefficients = [1.0, 0.25, 0.1, 0.05, 0.02, 0.01]  # 6 coefficients for 2D degree 2
         @test length(pm_hermite.components) == 2
         @test all(comp.rectifier isa Softplus for comp in pm_hermite.components)
         
         # Test different dimensions
         pm_1d = PolynomialMap(1, 3)
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_1d.components[1].coefficients = [1.0, 0.3, 0.1, 0.03]  # 4 coefficients for 1D degree 3
         @test length(pm_1d.components) == 1
         
         pm_5d = PolynomialMap(5, 1)
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_5d.components[1].coefficients = [1.0, 0.5]  # 2 coefficients for 1D degree 1
+        pm_5d.components[2].coefficients = [1.0, 0.3, 0.2]  # 3 coefficients for 2D degree 1
+        pm_5d.components[3].coefficients = [1.0, 0.2, 0.15, 0.1]  # 4 coefficients for 3D degree 1
+        pm_5d.components[4].coefficients = [1.0, 0.15, 0.1, 0.05, 0.025]  # 5 coefficients for 4D degree 1
+        pm_5d.components[5].coefficients = [1.0, 0.1, 0.08, 0.04, 0.02, 0.01]  # 6 coefficients for 5D degree 1
         @test length(pm_5d.components) == 5
     end
     
     @testset "Direct Construction with Components" begin
         # Create components manually
         comp1 = PolynomialMapComponent(1, 2, IdentityRectifier())
+        comp1.coefficients = [1.0, 0.5, 0.2]  # Set manual coefficients
         comp2 = PolynomialMapComponent(2, 2, IdentityRectifier())
+        comp2.coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]  # Set manual coefficients
         components = [comp1, comp2]
         
         pm = PolynomialMap(components)
@@ -43,18 +63,27 @@ using Test
     @testset "Evaluation" begin
         # Test 1D case
         pm_1d = PolynomialMap(1, 2, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_1d.components[1].coefficients = [1.0, 0.5, 0.2]
         result_1d = evaluate(pm_1d, [1.0])
         @test length(result_1d) == 1
         @test result_1d[1] isa Float64
         
         # Test 2D case - use simpler settings
         pm_2d = PolynomialMap(2, 1, IdentityRectifier())  # Use degree 1
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_2d.components[1].coefficients = [1.0, 0.5]
+        pm_2d.components[2].coefficients = [1.0, 0.3, 0.2]
         result_2d = evaluate(pm_2d, [0.5, 1.0])  # Use smaller values
         @test length(result_2d) == 2
         @test all(r isa Float64 for r in result_2d)
         
         # Test 3D case
         pm_3d = PolynomialMap(3, 1, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_3d.components[1].coefficients = [1.0, 0.5]
+        pm_3d.components[2].coefficients = [1.0, 0.3, 0.2]
+        pm_3d.components[3].coefficients = [1.0, 0.2, 0.15, 0.1]
         result_3d = evaluate(pm_3d, [0.2, 0.3, 0.4])  # Use smaller values
         @test length(result_3d) == 3
         @test all(r isa Float64 for r in result_3d)
@@ -67,24 +96,36 @@ using Test
     @testset "Jacobian Determinant" begin
         # Test 1D case
         pm_1d = PolynomialMap(1, 2, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_1d.components[1].coefficients = [1.0, 0.5, 0.2]
         jac_1d = jacobian(pm_1d, [1.0])
         @test jac_1d isa Float64
         @test isfinite(jac_1d)
         
         # Test 2D case
         pm_2d = PolynomialMap(2, 2, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_2d.components[1].coefficients = [1.0, 0.5, 0.2]
+        pm_2d.components[2].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]
         jac_2d = jacobian(pm_2d, [1.0, 2.0])
         @test jac_2d isa Float64
         @test isfinite(jac_2d)
         
         # Test 3D case
         pm_3d = PolynomialMap(3, 1, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_3d.components[1].coefficients = [1.0, 0.5]
+        pm_3d.components[2].coefficients = [1.0, 0.3, 0.2]
+        pm_3d.components[3].coefficients = [1.0, 0.2, 0.15, 0.1]
         jac_3d = jacobian(pm_3d, [0.5, 1.0, 1.5])
         @test jac_3d isa Float64
         @test isfinite(jac_3d)
         
         # With Softplus rectifier, Jacobian should be positive
         pm_softplus = PolynomialMap(2, 2, Softplus())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm_softplus.components[1].coefficients = [1.0, 0.5, 0.2]
+        pm_softplus.components[2].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]
         jac_softplus = jacobian(pm_softplus, [1.0, 2.0])
         @test jac_softplus > 0.0
         
@@ -129,6 +170,10 @@ using Test
     @testset "Triangular Structure" begin
         # The map should be triangular: M¹ depends only on x₁, M² on x₁,x₂, etc.
         pm = PolynomialMap(3, 1, IdentityRectifier())  # Use degree 1 for stability
+        # Set manual coefficients to avoid undefined/NaN values
+        pm.components[1].coefficients = [1.0, 0.5]
+        pm.components[2].coefficients = [1.0, 0.3, 0.2]
+        pm.components[3].coefficients = [1.0, 0.2, 0.15, 0.1]
         
         # Evaluate at a point
         x = [0.1, 0.2, 0.3]  # Use small values
@@ -149,6 +194,9 @@ using Test
         # Test with different rectifiers - use simpler cases
         for rectifier in [IdentityRectifier(), Softplus()]  # Remove ShiftedELU for now
             pm = PolynomialMap(2, 1, rectifier)  # Use degree 1 for stability
+            # Set manual coefficients to avoid undefined/NaN values
+            pm.components[1].coefficients = [1.0, 0.5]
+            pm.components[2].coefficients = [1.0, 0.3, 0.2]
             
             x = [0.1, 0.2]  # Use small positive values
             
@@ -177,6 +225,9 @@ using Test
     
     @testset "Scaling Properties" begin
         pm = PolynomialMap(2, 2, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm.components[1].coefficients = [1.0, 0.5, 0.2]
+        pm.components[2].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]
         
         # Test scaling of input
         x1 = [1.0, 2.0]
@@ -208,6 +259,10 @@ using Test
     
     @testset "Component Access" begin
         pm = PolynomialMap(3, 2)
+        # Set manual coefficients to avoid undefined/NaN values
+        pm.components[1].coefficients = [1.0, 0.5, 0.2]  # 3 coefficients for 1D degree 2
+        pm.components[2].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]  # 6 coefficients for 2D degree 2
+        pm.components[3].coefficients = [1.0, 0.2, 0.1, 0.05, 0.03, 0.015, 0.01, 0.005, 0.003, 0.001]  # 10 coefficients for 3D degree 2
         
         # Test that we can access individual components
         @test length(pm.components) == 3
@@ -225,6 +280,9 @@ using Test
     
     @testset "Coefficient Modification" begin
         pm = PolynomialMap(2, 2, IdentityRectifier())
+        # Set manual coefficients to avoid undefined/NaN values
+        pm.components[1].coefficients = [1.0, 0.5, 0.2]
+        pm.components[2].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]
         
         # Store original evaluation
         x = [1.0, 1.0]
@@ -245,6 +303,22 @@ using Test
         # Test various dimensions
         for dim in [1, 2, 3, 5]
             pm = PolynomialMap(dim, 2)
+            
+            # Set manual coefficients for each component based on dimension
+            for i in 1:dim
+                # For dimension i and degree 2, calculate number of coefficients
+                # Using the formula for multivariate polynomial coefficients
+                if i == 1
+                    pm.components[i].coefficients = [1.0, 0.5, 0.2]  # 3 coefficients
+                elseif i == 2
+                    pm.components[i].coefficients = [1.0, 0.3, 0.1, 0.05, 0.02, 0.01]  # 6 coefficients
+                elseif i == 3
+                    pm.components[i].coefficients = [1.0, 0.2, 0.1, 0.05, 0.03, 0.015, 0.01, 0.005, 0.003, 0.001]  # 10 coefficients
+                elseif i == 5
+                    # For 5D degree 2, we need 21 coefficients
+                    pm.components[i].coefficients = [1.0, 0.1, 0.08, 0.06, 0.04, 0.03, 0.025, 0.02, 0.015, 0.012, 0.01, 0.008, 0.006, 0.005, 0.004, 0.003, 0.0025, 0.002, 0.0015, 0.001, 0.0005]
+                end
+            end
             
             x = ones(dim)
             result = evaluate(pm, x)
