@@ -1,7 +1,8 @@
 # Todo: Make it function of the polynomial coefficients
 # Todo: Also implement gradient and Hessian
 
-function objective(
+# Compute the Kullback-Leibler divergence between the polynomial map and a target density
+function kldivergence(
     M::PolynomialMap,
     target_density::Function,
     quadrature::AbstractQuadratureWeights,
@@ -20,7 +21,6 @@ function objective(
     return total
 end
 
-
 function optimize!(
     M::PolynomialMap,
     target_density::Function,
@@ -28,9 +28,15 @@ function optimize!(
     )
 
     # Define the objective function
-    objective_function = (a) -> objective(M, quadrature, target_density)
+    objective_function(a) = begin
+        setcoefficients!(M, a)  # Set the coefficients in the polynomial map
+        return kldivergence(M, target_density, quadrature)
+    end
 
     # Optimize the polynomial coefficients
+    initial_coefficients = rand(numbercoefficients(M))
+    result = optimize(objective_function, initial_coefficients, SimulatedAnnealing())
 
+    return result
 
 end

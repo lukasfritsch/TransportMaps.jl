@@ -1,4 +1,4 @@
-mutable struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficients that are optimized
+struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficients that are optimized
     basisfunctions::Vector{MultivariateBasis}  # Vector of MultivariateBasis objects
     coefficients::Vector{Float64}  # Coefficients for the basis functions
     rectifier::AbstractRectifierFunction  # Rectifier function to apply to the partial derivatives
@@ -91,4 +91,9 @@ function inverse(
     x⁺, _ = hybridrootfinder(fun, ∂fun, lower, upper)
 
     return x⁺
+end
+
+function setcoefficients!(map_component::PolynomialMapComponent, coefficients::Vector{<:Real})
+    @assert length(coefficients) == length(map_component.coefficients) "Length of coefficients must match the number of basis functions."
+    map_component.coefficients .= coefficients
 end

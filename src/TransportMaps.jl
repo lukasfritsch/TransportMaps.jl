@@ -4,6 +4,7 @@ using Distributions
 using FastGaussQuadrature
 using ForwardDiff
 using LinearAlgebra
+using Optim
 using QuasiMonteCarlo
 using Random
 using StatsFuns
@@ -36,10 +37,17 @@ export hermite_derivative
 export hermite_polynomial
 export hybridrootfinder
 export inverse
+export inverse_jacobian
 export jacobian
+export optimize!
 export partial_derivative_x
 export multivariate_indices
 export partial_derivative_xk
+export pullback
+export pushforward
+export setcoefficients!
+export getcoefficients
+export numbercoefficients
 
 # Export structs/types
 export IdentityRectifier
