@@ -4,7 +4,6 @@ using Distributions
 using FastGaussQuadrature
 using ForwardDiff
 using LinearAlgebra
-using QuadGK
 using QuasiMonteCarlo
 using Random
 using StatsFuns
@@ -32,8 +31,11 @@ export evaluate
 export f
 export gradient_coefficients
 export gradient_x
+export gaussquadrature
 export hermite_derivative
 export hermite_polynomial
+export hybridrootfinder
+export inverse
 export jacobian
 export partial_derivative_x
 export multivariate_indices
@@ -59,6 +61,8 @@ include("mapcomponents/rectifier.jl")
 include("triangularmap/polynomialmap.jl")
 include("triangularmap/optimization.jl")
 
-include("util/quadrature.jl")
+include("util/gaussquadrature.jl")
+include("util/hybridrootfinder.jl")
+include("util/quadraturepoints.jl")
 
 end

@@ -48,15 +48,14 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
         return map_component.rectifier(∂f)
     end
 
-    # Second part: ∫g∂f
-    ∫g∂f, _ = quadgk(integrand, 0.0, x[map_component.index])
+    # Second part: ∫g∂f: Numerical integration using Gauss-Legendre quadrature
+    ∫g∂f = gaussquadrature(integrand, 100, 0., x[map_component.index])
 
     return f₀ + ∫g∂f
 end
 
-# Todo: Implement partial derivative of Mᵏ w.r.t. xₖ for jacobian
-# Partial derivative ∂Mᵏ/∂xₖ
-function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{<:Real}; δ::Float64 = 1e-10)
+# Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ)
+function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
 
     # Define the integrand for the partial derivative
@@ -65,22 +64,31 @@ function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{
         x_temp[map_component.index] = xₖ
         return evaluate(map_component, x_temp)
     end
-    #! does not work with ForwardDiff due to integral with upper bound that is differentiated
-    #∂Mᵏ = ForwardDiff.derivative(integrand, x[map_component.index])
 
-    # Finite difference approximation for the derivative
-    ∂Mᵏ = (integrand(x[map_component.index] + δ) - integrand(x[map_component.index] - δ)) / (2δ)
+    # ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ)
+    ∂fᵏ = partial_derivative_x(map_component.basisfunctions, map_component.coefficients, x, map_component.index)
+    ∂Mᵏ = map_component.rectifier(∂fᵏ)
 
     return ∂Mᵏ
 end
 
+# Inverse map for the polynomial map component using one-dimensional root finding
+function inverse(
+    map_component::PolynomialMapComponent,
+    xₖ₋₁::Vector{<:Real},
+    zₖ::Real,
+)
+    @assert length(xₖ₋₁) == map_component.index - 1 "Length of xₖ₋₁ must be equal to index - 1"
 
-# Todo: Implement inverse map for PolynomialMapComponent
-function inverse(map_component::PolynomialMapComponent, y::Vector{<:Real})
-    @assert length(y) == length(map_component.basisfunctions) "Dimension mismatch: y and basisfunctions must have same length"
-    @assert map_component.index > 0 "index must be a positive integer"
-    @assert map_component.index <= length(y) "index must not exceed the dimension of y"
+    # Define the residual
+    fun(xₖ) = evaluate(map_component, [xₖ₋₁..., xₖ]) - zₖ
+    ∂fun(xₖ) = partial_derivative_xk(map_component, [xₖ₋₁..., xₖ])
 
-    # This is a placeholder; actual implementation would require solving the inverse problem
-    return y
+    # Define bounds for the root-finding
+    lower, upper = _inverse_bound(fun)
+
+    # Use a root-finding method to find the inverse
+    x⁺, _ = hybridrootfinder(fun, ∂fun, lower, upper)
+
+    return x⁺
 end
