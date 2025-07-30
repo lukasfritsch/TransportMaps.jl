@@ -6,20 +6,18 @@ CurrentModule = TransportMaps
 
 ## Overview
 
-Transport## References
-
-This implementation is based on the adaptive transport map framework. For theoretical background, see [marzouk2012bayesian](@cite), [parno2018transport](@cite), and [baptista2022adaptive](@cite). The broader mathematical theory connects to optimal transport [villani2003topics](@cite) and modern computational advances in transport-based inference [brennan2020greedy](@cite).l is a pure Julia implementation of transport maps for probability density transformation and sampling. This package provides tools for constructing polynomial transport maps that can transform samples from simple reference distributions (e.g., standard Gaussian) to complex target distributions.
+This implementation is based on the adaptive transport map framework. For a comprehensive introduction to transport maps, see [marzouk2016](@cite) and [ramgraber2025](@cite). The theoretical foundations for monotone triangular transport maps are detailed in [baptista2023](@cite). For practical applications in structural health monitoring and Bayesian inference, see [grashorn2024](@cite). Related software implementations can be found in [parno2022](@cite).l is a pure Julia implementation of transport maps for probability density transformation and sampling. This package provides tools for constructing polynomial transport maps that can transform samples from simple reference distributions (e.g., standard Gaussian) to complex target distributions.
 
 ## What are Transport Maps?
 
-Transport maps are smooth, invertible functions that can transform one probability distribution into another [marzouk2012bayesian](@cite). They are particularly useful for:
+Transport maps are smooth, invertible functions that can transform one probability distribution into another [marzouk2016](@cite). They are particularly useful for:
 
 - **Sampling**: Generate samples from complex distributions by transforming samples from simple distributions
 - **Density estimation**: Learn the structure of complex probability distributions
-- **Uncertainty quantification**: Efficient sampling and analysis of complex parameter spaces [spantini2018inference](@cite)
+- **Uncertainty quantification**: Efficient sampling and analysis of complex parameter spaces [grashorn2024](@cite)
 - **Variational inference**: Approximate complex posterior distributions
 
-The mathematical foundation builds on the Rosenblatt transformation [rosenblatt1952remarks](@cite) and the Knothe-Rosenblatt rearrangement [knothe1957contributions](@cite), with modern developments enabling practical implementation for high-dimensional problems [parno2018transport](@cite).
+The mathematical foundation builds on the Rosenblatt transformation [rosenblatt1952](@cite) and the Knothe-Rosenblatt rearrangement [knothe1957](@cite), with modern developments enabling practical implementation for high-dimensional problems [baptista2023](@cite).
 
 ## Key Features
 

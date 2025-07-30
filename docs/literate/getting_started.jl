@@ -7,21 +7,19 @@
 # ### What is a Transport Map?
 #
 # A transport map T is a function that transforms samples from a reference distribution
-# (typically standard Gaussian) to a target distribution [marzouk2012bayesian](@cite). The key property is that if
+# (typically standard Gaussian) to a target distribution [marzouk2016](@cite). The key property is that if
 # X ~ ρ₀ (reference) and Y = T(X), then Y ~ ρ₁ (target).
 #
 # ### Triangular Maps
 #
-# TransportMaps.jl focuses on triangular transport maps [spantini2018inference](@cite), where:
+# TransportMaps.jl focuses on triangular transport maps [baptista2023](@cite), where:
 # - T₁(x) = T₁(x₁)
 # - T₂(x) = T₂(x₁, x₂)
 # - T₃(x) = T₃(x₁, x₂, x₃)
 # - ...
 #
 # This structure ensures that the map is invertible and the Jacobian determinant is easy to compute.
-# The construction follows the Knothe-Rosenblatt rearrangement [knothe1957contributions](@cite).
-
-# ## Installation and Setup
+# The construction follows the Knothe-Rosenblatt rearrangement [knothe1957](@cite).# ## Installation and Setup
 
 using TransportMaps
 using Distributions
@@ -169,12 +167,12 @@ println("Banana distribution variance diagnostic: ", var_diag_banana)
 # 4. **Experiment with Rectifiers**: Different rectifiers work better for different problems
 # 5. **Scale Your Problem**: Normalize your target distribution if needed
 #
-# For theoretical guidance on transport map construction, see [marzouk2012bayesian](@cite).
-# Advanced optimization techniques are discussed in [parno2018transport](@cite).
+# For theoretical guidance on transport map construction, see [marzouk2016](@cite) and [ramgraber2025](@cite).
+# Advanced techniques for monotone triangular maps are discussed in [baptista2023](@cite).
 #
 # ## Next Steps
 #
 # - Explore more complex distributions
-# - Try higher-dimensional problems (see [spantini2018inference](@cite) for scalability considerations)
-# - Experiment with adaptive map construction [baptista2022adaptive](@cite)
+# - Try higher-dimensional problems (see [baptista2023](@cite) for scalability considerations)
+# - Experiment with adaptive map construction
 # - Check out the banana distribution example for more details

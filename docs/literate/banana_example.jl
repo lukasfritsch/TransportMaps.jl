@@ -3,10 +3,10 @@
 # This example demonstrates how to use TransportMaps.jl to approximate
 # a "banana" distribution using polynomial transport maps.
 #
-# The banana distribution is a common test case in transport map literature [marzouk2012bayesian](@cite),
+# The banana distribution is a common test case in transport map literature [marzouk2016](@cite),
 # defined as a standard normal in the first dimension and a normal distribution
 # centered at x₁² in the second dimension. This example showcases the effectiveness
-# of triangular transport maps for capturing nonlinear dependencies [spantini2018inference](@cite).
+# of triangular transport maps for capturing nonlinear dependencies [baptista2023](@cite).
 
 using TransportMaps
 using Distributions
@@ -82,10 +82,11 @@ println("Variance Diagnostic: ", var_diag)
 # ## Further Experiments
 #
 # You can experiment with:
-# - Different polynomial degrees (see [baptista2022adaptive](@cite) for adaptive degree selection)
+# - Different polynomial degrees (see [baptista2023](@cite) for monotone map theory)
 # - Different rectifier functions (`IdentityRectifier()`, `ShiftedELU()`)
 # - Different quadrature methods (`MonteCarloWeights`, `LatinHypercubeWeights`)
 # - More quadrature points for higher accuracy
 #
-# For advanced techniques in transport map construction and optimization,
-# refer to [brennan2020greedy](@cite) and [parno2018transport](@cite).
+# For advanced techniques in transport map construction and applications,
+# refer to [ramgraber2025](@cite) and [grashorn2024](@cite). The MParT toolkit [parno2022](@cite)
+# provides additional implementation strategies for large-scale problems.
