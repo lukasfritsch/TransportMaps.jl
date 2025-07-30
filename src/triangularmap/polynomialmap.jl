@@ -40,7 +40,7 @@ function inverse(M::PolynomialMap, x::AbstractArray{<:Real})
     # Initialize the inverse map
     z = Vector{Float64}(undef, length(x))
     for (i, component) in enumerate(M.components)
-        z[i] = inverse(component, x[1:i-1])
+        z[i] = inverse(component, z[1:i-1], x[i])
     end
 
     return z

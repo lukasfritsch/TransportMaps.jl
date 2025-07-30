@@ -1,5 +1,5 @@
-# Todo: Make it function of the polynomial coefficients
 # Todo: Also implement gradient and Hessian
+# Todo: Implement map from samples
 
 # Compute the Kullback-Leibler divergence between the polynomial map and a target density
 function kldivergence(
@@ -24,6 +24,7 @@ function kldivergence(
     return total
 end
 
+# Optimize the polynomial map to minimize the Kullback-Leibler divergence to a target density
 function optimize!(
     M::PolynomialMap,
     target_density::Function,
@@ -45,6 +46,7 @@ function optimize!(
     return result
 end
 
+# Compute the variance diagnostic for the polynomial map
 function variance_diagnostic(
     M::PolynomialMap,
     target_density::Function,
