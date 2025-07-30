@@ -16,63 +16,62 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     end
 end
 
-# Evaluate the polynomial map at x
-function evaluate(M::PolynomialMap, x::AbstractArray{<:Real})
-    @assert length(M.components) == length(x) "Number of components must match the dimension of x"
+# Evaluate the polynomial map at z
+function evaluate(M::PolynomialMap, z::AbstractArray{<:Real})
+    @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
-    return [evaluate(component, x[1:i]) for (i, component) in enumerate(M.components)]
+    return [evaluate(component, z[1:i]) for (i, component) in enumerate(M.components)]
 end
 
-# Compute the Jacobian determinant of the polynomial map at x
-function jacobian(M::PolynomialMap, x::AbstractArray{<:Real})
-    @assert length(M.components) == length(x) "Number of components must match the dimension of x"
+# Compute the Jacobian determinant of the polynomial map at z
+function jacobian(M::PolynomialMap, z::AbstractArray{<:Real})
+    @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     # Compute the derivatives ∂Mᵏ/∂xₖ for each component
-    diagonal_derivatives = [partial_derivative_xk(component, x[1:i]) for (i, component) in enumerate(M.components)]
+    diagonal_derivatives = [partial_derivative_xk(component, z[1:i]) for (i, component) in enumerate(M.components)]
 
     return prod(diagonal_derivatives)
 end
 
-# Compute the inverse of the polynomial map at z
-function inverse(M::PolynomialMap, z::AbstractArray{<:Real})
-    @assert length(M.components) == length(z) "Number of components must match the dimension of z"
+# Compute the inverse of the polynomial map at x
+function inverse(M::PolynomialMap, x::AbstractArray{<:Real})
+    @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     # Initialize the inverse map
-    x = Vector{Float64}(undef, length(z))
+    z = Vector{Float64}(undef, length(x))
     for (i, component) in enumerate(M.components)
-        x[i] = inverse(component, x[1:i-1], z[i])
+        z[i] = inverse(component, x[1:i-1])
     end
 
-    return x
+    return z
 end
 
-# Compute the Jacobian determinant of the inverse polynomial map at z
-function inverse_jacobian(M::PolynomialMap, z::AbstractArray{<:Real})
-    @assert length(M.components) == length(z) "Number of components must match the dimension of z"
+# Compute the Jacobian determinant of the inverse polynomial map at x
+function inverse_jacobian(M::PolynomialMap, x::AbstractArray{<:Real})
+    @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     # Compute the Jacobian determinant of the inverse map
-    J_inv = jacobian(M, inverse(M, z))
+    J_inv = jacobian(M, inverse(M, x))
 
     return 1.0 / J_inv
 end
 
-# Pullback density: Map from reference to target space
-function pullback(M::PolynomialMap, z::AbstractArray{<:Real})
-    @assert length(M.components) == length(z) "Number of components must match the dimension of z"
-
-    rho(z) = pdf(MvNormal(zeros(length(M.components)), I(length(M.components))), z)
-
-    # Compute pull-back density π̂(z) = ρ(M⁻¹(z)) * |det J|
-    return rho(inverse(M, z) * abs(inverse_jacobian(M, z)))
-end
-
-# Pushforward density: Map from target to reference space
-function pushforward(M::PolynomialMap, π::Function, x::AbstractArray{<:Real})
+# Pullback density: Map from reference to target space 𝑋 ↦ 𝑍
+function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
-    # Compute push-forward density ρ(x) = π(M(x)) * |det J|
-    return π(evaluate(M, x)) * abs(jacobian(M, x))
+    reference_density(z) = pdf(MvNormal(zeros(length(M.components)), I(length(M.components))), z)
 
+    # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
+    return reference_density(inverse(M, x) * abs(inverse_jacobian(M, x)))
+end
+
+# Pushforward density: Map from target to reference space 𝑍 ↦ 𝑋
+function pushforward(M::PolynomialMap, target_density::Function, z::AbstractArray{<:Real})
+    @assert length(M.components) == length(z) "Number of components must match the dimension of z"
+
+    # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|
+    return target_density(evaluate(M, z)) * abs(jacobian(M, z))
 end
 
 # Set the coefficients in all map components.
@@ -84,6 +83,7 @@ function setcoefficients!(M::PolynomialMap, coefficients::Vector{<:Real})
     end
 end
 
+# Get the coefficients from all map components.
 function getcoefficients(M::PolynomialMap)
     coefficients = Vector{Float64}(undef, numbercoefficients(M))
     counter = 1
@@ -94,6 +94,12 @@ function getcoefficients(M::PolynomialMap)
     return coefficients
 end
 
+# Number of coefficients in the polynomial map
 function numbercoefficients(M::PolynomialMap)
     return sum(length(component.coefficients) for component in M.components)
+end
+
+# Number of dimensions in the polynomial map
+function numberdimensions(M::PolynomialMap)
+    return length(M.components)
 end

@@ -27,27 +27,38 @@ export AbstractRectifierFunction
 export AbstractQuadratureWeights
 
 # Export functions/methods
+# Basis functions and evaluation
 export Psi
 export evaluate
 export f
+export hermite_polynomial
+export hermite_derivative
+export multivariate_indices
+
+# Map operations
 export gradient_coefficients
 export gradient_x
-export gaussquadrature
-export hermite_derivative
-export hermite_polynomial
-export hybridrootfinder
+export jacobian
 export inverse
 export inverse_jacobian
-export jacobian
-export optimize!
 export partial_derivative_x
-export multivariate_indices
 export partial_derivative_xk
 export pullback
 export pushforward
+
+# Coefficient utilities
 export setcoefficients!
 export getcoefficients
 export numbercoefficients
+export numberdimensions
+
+# Quadrature and optimization
+export gaussquadrature
+export optimize!
+export variance_diagnostic
+
+# Utilities
+export hybridrootfinder
 
 # Export structs/types
 export IdentityRectifier
