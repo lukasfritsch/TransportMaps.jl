@@ -116,8 +116,10 @@ function optimize!(
         grad_storage .= kldivergence_gradient(M, target, quadrature)
     end
 
+    # Initialize coefficients: all zeros
+    initial_coefficients = zeros(numbercoefficients(M))
+
     # Optimize with analytical gradient
-    initial_coefficients = getcoefficients(M)  # Start from current coefficients
     result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, LBFGS())
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients

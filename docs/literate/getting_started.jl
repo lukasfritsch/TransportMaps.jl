@@ -33,6 +33,7 @@ using LinearAlgebra
 
 # Set random seed for reproducibility
 Random.seed!(1234)
+#hide
 
 # Create a 2D polynomial map with degree 2
 M = PolynomialMap(2, 2, Softplus())
@@ -50,6 +51,7 @@ function correlated_gaussian(x; ρ=0.8)
     Σ = [1.0 ρ; ρ 1.0]
     return pdf(MvNormal(zeros(2), Σ), x)
 end
+#hide
 
 # Create a TargetDensity object for optimization
 target_density = TargetDensity(correlated_gaussian, :auto_diff)
@@ -94,11 +96,11 @@ end
 # Let's plot both the reference and target samples:
 
 p1 = scatter(reference_samples[:, 1], reference_samples[:, 2],
-            alpha=0.6, title="Reference Samples (Standard Normal)",
+            alpha=0.6, title="Reference Samples",
             xlabel="Z₁", ylabel="Z₂", legend=false, aspect_ratio=:equal)
 
 p2 = scatter(target_samples[:, 1], target_samples[:, 2],
-            alpha=0.6, title="Target Samples (Correlated Gaussian)",
+            alpha=0.6, title="Target Samples",
             xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
 
 plot(p1, p2, layout=(1,2), size=(800, 400))
@@ -147,6 +149,9 @@ target_density_banana = TargetDensity(banana_density, :auto_diff)
 # Create a new map for this target
 M_banana = PolynomialMap(2, 2, Softplus())
 result_banana = optimize!(M_banana, target_density_banana, quadrature)
+
+# Display optimized map
+display(M_banana)
 
 # Generate samples
 banana_samples = zeros(n_samples, 2)
