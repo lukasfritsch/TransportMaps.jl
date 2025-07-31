@@ -103,3 +103,85 @@ end
 function numberdimensions(M::PolynomialMap)
     return length(M.components)
 end
+
+# Display method for PolynomialMap
+function Base.show(io::IO, M::PolynomialMap)
+    n_dims = length(M.components)
+    n_coeffs = numbercoefficients(M)
+
+    # Get common properties from the first component
+    if n_dims > 0
+        first_component = M.components[1]
+        max_degree = maximum(sum(basis.multi_index) for basis in first_component.basisfunctions)
+
+        # Get basis type
+        basis_type = typeof(first_component.basisfunctions[1].basis_type)
+        basis_name = string(basis_type)
+        if basis_name == "HermiteBasis"
+            basis_name = "Hermite"
+        end
+
+        # Get rectifier type
+        rectifier_type = typeof(first_component.rectifier)
+        rectifier_name = string(rectifier_type)
+
+        print(io, "PolynomialMap(")
+        print(io, "$n_dims-dimensional, ")
+        print(io, "degree=$max_degree, ")
+        print(io, "basis=$basis_name, ")
+        print(io, "rectifier=$rectifier_name, ")
+        print(io, "$n_coeffs total coefficients)")
+    else
+        print(io, "PolynomialMap(empty)")
+    end
+end
+
+function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
+    n_dims = length(M.components)
+    n_coeffs = numbercoefficients(M)
+
+    println(io, "PolynomialMap:")
+    println(io, "  Dimensions: $n_dims")
+    println(io, "  Total coefficients: $n_coeffs")
+
+    if n_dims > 0
+        # Get properties from the first component (assuming all components have similar properties)
+        first_component = M.components[1]
+        max_degree = maximum(sum(basis.multi_index) for basis in first_component.basisfunctions)
+
+        # Get basis type
+        basis_type = typeof(first_component.basisfunctions[1].basis_type)
+        basis_name = string(basis_type)
+        if basis_name == "HermiteBasis"
+            basis_name = "Hermite"
+        end
+
+        # Get rectifier type
+        rectifier_type = typeof(first_component.rectifier)
+        rectifier_name = string(rectifier_type)
+
+        println(io, "  Maximum degree: $max_degree")
+        println(io, "  Basis: $basis_name")
+        println(io, "  Rectifier: $rectifier_name")
+
+        # Show components summary
+        println(io, "  Components:")
+        for (i, component) in enumerate(M.components)
+            n_basis = length(component.basisfunctions)
+            println(io, "    Component $i: $n_basis basis functions")
+        end
+
+        # Show coefficient statistics if they're set
+        all_coeffs = getcoefficients(M)
+        if all(isfinite, all_coeffs)
+            coeff_min = minimum(all_coeffs)
+            coeff_max = maximum(all_coeffs)
+            coeff_mean = sum(all_coeffs) / length(all_coeffs)
+            println(io, "  Coefficients: min=$coeff_min, max=$coeff_max, mean=$coeff_mean")
+        else
+            println(io, "  Coefficients: uninitialized")
+        end
+    else
+        println(io, "  (Empty map)")
+    end
+end

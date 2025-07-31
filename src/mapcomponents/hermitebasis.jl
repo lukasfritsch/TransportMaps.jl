@@ -95,3 +95,16 @@ end
 function gradient_coefficients(Ψ::Vector{MultivariateBasis}, x::Vector{<:Real})
     return [evaluate(mvb, x) for mvb in Ψ]
 end
+
+# Display methods for HermiteBasis
+function Base.show(io::IO, ::HermiteBasis)
+    print(io, "HermiteBasis()")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", ::HermiteBasis)
+    println(io, "HermiteBasis:")
+    println(io, "  Type: Probabilist's Hermite polynomials")
+    println(io, "  Orthogonal with respect to: standard Gaussian measure")
+    println(io, "  Recursion: H_n(x) = x·H_{n-1}(x) - (n-1)·H_{n-2}(x)")
+    println(io, "  First few polynomials: H_0(x)=1, H_1(x)=x, H_2(x)=x²-1, ...")
+end

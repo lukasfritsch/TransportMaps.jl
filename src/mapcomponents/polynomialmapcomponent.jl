@@ -97,3 +97,74 @@ function setcoefficients!(map_component::PolynomialMapComponent, coefficients::V
     @assert length(coefficients) == length(map_component.coefficients) "Length of coefficients must match the number of basis functions."
     map_component.coefficients .= coefficients
 end
+
+# Display method for PolynomialMapComponent
+function Base.show(io::IO, component::PolynomialMapComponent)
+    n_basis = length(component.basisfunctions)
+    n_coeffs = length(component.coefficients)
+
+    # Get the maximum degree from the basis functions
+    max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
+
+    # Get basis type from the first basis function
+    basis_type = typeof(component.basisfunctions[1].basis_type)
+    basis_name = string(basis_type)
+    if basis_name == "HermiteBasis"
+        basis_name = "Hermite"
+    end
+
+    # Get rectifier type
+    rectifier_type = typeof(component.rectifier)
+    rectifier_name = string(rectifier_type)
+
+    print(io, "PolynomialMapComponent(")
+    print(io, "index=$(component.index), ")
+    print(io, "degree=$max_degree, ")
+    print(io, "basis=$basis_name, ")
+    print(io, "rectifier=$rectifier_name, ")
+    print(io, "$n_basis basis functions)")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent)
+    n_basis = length(component.basisfunctions)
+    max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
+
+    # Get basis type
+    basis_type = typeof(component.basisfunctions[1].basis_type)
+    basis_name = string(basis_type)
+    if basis_name == "HermiteBasis"
+        basis_name = "Hermite"
+    end
+
+    # Get rectifier type
+    rectifier_type = typeof(component.rectifier)
+    rectifier_name = string(rectifier_type)
+
+    println(io, "PolynomialMapComponent:")
+    println(io, "  Index: $(component.index)")
+    println(io, "  Maximum degree: $max_degree")
+    println(io, "  Basis: $basis_name")
+    println(io, "  Rectifier: $rectifier_name")
+    println(io, "  Number of basis functions: $n_basis")
+
+    # Show first few multi-indices as examples
+    if n_basis > 0
+        println(io, "  Multi-indices (first $(min(5, n_basis))):")
+        for i in 1:min(5, n_basis)
+            println(io, "    $(component.basisfunctions[i].multi_index)")
+        end
+        if n_basis > 5
+            println(io, "    ... and $(n_basis - 5) more")
+        end
+    end
+
+    # Show coefficient statistics if they're set
+    if all(isfinite, component.coefficients)
+        coeff_min = minimum(component.coefficients)
+        coeff_max = maximum(component.coefficients)
+        coeff_mean = sum(component.coefficients) / length(component.coefficients)
+        println(io, "  Coefficients: min=$coeff_min, max=$coeff_max, mean=$coeff_mean")
+    else
+        println(io, "  Coefficients: uninitialized")
+    end
+end
