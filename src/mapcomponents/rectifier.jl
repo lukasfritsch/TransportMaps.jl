@@ -5,6 +5,11 @@ function (r::Softplus)(ξ)
     return log1p(exp(ξ))  # log(1 + exp(ξ)) for numerical stability
 end
 
+# Derivative of Softplus: d/dξ log(1 + exp(ξ)) = exp(ξ)/(1 + exp(ξ)) = sigmoid(ξ)
+function derivative(r::Softplus, ξ)
+    return 1.0 / (1.0 + exp(-ξ))  # sigmoid function
+end
+
 struct ShiftedELU <: AbstractRectifierFunction
 end
 
@@ -13,11 +18,21 @@ function (r::ShiftedELU)(ξ)
     return ξ <= 0 ? exp(ξ) : ξ + 1
 end
 
+# Derivative of ShiftedELU
+function derivative(r::ShiftedELU, ξ)
+    return ξ <= 0 ? exp(ξ) : 1.0
+end
+
 struct IdentityRectifier <: AbstractRectifierFunction
 end
 
 function (r::IdentityRectifier)(ξ)
     return ξ
+end
+
+# Derivative of IdentityRectifier
+function derivative(r::IdentityRectifier, ξ)
+    return 1.0
 end
 
 # Display methods for Softplus

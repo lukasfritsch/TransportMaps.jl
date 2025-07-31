@@ -86,17 +86,17 @@ using Test
             x = [1.0, 0.5]
 
             # ∂/∂x1 of (x1 * (x2^2 - 1)) = (x2^2 - 1)
-            pd1 = partial_derivative_x(mvb, x, 1)
+            pd1 = partial_derivative_z(mvb, x, 1)
             expected1 = hermite_derivative(1, 1.0) * hermite_polynomial(2, 0.5)
             @test pd1 ≈ expected1
 
             # ∂/∂x2 of (x1 * (x2^2 - 1)) = x1 * 2*x2
-            pd2 = partial_derivative_x(mvb, x, 2)
+            pd2 = partial_derivative_z(mvb, x, 2)
             expected2 = hermite_polynomial(1, 1.0) * hermite_derivative(2, 0.5)
             @test pd2 ≈ expected2
 
             # Test gradient
-            grad = gradient_x(mvb, x)
+            grad = gradient_z(mvb, x)
             @test length(grad) == 2
             @test grad[1] ≈ pd1
             @test grad[2] ≈ pd2
@@ -112,8 +112,8 @@ using Test
             x = [1.0, 2.0]
 
             # Gradient w.r.t. x should be [2, 3]
-            grad_x = gradient_x(Psi_vec, coefficients, x)
-            @test grad_x ≈ [2.0, 3.0]
+            grad_z = gradient_z(Psi_vec, coefficients, x)
+            @test grad_z ≈ [2.0, 3.0]
 
             # Gradient w.r.t. coefficients should be the basis function values
             grad_c = gradient_coefficients(Psi_vec, x)

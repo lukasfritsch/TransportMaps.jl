@@ -35,12 +35,16 @@ quadrature = GaussHermiteWeights(3, 2)
 # where φ is the standard normal PDF.
 
 target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+#hide
+
+# Create a TargetDensity object for optimization
+target = TargetDensity(target_density, :auto_diff)
 
 # ## Optimizing the Map
 #
 # Now we optimize the map coefficients to approximate the target density:
 
-@time res = optimize!(M, target_density, quadrature)
+@time res = optimize!(M, target, quadrature)
 println("Optimization result: ", res)
 
 # ## Testing the Map
@@ -68,7 +72,7 @@ scatter(mapped_samples[:, 1], mapped_samples[:, 2],
 #
 # We can assess the quality of our approximation using the variance diagnostic:
 
-var_diag = variance_diagnostic(M, target_density, samples_z)
+var_diag = variance_diagnostic(M, target, samples_z)
 println("Variance Diagnostic: ", var_diag)
 
 # ## Interpretation

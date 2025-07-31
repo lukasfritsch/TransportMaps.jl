@@ -51,6 +51,9 @@ function correlated_gaussian(x; ρ=0.8)
     return pdf(MvNormal(zeros(2), Σ), x)
 end
 
+# Create a TargetDensity object for optimization
+target_density = TargetDensity(correlated_gaussian, :auto_diff)
+
 # ## Setting up Quadrature
 #
 # Choose an appropriate quadrature scheme for map optimization:
@@ -67,7 +70,7 @@ quadrature = GaussHermiteWeights(5, 2)  # 5 points per dimension, 2D
 # Fit the transport map to your target distribution:
 
 println("Optimizing the map...")
-@time result = optimize!(M, correlated_gaussian, quadrature)
+@time result = optimize!(M, target_density, quadrature)
 
 println("Optimization result: ", result)
 println("Final coefficients: ", getcoefficients(M))
@@ -105,7 +108,7 @@ plot(p1, p2, layout=(1,2), size=(800, 400))
 # Check how well your map approximates the target:
 
 # Variance diagnostic (should be close to 1 for good maps)
-var_diag = variance_diagnostic(M, correlated_gaussian, reference_samples)
+var_diag = variance_diagnostic(M, target_density, reference_samples)
 println("Variance diagnostic: ", var_diag)
 
 # You can also check the Jacobian determinant
@@ -120,13 +123,13 @@ println("Jacobian determinant at origin: ", det_jac)
 
 # Identity rectifier (linear map)
 M_linear = PolynomialMap(2, 2, IdentityRectifier())
-result_linear = optimize!(M_linear, correlated_gaussian, quadrature)
-var_diag_linear = variance_diagnostic(M_linear, correlated_gaussian, reference_samples)
+result_linear = optimize!(M_linear, target_density, quadrature)
+var_diag_linear = variance_diagnostic(M_linear, target_density, reference_samples)
 
 # ShiftedELU rectifier
 M_elu = PolynomialMap(2, 2, ShiftedELU())
-result_elu = optimize!(M_elu, correlated_gaussian, quadrature)
-var_diag_elu = variance_diagnostic(M_elu, correlated_gaussian, reference_samples)
+result_elu = optimize!(M_elu, target_density, quadrature)
+var_diag_elu = variance_diagnostic(M_elu, target_density, reference_samples)
 
 println("Variance diagnostics:")
 println("  Softplus: ", var_diag)
@@ -139,10 +142,11 @@ println("  ShiftedELU: ", var_diag_elu)
 
 # Define banana density
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+target_density_banana = TargetDensity(banana_density, :auto_diff)
 
 # Create a new map for this target
 M_banana = PolynomialMap(2, 2, Softplus())
-result_banana = optimize!(M_banana, banana_density, quadrature)
+result_banana = optimize!(M_banana, target_density_banana, quadrature)
 
 # Generate samples
 banana_samples = zeros(n_samples, 2)
@@ -156,7 +160,7 @@ scatter(banana_samples[:, 1], banana_samples[:, 2],
         xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
 
 # Check quality
-var_diag_banana = variance_diagnostic(M_banana, banana_density, reference_samples)
+var_diag_banana = variance_diagnostic(M_banana, target_density_banana, reference_samples)
 println("Banana distribution variance diagnostic: ", var_diag_banana)
 
 # ## Tips for Success

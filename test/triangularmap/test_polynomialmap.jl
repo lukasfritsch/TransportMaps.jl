@@ -331,4 +331,93 @@ using Test
             @test length(inv_result) == dim
         end
     end
+
+    @testset "Gradient with respect to coefficients" begin
+        # Test 2D polynomial map gradient
+        pm = PolynomialMap(2, 2, IdentityRectifier())
+
+        # Set specific coefficients for reproducible testing
+        n_total_coeffs = numbercoefficients(pm)
+        all_coeffs = randn(n_total_coeffs)
+        setcoefficients!(pm, all_coeffs)
+
+        z = [0.5, 1.2]
+
+        # Test that gradient function returns correct size
+        grad_matrix = gradient_coefficients(pm, z)
+        @test size(grad_matrix) == (2, n_total_coeffs)
+        @test all(isfinite, grad_matrix)
+
+        # Test triangular structure:
+        # - Component 1 should only depend on its own coefficients
+        # - Component 2 should only depend on coefficients from components 1 and 2
+        n_coeffs_comp1 = length(pm.components[1].coefficients)
+        n_coeffs_comp2 = length(pm.components[2].coefficients)
+
+        # Component 1 gradient should be zero for component 2's coefficients
+        @test all(grad_matrix[1, n_coeffs_comp1+1:end] .== 0)
+
+        # Component 1 gradient should be non-zero for its own coefficients
+        @test any(grad_matrix[1, 1:n_coeffs_comp1] .!= 0)
+
+        # Verify gradient using finite differences
+        ε = 1e-8
+        numerical_grad = zeros(size(grad_matrix))
+
+        for j in 1:n_total_coeffs
+            coeffs_plus = copy(all_coeffs)
+            coeffs_minus = copy(all_coeffs)
+            coeffs_plus[j] += ε
+            coeffs_minus[j] -= ε
+
+            setcoefficients!(pm, coeffs_plus)
+            f_plus = evaluate(pm, z)
+
+            setcoefficients!(pm, coeffs_minus)
+            f_minus = evaluate(pm, z)
+
+            numerical_grad[:, j] = (f_plus - f_minus) / (2 * ε)
+
+            # Reset coefficients
+            setcoefficients!(pm, all_coeffs)
+        end
+
+        # Check agreement within tolerance
+        @test all(abs.(grad_matrix - numerical_grad) .< 1e-6)
+
+        # Test with 1D map (simpler case)
+        pm_1d = PolynomialMap(1, 2, Softplus())
+        n_coeffs_1d = numbercoefficients(pm_1d)
+        setcoefficients!(pm_1d, randn(n_coeffs_1d))
+
+        z_1d = [0.8]
+        grad_1d = gradient_coefficients(pm_1d, z_1d)
+        @test size(grad_1d) == (1, n_coeffs_1d)
+        @test all(isfinite, grad_1d)
+
+        # Test with 3D map
+        pm_3d = PolynomialMap(3, 1, ShiftedELU())
+        n_coeffs_3d = numbercoefficients(pm_3d)
+        setcoefficients!(pm_3d, randn(n_coeffs_3d))
+
+        z_3d = [0.3, 0.7, 1.1]
+        grad_3d = gradient_coefficients(pm_3d, z_3d)
+        @test size(grad_3d) == (3, n_coeffs_3d)
+        @test all(isfinite, grad_3d)
+
+        # Test triangular structure for 3D
+        n_coeffs_3d_comp1 = length(pm_3d.components[1].coefficients)
+        n_coeffs_3d_comp2 = length(pm_3d.components[2].coefficients)
+        n_coeffs_3d_comp3 = length(pm_3d.components[3].coefficients)
+
+        # Component 1 should only depend on its own coefficients
+        @test all(grad_3d[1, n_coeffs_3d_comp1+1:end] .== 0)
+
+        # Component 2 should be zero for component 3's coefficients
+        @test all(grad_3d[2, n_coeffs_3d_comp1+n_coeffs_3d_comp2+1:end] .== 0)
+
+        # Test dimension mismatch
+        @test_throws AssertionError gradient_coefficients(pm, [0.5])  # Wrong dimension
+        @test_throws AssertionError gradient_coefficients(pm, [0.5, 1.0, 0.3])  # Wrong dimension
+    end
 end

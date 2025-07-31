@@ -23,14 +23,113 @@ function evaluate(M::PolynomialMap, z::AbstractArray{<:Real})
     return [evaluate(component, z[1:i]) for (i, component) in enumerate(M.components)]
 end
 
+# Gradient of the polynomial map at z
+function gradient_zk(M::PolynomialMap, z::AbstractArray{<:Real})
+    @assert length(z) == length(M.components) "Dimension mismatch: z and components must have same length"
+    # Compute the derivatives ∂Mᵏ/∂zₖ for each component
+    return [partial_derivative_zk(component, z[1:i]) for (i, component) in enumerate(M.components)]
+end
+
+# Gradient of the map with respect to the coefficients at z
+"""
+    gradient_coefficients(M::PolynomialMap, z::AbstractArray{<:Real})
+
+Compute the gradient of the polynomial map with respect to all its coefficients at point z.
+
+For a triangular polynomial map M(z) = [M¹(z₁), M²(z₁,z₂), ..., Mᵈ(z₁,...,zᵈ)],
+this function returns the gradient matrix where:
+- Each row i corresponds to component Mⁱ
+- Each column j corresponds to a coefficient across all components
+
+The coefficients are ordered by component: [c₁₁, c₁₂, ..., c₂₁, c₂₂, ..., cᵈₙ]
+where cᵢⱼ is the j-th coefficient of the i-th component.
+
+# Arguments
+- `M::PolynomialMap`: The polynomial map
+- `z::AbstractArray{<:Real}`: Point at which to evaluate the gradient
+
+# Returns
+- `Matrix{Float64}`: Gradient matrix of size (dimension × total_coefficients)
+  - Element (i,j) = ∂Mⁱ/∂cⱼ at point z
+
+# Examples
+```julia
+# Create a 2D polynomial map
+M = PolynomialMap(2, 2, Softplus())
+setcoefficients!(M, randn(numbercoefficients(M)))
+
+# Evaluate gradient at point z = [0.5, 1.2]
+z = [0.5, 1.2]
+grad_matrix = gradient_coefficients(M, z)
+
+# grad_matrix[i, j] = ∂Mⁱ/∂cⱼ
+```
+"""
+function gradient_coefficients(M::PolynomialMap, z::AbstractArray{<:Real})
+    @assert length(z) == length(M.components) "Dimension mismatch: z and components must have same length"
+
+    n_dimensions = length(M.components)
+    n_total_coeffs = numbercoefficients(M)
+
+    # Initialize gradient matrix: (n_dimensions × n_total_coeffs)
+    gradient_matrix = zeros(Float64, n_dimensions, n_total_coeffs)
+
+    # Track coefficient index across all components
+    coeff_offset = 1
+
+    for (i, component) in enumerate(M.components)
+        n_component_coeffs = length(component.coefficients)
+
+        # For component i, compute gradient with respect to its own coefficients
+        # This gives ∂Mⁱ/∂cᵢⱼ for all j in component i
+        component_grad = gradient_coefficients(component, z[1:i])
+
+        # Fill in the gradient matrix
+        gradient_matrix[i, coeff_offset:coeff_offset + n_component_coeffs - 1] = component_grad
+
+        # All other coefficients don't affect this component (triangular structure)
+        # So gradient_matrix[i, other_indices] remains zero
+
+        coeff_offset += n_component_coeffs
+    end
+
+    return gradient_matrix
+end
+
 # Compute the Jacobian determinant of the polynomial map at z
 function jacobian(M::PolynomialMap, z::AbstractArray{<:Real})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
+    # Compute the jacobian determinant as ∏ₖ ∂Mᵏ/∂zₖ
+    return prod(gradient_zk(M, z))
+end
 
-    # Compute the derivatives ∂Mᵏ/∂xₖ for each component
-    diagonal_derivatives = [partial_derivative_xk(component, z[1:i]) for (i, component) in enumerate(M.components)]
+# Compute the gradient of log|det J_M| with respect to coefficients
+function jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{Float64})
+    n_coeffs = numbercoefficients(M)
+    gradient = zeros(Float64, n_coeffs)
 
-    return prod(diagonal_derivatives)
+    # For triangular maps: log|det J_M| = Σᵢ log(∂Mᵢ/∂zᵢ)
+    # So ∂log|det J_M|/∂c = Σᵢ (1/(∂Mᵢ/∂zᵢ)) * ∂²Mᵢ/(∂zᵢ∂c)
+
+    coeff_offset = 1
+    for (i, component) in enumerate(M.components)
+        n_comp_coeffs = length(component.coefficients)
+
+        # Compute ∂Mᵢ/∂zᵢ (diagonal element of Jacobian)
+        diagonal_deriv = partial_derivative_zk(component, z[1:i])
+
+        # Compute gradient of ∂Mᵢ/∂zᵢ with respect to component's coefficients
+        # This requires the gradient of partial_derivative_xk w.r.t. coefficients
+        comp_grad = partial_derivative_zk_gradient_coefficients(component, z[1:i])
+
+        # Add contribution: (1/diagonal_deriv) * comp_grad
+        coeff_range = coeff_offset:coeff_offset + n_comp_coeffs - 1
+        gradient[coeff_range] += comp_grad / diagonal_deriv
+
+        coeff_offset += n_comp_coeffs
+    end
+
+    return gradient
 end
 
 # Compute the inverse of the polynomial map at x

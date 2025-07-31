@@ -44,7 +44,7 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
     integrand(x̄) = begin
         x_temp = copy(x)
         x_temp[map_component.index] = x̄
-        ∂f = partial_derivative_x(map_component.basisfunctions, map_component.coefficients, x_temp, map_component.index)
+        ∂f = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, x_temp, map_component.index)
         return map_component.rectifier(∂f)
     end
 
@@ -55,7 +55,7 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
 end
 
 # Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ)
-function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{<:Real})
+function partial_derivative_zk(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
 
     # Define the integrand for the partial derivative
@@ -66,10 +66,103 @@ function partial_derivative_xk(map_component::PolynomialMapComponent, x::Vector{
     end
 
     # ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ)
-    ∂fᵏ = partial_derivative_x(map_component.basisfunctions, map_component.coefficients, x, map_component.index)
+    ∂fᵏ = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, x, map_component.index)
     ∂Mᵏ = map_component.rectifier(∂fᵏ)
 
     return ∂Mᵏ
+end
+
+# Compute gradient of ∂Mᵏ/∂zₖ with respect to coefficients
+function partial_derivative_zk_gradient_coefficients(component::PolynomialMapComponent, z::Vector{Float64})
+    # ∂Mᵏ/∂zₖ = g(∂f/∂zₖ), where g is the rectifier
+    # So ∂²Mᵏ/(∂zₖ∂c) = g'(∂f/∂zₖ) * ∂²f/(∂zₖ∂c)
+
+    # Compute ∂f/∂zₖ
+    ∂f = partial_derivative_z(component.basisfunctions, component.coefficients, z, component.index)
+
+    # Compute g'(∂f/∂zₖ)
+    g_prime = derivative(component.rectifier, ∂f)
+
+    # Compute ∂²f/(∂zₖ∂c) = [∂ψⱼ/∂zₖ for j in 1:n_coeffs]
+    n_coeffs = length(component.coefficients)
+    ∂²f_∂zₖ∂c = zeros(Float64, n_coeffs)
+
+    for j in 1:n_coeffs
+        ∂²f_∂zₖ∂c[j] = partial_derivative_z(component.basisfunctions[j], z, component.index)
+    end
+
+    return g_prime * ∂²f_∂zₖ∂c
+end
+
+
+# Gradient of the map component with respect to the coefficients at z
+"""
+    gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{<:Real})
+
+Compute the gradient of the polynomial map component with respect to its coefficients at point z.
+
+For a polynomial map component Mᵏ(z) defined as:
+Mᵏ(z) = f(z₁, ..., z_{k-1}, 0) + ∫₀^{z_k} g(∂f/∂x_k) dx_k
+
+where f(z) = Σᵢ cᵢ ψᵢ(z) and g is the rectifier function, the gradient is:
+∂Mᵏ/∂cⱼ = ψⱼ(z₁, ..., z_{k-1}, 0) + ∫₀^{z_k} g'(∂f/∂x_k) ∂ψⱼ/∂x_k dx_k
+
+# Arguments
+- `map_component::PolynomialMapComponent`: The polynomial map component
+- `z::Vector{<:Real}`: Point at which to evaluate the gradient (must match dimension of basis functions)
+
+# Returns
+- `Vector{Float64}`: Gradient vector with respect to coefficients, same length as `map_component.coefficients`
+
+# Examples
+```julia
+# Create a 2D polynomial map component for the 2nd coordinate
+pmc = PolynomialMapComponent(2, 2, Softplus())
+setcoefficients!(pmc, randn(length(pmc.coefficients)))
+
+# Evaluate gradient at point z = [0.5, 1.2]
+z = [0.5, 1.2]
+grad = gradient_coefficients(pmc, z)
+```
+"""
+function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{<:Real})
+    @assert length(z) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: z and basis functions must have same length"
+
+    # First part: gradient of f₀ = f(x₁, ..., x_{k-1}, 0) w.r.t. coefficients
+    z₀ = copy(z)
+    z₀[map_component.index] = 0.0
+    ∇f₀ = gradient_coefficients(map_component.basisfunctions, z₀)
+
+    # Second part: gradient of the integral ∫₀^{z_k} g(∂f/∂x_k) dx_k w.r.t. coefficients
+    # For each coefficient cⱼ, we need: ∫₀^{z_k} g'(∂f/∂x_k) * ∂²f/∂x_k∂cⱼ dx_k
+    # Since ∂²f/∂x_k∂cⱼ = ∂ψⱼ/∂x_k (basis function derivative), we can compute this
+
+    n_coeffs = length(map_component.coefficients)
+    ∇integral = zeros(Float64, n_coeffs)
+
+    for j in 1:n_coeffs
+        # Integrand for coefficient j: g'(∂f/∂x_k) * ∂ψⱼ/∂x_k
+        integrand_j(x̄) = begin
+            z_temp = copy(z)
+            z_temp[map_component.index] = x̄
+
+            # Compute ∂f/∂x_k at this point
+            ∂f = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, z_temp, map_component.index)
+
+            # Compute derivative of rectifier g'(∂f/∂x_k)
+            g_prime = derivative(map_component.rectifier, ∂f)
+
+            # Compute ∂ψⱼ/∂x_k (derivative of j-th basis function w.r.t. x_k)
+            ∂ψⱼ = partial_derivative_z(map_component.basisfunctions[j], z_temp, map_component.index)
+
+            return g_prime * ∂ψⱼ
+        end
+
+        # Integrate from 0 to z[k]
+        ∇integral[j] = gaussquadrature(integrand_j, 100, 0., z[map_component.index])
+    end
+
+    return ∇f₀ + ∇integral
 end
 
 # Inverse map for the polynomial map component using one-dimensional root finding
@@ -82,7 +175,7 @@ function inverse(
 
     # Define the residual
     fun(xₖ) = evaluate(map_component, [xₖ₋₁..., xₖ]) - zₖ
-    ∂fun(xₖ) = partial_derivative_xk(map_component, [xₖ₋₁..., xₖ])
+    ∂fun(xₖ) = partial_derivative_zk(map_component, [xₖ₋₁..., xₖ])
 
     # Define bounds for the root-finding
     lower, upper = _inverse_bound(fun)
