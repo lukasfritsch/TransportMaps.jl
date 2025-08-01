@@ -149,10 +149,9 @@ end
 function inverse_jacobian(M::PolynomialMap, x::AbstractArray{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
-    # Compute the Jacobian determinant of the inverse map
-    J_inv = jacobian(M, inverse(M, x))
-
-    return 1.0 / J_inv
+    # For triangular maps, det(J_{M⁻¹}(x)) = 1/det(J_M(M⁻¹(x)))
+    # where J_M is the Jacobian of the forward map M
+    return 1.0 / jacobian(M, inverse(M, x))
 end
 
 # Pullback density: Map from reference to target space
@@ -162,7 +161,7 @@ function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     reference_density(z) = pdf(MvNormal(zeros(length(M.components)), I(length(M.components))), z)
 
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
-    return reference_density(inverse(M, x) * abs(inverse_jacobian(M, x)))
+    return reference_density(inverse(M, x)) * abs(inverse_jacobian(M, x))
 end
 
 # Pushforward density: Map from target to reference space

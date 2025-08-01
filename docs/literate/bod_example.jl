@@ -123,6 +123,18 @@ contour!(x₁, x₂, posterior_values, colormap=:viridis, label="Posterior Densi
 #md savefig("samples-bod.svg"); nothing # hide
 # ![BOD Samples](samples-bod.svg)
 
+# Finally, we can compute the pullback density to visualize how well our transport map approximates the posterior:
+posterior_pullback = [pullback(M, [x₁, x₂]) for x₂ in x₂, x₁ in x₁]
+
+contour(x₁, x₂, posterior_values./maximum(posterior_values);
+    levels = 5, colormap = :viridis, colorbar = false,
+    label="Target", xlabel="x₁", ylabel="x₂")
+contour!(x₁, x₂, posterior_pullback./maximum(posterior_pullback);
+    levels = 5, colormap = :viridis, linestyle=:dash,
+    label="Pullback")
+#md savefig("pullback-bod.svg"); nothing # hide
+# ![BOD Pullback Density](pullback-bod.svg)
+
 # ## Model Parameter Interpretation
 #
 # The posterior samples provide uncertainty quantification for the BOD model parameters:

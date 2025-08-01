@@ -57,6 +57,8 @@ export numberdimensions
 
 # Quadrature and optimization
 export gaussquadrature
+export kldivergence
+export kldivergence_gradient
 export optimize!
 export variance_diagnostic
 
