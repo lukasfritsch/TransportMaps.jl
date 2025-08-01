@@ -155,7 +155,7 @@ function inverse_jacobian(M::PolynomialMap, x::AbstractArray{<:Real})
     return 1.0 / J_inv
 end
 
-# Pullback density: Map from reference to target space 𝑋 ↦ 𝑍
+# Pullback density: Map from reference to target space
 function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
@@ -165,7 +165,7 @@ function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     return reference_density(inverse(M, x) * abs(inverse_jacobian(M, x)))
 end
 
-# Pushforward density: Map from target to reference space 𝑍 ↦ 𝑋
+# Pushforward density: Map from target to reference space
 function pushforward(M::PolynomialMap, target_density::Function, z::AbstractArray{<:Real})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 

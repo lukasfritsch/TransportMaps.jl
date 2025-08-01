@@ -104,6 +104,8 @@ p2 = scatter(target_samples[:, 1], target_samples[:, 2],
             xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
 
 plot(p1, p2, layout=(1,2), size=(800, 400))
+#md savefig("samples.svg"); nothing # hide
+# ![Transport Map Samples](samples.svg)
 
 # ## Evaluating Map Quality
 #
@@ -159,10 +161,18 @@ for i in 1:n_samples
     banana_samples[i, :] = evaluate(M_banana, reference_samples[i, :])
 end
 
+
 # Visualize the banana distribution
+x1_grid = range(-3, 3, length=100)
+x2_grid = range(-3, 6, length=100)
+posterior_values = [banana_density([x₁, x₂]) for x₂ in x2_grid, x₁ in x1_grid]
+
 scatter(banana_samples[:, 1], banana_samples[:, 2],
         alpha=0.6, title="Banana Distribution Samples",
         xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
+contour!(x1_grid, x2_grid, posterior_values, colormap=:viridis, label="Posterior Density")
+#md savefig("banana_samples.svg"); nothing # hide
+# ![Banana Distribution Samples](banana_samples.svg)
 
 # Check quality
 var_diag_banana = variance_diagnostic(M_banana, target_density_banana, reference_samples)

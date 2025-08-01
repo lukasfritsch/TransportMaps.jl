@@ -66,7 +66,8 @@ scatter(mapped_samples[:, 1], mapped_samples[:, 2],
            label="Mapped Samples", alpha=0.5, color=2,
            title="Transport Map Approximation of Banana Distribution",
            xlabel="x₁", ylabel="x₂")
-# #md savefig("samples-banana.svg"); nothing # hide
+#md savefig("samples-banana.svg"); nothing # hide
+# ![Banana Samples](samples-banana.svg)
 
 # ## Quality Assessment
 #

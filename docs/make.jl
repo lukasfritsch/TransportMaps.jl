@@ -26,6 +26,14 @@ Literate.markdown(
     credit = false
 )
 
+# Process BOD example
+Literate.markdown(
+    joinpath(LITERATE_DIR, "bod_example.jl"),
+    joinpath(OUTPUT_DIR, "Examples");
+    documenter = true,
+    credit = false
+)
+
 makedocs(
     sitename = "TransportMaps.jl",
     format = Documenter.HTML(
@@ -39,7 +47,8 @@ makedocs(
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
         "Examples" => [
-            "Banana Distribution" => "Examples/banana_example.md"
+            "Banana Distribution" => "Examples/banana_example.md",
+            "BOD Parameter Estimation" => "Examples/bod_example.md"
         ],
         "API Reference" => "api.md",
         "References" => "references.md"
