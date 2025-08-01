@@ -427,24 +427,24 @@ using LinearAlgebra
         # Test 1D case
         pm_1d = PolynomialMap(1, 1, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])  # Linear map: f(z) = z
-        
+
         x_1d = [0.5]
         inv_jac_1d = inverse_jacobian(pm_1d, x_1d)
         @test inv_jac_1d ≈ 1.0 atol=1e-10  # For identity map, inverse jacobian should be 1
-        
+
         # Test 2D case with simple map
         pm_2d = PolynomialMap(2, 1, IdentityRectifier())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])  # First component: f₁(z₁) = z₁
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])  # Second component: f₂(z₁,z₂) = z₂
-        
+
         x_2d = [0.3, 0.7]
         inv_jac_2d = inverse_jacobian(pm_2d, x_2d)
         @test inv_jac_2d ≈ 1.0 atol=1e-10  # For identity-like map, inverse jacobian should be 1
-        
+
         # Test with Softplus rectifier (should be positive)
         pm_softplus = PolynomialMap(2, 2, Softplus())
         setcoefficients!(pm_softplus, randn(numbercoefficients(pm_softplus)) * 0.1)
-        
+
         x_test = [0.5, 1.0]
         try
             inv_jac_softplus = inverse_jacobian(pm_softplus, x_test)
@@ -454,22 +454,22 @@ using LinearAlgebra
             # Skip if inverse fails due to numerical issues
             @test true
         end
-        
+
         # Test consistency: 1/jacobian(M, inverse(M, x)) should equal inverse_jacobian(M, x)
         pm_test = PolynomialMap(2, 1, Softplus())
         setcoefficients!(pm_test, abs.(randn(numbercoefficients(pm_test))) .+ 0.1)  # Positive coefficients
-        
+
         x_consistency = [0.2, 0.8]
         try
             z = inverse(pm_test, x_consistency)
             forward_jac = jacobian(pm_test, z)
             inv_jac_direct = inverse_jacobian(pm_test, x_consistency)
-            
+
             @test abs(1.0 / forward_jac - inv_jac_direct) < 1e-10
         catch
             @test true  # Skip if numerical issues
         end
-        
+
         # Test dimension mismatch
         @test_throws AssertionError inverse_jacobian(pm_2d, [1.0])
         @test_throws AssertionError inverse_jacobian(pm_2d, [1.0, 2.0, 3.0])
@@ -479,27 +479,27 @@ using LinearAlgebra
         # Test 1D case with identity map
         pm_1d = PolynomialMap(1, 1, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])  # Linear map: f(z) = z
-        
+
         x_1d = [0.5]
         pb_1d = pullback(pm_1d, x_1d)
         # For identity map, pullback should equal reference density at x
-        ref_1d = pdf(MvNormal([0.0], [1.0]), x_1d)
+        ref_1d = pdf(MvNormal([0.0], I(1)), x_1d)
         @test pb_1d ≈ ref_1d atol=1e-10
-        
+
         # Test 2D case with identity-like map
         pm_2d = PolynomialMap(2, 1, IdentityRectifier())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
-        
+
         x_2d = [0.3, 0.7]
         pb_2d = pullback(pm_2d, x_2d)
         ref_2d = pdf(MvNormal(zeros(2), I(2)), x_2d)
         @test pb_2d ≈ ref_2d atol=1e-10
-        
+
         # Test mathematical consistency: pullback(M, x) = reference_density(inverse(M, x)) * |inverse_jacobian(M, x)|
         pm_test = PolynomialMap(2, 2, Softplus())
         setcoefficients!(pm_test, randn(numbercoefficients(pm_test)) * 0.1)
-        
+
         test_points = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
         for x in test_points
             try
@@ -508,7 +508,7 @@ using LinearAlgebra
                 ref_val = pdf(MvNormal(zeros(2), I(2)), z)
                 inv_jac = inverse_jacobian(pm_test, x)
                 expected = ref_val * abs(inv_jac)
-                
+
                 @test abs(pb_val - expected) < 1e-10
                 @test pb_val ≥ 0  # Density should be non-negative
                 @test isfinite(pb_val)
@@ -516,12 +516,12 @@ using LinearAlgebra
                 @test true  # Skip if numerical issues
             end
         end
-        
+
         # Test with different polynomial degrees
         for degree in [1, 2, 3]
             pm_deg = PolynomialMap(2, degree, Softplus())
             setcoefficients!(pm_deg, randn(numbercoefficients(pm_deg)) * 0.05)
-            
+
             x_test = [0.1, 0.2]
             try
                 pb_val = pullback(pm_deg, x_test)
@@ -531,7 +531,7 @@ using LinearAlgebra
                 @test true  # Skip if numerical issues
             end
         end
-        
+
         # Test dimension mismatch
         @test_throws AssertionError pullback(pm_2d, [1.0])
         @test_throws AssertionError pullback(pm_2d, [1.0, 2.0, 3.0])
@@ -540,29 +540,29 @@ using LinearAlgebra
     @testset "Pushforward Density" begin
         # Test with simple target density
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
-        
+
         # Test 1D case
         pm_1d = PolynomialMap(1, 1, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])
-        
+
         z_1d = [0.5]
         pf_1d = pushforward(pm_1d, target_density, z_1d)
         # For identity map with standard normal target, pushforward should equal target at z
         @test pf_1d ≈ target_density(z_1d) atol=1e-10
-        
+
         # Test 2D case
         pm_2d = PolynomialMap(2, 1, IdentityRectifier())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
-        
+
         z_2d = [0.3, 0.7]
         pf_2d = pushforward(pm_2d, target_density, z_2d)
         @test pf_2d ≈ target_density(z_2d) atol=1e-10
-        
+
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
         pm_test = PolynomialMap(2, 2, Softplus())
         setcoefficients!(pm_test, randn(numbercoefficients(pm_test)) * 0.1)
-        
+
         test_points = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
         for z in test_points
             try
@@ -571,7 +571,7 @@ using LinearAlgebra
                 target_val = target_density(x)
                 jac_val = jacobian(pm_test, z)
                 expected = target_val * abs(jac_val)
-                
+
                 @test abs(pf_val - expected) < 1e-10
                 @test pf_val ≥ 0  # Density should be non-negative
                 @test isfinite(pf_val)
@@ -579,14 +579,14 @@ using LinearAlgebra
                 @test true  # Skip if numerical issues
             end
         end
-        
+
         # Test with different target densities
         uniform_target(x) = all(0 ≤ xi ≤ 1 for xi in x) ? 1.0 : 0.0
         exponential_target(x) = prod(exp(-xi) for xi in x if xi ≥ 0)
-        
+
         pm_simple = PolynomialMap(2, 1, Softplus())
         setcoefficients!(pm_simple, ones(numbercoefficients(pm_simple)) * 0.1)
-        
+
         z_test = [0.2, 0.3]
         try
             pf_uniform = pushforward(pm_simple, uniform_target, z_test)
@@ -598,7 +598,7 @@ using LinearAlgebra
         catch
             @test true  # Skip if numerical issues
         end
-        
+
         # Test dimension mismatch
         @test_throws AssertionError pushforward(pm_2d, target_density, [1.0])
         @test_throws AssertionError pushforward(pm_2d, target_density, [1.0, 2.0, 3.0])
@@ -608,42 +608,42 @@ using LinearAlgebra
         # Test the fundamental relationship between pullback and pushforward
         pm = PolynomialMap(2, 2, Softplus())
         setcoefficients!(pm, randn(numbercoefficients(pm)) * 0.1)
-        
+
         # Define a simple target density
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
-        
+
         # Test points
         z_point = [0.3, 0.4]
-        
+
         try
             # Map z to x
             x_point = evaluate(pm, z_point)
-            
+
             # Compute pushforward at z
             pf_val = pushforward(pm, target_density, z_point)
-            
+
             # Compute pullback at x
             pb_val = pullback(pm, x_point)
-            
+
             # For standard normal target, these should be related by:
             # pushforward(M, π_ref, z) * reference_density(z) = pullback(M, M(z)) * π_ref(M(z))
             # When π_ref is standard normal, this simplifies to verification of the transform
-            
+
             @test isfinite(pf_val)
             @test isfinite(pb_val)
             @test pf_val ≥ 0
             @test pb_val ≥ 0
-            
-            # Additional consistency check: 
+
+            # Additional consistency check:
             # For z sampled from reference, M(z) should have density pullback(M, M(z))
             reference_val = pdf(MvNormal(zeros(2), I(2)), z_point)
-            
+
             # The relationship: reference_density(z) = pullback(M, M(z)) when M is the correct transport map
             # This is an equality check for perfect transport maps
             # For our approximate maps, we just check they're in reasonable ranges
             ratio = pb_val / reference_val
             @test 0.01 < ratio < 100  # Should be within reasonable bounds
-            
+
         catch
             @test true  # Skip if numerical issues
         end
