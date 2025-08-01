@@ -39,7 +39,7 @@ target = TargetDensity(posterior, :auto_diff)</code></pre><pre class="documenter
   Components:
     Component 1: 4 basis functions
     Component 2: 10 basis functions
-  Coefficients: min=5.0e-324, max=7.748597204865894e-304, mean=1.1068187874924267e-304
+  Coefficients: min=0.0, max=1.390671161567e-309, mean=2.63987836333836e-310
 </code></pre><p>Set up Gauss-Hermite quadrature for optimization:</p><pre><code class="language-julia hljs">quadrature = GaussHermiteWeights(10, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">GaussHermiteWeights:
   Number of points: 100
   Dimensions: 2
@@ -55,7 +55,7 @@ target = TargetDensity(posterior, :auto_diff)</code></pre><pre class="documenter
     [-0.48493570751550125, -4.859462828332312] → weight: 1.4856333877315967e-6
     ... and 95 more
 </code></pre><p>Optimize the map coefficients:</p><pre><code class="language-julia hljs">@time res = optimize!(M, target, quadrature)
-println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> 13.020517 seconds (168.96 M allocations: 9.833 GiB, 6.21% gc time, 3.45% compilation time)
+println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> 11.883163 seconds (168.96 M allocations: 9.833 GiB, 5.15% gc time, 3.76% compilation time)
 Optimization result:  * Status: success
 
  * Candidate solution
@@ -72,51 +72,51 @@ Optimization result:  * Status: success
     |g(x)|                 = 6.68e-09 ≤ 1.0e-08
 
  * Work counters
-    Seconds run:   13  (vs limit Inf)
+    Seconds run:   11  (vs limit Inf)
     Iterations:    123
     f(x) calls:    368
     ∇f(x) calls:   368</code></pre><h2 id="Generating-Posterior-Samples"><a class="docs-heading-anchor" href="#Generating-Posterior-Samples">Generating Posterior Samples</a><a id="Generating-Posterior-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Posterior-Samples" title="Permalink"></a></h2><p>Generate samples from the standard normal distribution and map them to the posterior:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
- -0.593954   -0.225482
- -1.23866     0.107101
- -0.595755    0.431038
-  0.70638    -1.09901
-  0.405676    0.696498
-  0.630101    0.587051
- -1.35903     0.235258
- -2.09966     0.502246
- -0.654834    1.07258
-  1.19717    -1.59149
+ -0.71734    -0.174579
+  1.54274    -0.204213
+  1.52108    -0.425212
+  0.702431   -0.254735
+ -0.184504    1.03153
+  0.0873686  -0.0962195
+ -0.598102    0.566983
+  0.438224    0.010725
+ -0.082205   -0.395963
+ -0.139243   -0.429648
   ⋮          
- -0.0892958  -2.04223
-  1.02665     1.91685
- -2.50304    -0.340481
- -0.428218    0.129756
-  0.626765    0.304077
- -0.70252    -2.29195
- -0.721286   -1.01867
-  0.574433   -0.557474
-  0.841172    1.35866</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = reduce(vcat, [evaluate(M, z)&#39; for z in eachrow(samples_z)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
- -0.208115   1.16413
- -0.317408   1.61698
- -0.208472   1.33652
-  0.183621   0.364853
-  0.0619058  0.751672
-  0.150325   0.600431
- -0.334485   1.73423
- -0.424579   2.28637
- -0.219998   1.58217
-  0.446502   0.112034
+  0.644835   -0.182378
+ -0.883518   -0.729537
+  0.830809   -0.241907
+  0.835752   -2.01087
+ -0.316602   -0.651423
+  0.734829   -0.898434
+ -0.505107    0.919138
+ -0.674642   -0.0607392
+  0.570508    0.660668</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = reduce(vcat, [evaluate(M, z)&#39; for z in eachrow(samples_z)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+ -0.231809   1.24385
+  0.695389   0.0781555
+  0.677921   0.0717312
+  0.181853   0.457815
+ -0.116857   1.21751
+ -0.0428005  0.810542
+ -0.208937   1.37754
+  0.073908   0.631075
+ -0.0904372  0.852416
+ -0.10537    0.876934
   ⋮          
- -0.092322   0.607239
-  0.344612   0.527704
- -0.466248   1.92563
- -0.173706   1.1546
-  0.148909   0.565312
- -0.229043   0.811193
- -0.232542   1.04941
-  0.127112   0.487422
-  0.246971   0.574647</code></pre><h2 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h2><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
-println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.031997037267751126</code></pre><h2 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h2><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">x₁ = range(-0.5, 1.5, length=100)
+  0.15662    0.495776
+ -0.261437   1.18796
+  0.241885   0.394675
+  0.244306   0.220396
+ -0.148667   0.928662
+  0.196498   0.372475
+ -0.19006    1.41935
+ -0.223783   1.24982
+  0.125508   0.645758</code></pre><h2 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h2><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
+println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.011699325538388386</code></pre><h2 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h2><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">x₁ = range(-0.5, 1.5, length=100)
 x₂ = range(-0.5, 3, length=100)
 
 posterior_values = [posterior([x₁, x₂]) for x₂ in x₂, x₁ in x₁]
@@ -131,4 +131,4 @@ contour(x₁, x₂, posterior_values./maximum(posterior_values);
     label=&quot;Target&quot;, xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;)
 contour!(x₁, x₂, posterior_pullback./maximum(posterior_pullback);
     levels = 5, colormap = :viridis, linestyle=:dash,
-    label=&quot;Pullback&quot;)</code></pre><p><img src="../pullback-bod.svg" alt="BOD Pullback Density"/></p><h2 id="Model-Parameter-Interpretation"><a class="docs-heading-anchor" href="#Model-Parameter-Interpretation">Model Parameter Interpretation</a><a id="Model-Parameter-Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Model-Parameter-Interpretation" title="Permalink"></a></h2><p>The posterior samples provide uncertainty quantification for the BOD model parameters:</p><ul><li><strong>x₁</strong>: Controls the maximum BOD level (parameter A)</li><li><strong>x₂</strong>: Controls the rate of BOD development (parameter B)</li></ul><p>The correlation structure in the posterior reflects the interdependence between these parameters in explaining the observed data.</p><h2 id="Further-Analysis"><a class="docs-heading-anchor" href="#Further-Analysis">Further Analysis</a><a id="Further-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Analysis" title="Permalink"></a></h2><p>You can extend this example by:</p><ul><li>Increasing the polynomial degree for higher accuracy</li><li>Using different rectifier functions for improved monotonicity</li><li>Adding more measurement data points</li><li>Comparing with MCMC methods for validation</li><li>Performing forward uncertainty propagation through the model</li></ul><p>This example demonstrates the effectiveness of transport maps for Bayesian inference in environmental modeling applications, providing efficient posterior sampling for parameter estimation and uncertainty quantification.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_example/">« Banana Distribution</a><a class="docs-footer-nextpage" href="../../api/">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 09:39">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    label=&quot;Pullback&quot;)</code></pre><p><img src="../pullback-bod.svg" alt="BOD Pullback Density"/></p><h2 id="Model-Parameter-Interpretation"><a class="docs-heading-anchor" href="#Model-Parameter-Interpretation">Model Parameter Interpretation</a><a id="Model-Parameter-Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Model-Parameter-Interpretation" title="Permalink"></a></h2><p>The posterior samples provide uncertainty quantification for the BOD model parameters:</p><ul><li><strong>x₁</strong>: Controls the maximum BOD level (parameter A)</li><li><strong>x₂</strong>: Controls the rate of BOD development (parameter B)</li></ul><p>The correlation structure in the posterior reflects the interdependence between these parameters in explaining the observed data.</p><h2 id="Further-Analysis"><a class="docs-heading-anchor" href="#Further-Analysis">Further Analysis</a><a id="Further-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Analysis" title="Permalink"></a></h2><p>You can extend this example by:</p><ul><li>Increasing the polynomial degree for higher accuracy</li><li>Using different rectifier functions for improved monotonicity</li><li>Adding more measurement data points</li><li>Comparing with MCMC methods for validation</li><li>Performing forward uncertainty propagation through the model</li></ul><p>This example demonstrates the effectiveness of transport maps for Bayesian inference in environmental modeling applications, providing efficient posterior sampling for parameter estimation and uncertainty quantification.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_example/">« Banana Distribution</a><a class="docs-footer-nextpage" href="../../api/">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 12:34">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

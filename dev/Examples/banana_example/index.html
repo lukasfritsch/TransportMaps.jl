@@ -10,7 +10,7 @@ using Plots</code></pre><h2 id="Creating-the-Transport-Map"><a class="docs-headi
   Components:
     Component 1: 3 basis functions
     Component 2: 6 basis functions
-  Coefficients: min=6.9379069205562e-310, max=6.9379144493135e-310, mean=6.9379081993816e-310
+  Coefficients: min=0.0, max=6.9052647428229e-310, mean=3.069004541206e-310
 </code></pre><h2 id="Setting-up-Quadrature"><a class="docs-heading-anchor" href="#Setting-up-Quadrature">Setting up Quadrature</a><a id="Setting-up-Quadrature-1"></a><a class="docs-heading-anchor-permalink" href="#Setting-up-Quadrature" title="Permalink"></a></h2><p>For optimization, we need to specify quadrature weights. Here we use Gauss-Hermite quadrature with 3 points per dimension.</p><pre><code class="language-julia hljs">quadrature = GaussHermiteWeights(3, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">GaussHermiteWeights:
   Number of points: 9
   Dimensions: 2
@@ -29,7 +29,7 @@ using Plots</code></pre><h2 id="Creating-the-Transport-Map"><a class="docs-headi
     [-1.2560739669470201e-15, 1.7320508075688776] → weight: 0.11111111111111116
     [1.7320508075688776, 1.7320508075688776] → weight: 0.02777777777777786
 </code></pre><h2 id="Defining-the-Target-Density"><a class="docs-heading-anchor" href="#Defining-the-Target-Density">Defining the Target Density</a><a id="Defining-the-Target-Density-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-Target-Density" title="Permalink"></a></h2><p>The banana distribution has the density:</p><p class="math-container">\[p(x) = \phi(x_1) \cdot \phi(x_2 - x_1^2)\]</p><p>where φ is the standard normal PDF.</p><pre><code class="language-julia hljs">target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">target_density (generic function with 1 method)</code></pre><p>Create a TargetDensity object for optimization</p><pre><code class="language-julia hljs">target = TargetDensity(target_density, :auto_diff)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">TargetDensity(gradient_type=:auto_diff)</code></pre><h2 id="Optimizing-the-Map"><a class="docs-heading-anchor" href="#Optimizing-the-Map">Optimizing the Map</a><a id="Optimizing-the-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Optimizing-the-Map" title="Permalink"></a></h2><p>Now we optimize the map coefficients to approximate the target density:</p><pre><code class="language-julia hljs">@time res = optimize!(M, target, quadrature)
-println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  3.953557 seconds (9.08 M allocations: 471.638 MiB, 1.91% gc time, 98.02% compilation time)
+println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  3.840223 seconds (9.07 M allocations: 471.228 MiB, 1.96% gc time, 98.57% compilation time)
 Optimization result:  * Status: success
 
  * Candidate solution
@@ -50,47 +50,47 @@ Optimization result:  * Status: success
     Iterations:    12
     f(x) calls:    33
     ∇f(x) calls:   33</code></pre><h2 id="Testing-the-Map"><a class="docs-heading-anchor" href="#Testing-the-Map">Testing the Map</a><a id="Testing-the-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Testing-the-Map" title="Permalink"></a></h2><p>Let&#39;s generate some samples from the standard normal distribution and map them through our optimized transport map:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
- -1.53574   -0.499964
- -0.633959   1.24372
-  0.717155   1.19736
- -0.359193  -1.15292
- -0.504957   1.39792
- -1.02402    0.84403
-  0.738384   0.41098
-  1.78613    0.271112
- -0.557223  -0.94345
-  0.276077  -1.56968
+ -0.363351  -1.72711
+  0.995816   1.83259
+ -0.252591   0.897755
+  1.38192   -1.21173
+  1.43005   -0.606932
+ -1.1969    -0.730696
+  0.830884   0.761798
+  1.63484    0.943607
+  1.03356    1.23762
+  0.085187   0.768682
   ⋮         
-  0.882175   2.15999
-  0.292605  -0.403204
-  0.348351   1.80875
- -0.362977   0.0872829
- -0.601292  -0.702864
- -1.03027   -3.4287
- -0.141354  -1.36126
- -0.855488   0.0500465
-  0.539941   2.3368</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = reduce(vcat, [evaluate(M, x)&#39; for x in eachrow(samples_z)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
- -1.53574    1.85854
- -0.633959   1.64562
-  0.717155   1.71167
- -0.359193  -1.0239
- -0.504957   1.6529
- -1.02402    1.89266
-  0.738384   0.956191
-  1.78613    3.46136
- -0.557223  -0.632952
-  0.276077  -1.49346
+  1.75356   -2.80874
+  0.091282  -1.09038
+  0.473727   0.912568
+  1.15469    0.547368
+ -1.03813   -0.18555
+ -0.71072   -1.62757
+ -0.893282  -1.32394
+ -0.463604   0.97779
+ -0.895296  -0.459703</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = reduce(vcat, [evaluate(M, x)&#39; for x in eachrow(samples_z)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+ -0.363351  -1.59508
+  0.995816   2.82424
+ -0.252591   0.961558
+  1.38192    0.697991
+  1.43005    1.43812
+ -1.1969     0.701873
+  0.830884   1.45217
+  1.63484    3.61632
+  1.03356    2.30587
+  0.085187   0.775939
   ⋮         
-  0.882175   2.93822
-  0.292605  -0.317586
-  0.348351   1.9301
- -0.362977   0.219035
- -0.601292  -0.341312
- -1.03027   -2.36726
- -0.141354  -1.34128
- -0.855488   0.781905
-  0.539941   2.62833</code></pre><h2 id="Visualizing-Results"><a class="docs-heading-anchor" href="#Visualizing-Results">Visualizing Results</a><a id="Visualizing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-Results" title="Permalink"></a></h2><p>Let&#39;s create a scatter plot of the mapped samples to see how well our transport map approximates the banana distribution:</p><pre><code class="language-julia hljs">scatter(mapped_samples[:, 1], mapped_samples[:, 2],
+  1.75356    0.266223
+  0.091282  -1.08205
+  0.473727   1.13699
+  1.15469    1.88068
+ -1.03813    0.892155
+ -0.71072   -1.12245
+ -0.893282  -0.525989
+ -0.463604   1.19272
+ -0.895296   0.341851</code></pre><h2 id="Visualizing-Results"><a class="docs-heading-anchor" href="#Visualizing-Results">Visualizing Results</a><a id="Visualizing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-Results" title="Permalink"></a></h2><p>Let&#39;s create a scatter plot of the mapped samples to see how well our transport map approximates the banana distribution:</p><pre><code class="language-julia hljs">scatter(mapped_samples[:, 1], mapped_samples[:, 2],
            label=&quot;Mapped Samples&quot;, alpha=0.5, color=2,
            title=&quot;Transport Map Approximation of Banana Distribution&quot;,
            xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">GKS: cannot open display - headless operation mode active</code></pre><p><img src="../samples-banana.svg" alt="Banana Samples"/></p><h2 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h2><p>We can assess the quality of our approximation using the variance diagnostic:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
-println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 4.742440387445058e-18</code></pre><h2 id="Interpretation"><a class="docs-heading-anchor" href="#Interpretation">Interpretation</a><a id="Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpretation" title="Permalink"></a></h2><p>The variance diagnostic provides a measure of how well the transport map approximates the target distribution. Lower values indicate better approximation.</p><p>The scatter plot should show the characteristic &quot;banana&quot; shape, with samples curved according to the relationship x₂ ≈ x₁².</p><h2 id="Further-Experiments"><a class="docs-heading-anchor" href="#Further-Experiments">Further Experiments</a><a id="Further-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Experiments" title="Permalink"></a></h2><p>You can experiment with:</p><ul><li>Different polynomial degrees (see [<a href="../../references/#baptista2023">3</a>] for monotone map theory)</li><li>Different rectifier functions (<code>IdentityRectifier()</code>, <code>ShiftedELU()</code>)</li><li>Different quadrature methods (<code>MonteCarloWeights</code>, <code>LatinHypercubeWeights</code>)</li><li>More quadrature points for higher accuracy</li></ul><p>For advanced techniques in transport map construction and applications, refer to [<a href="../../references/#ramgraber2025">2</a>] and [<a href="../../references/#grashorn2024">4</a>]. The MParT toolkit [<a href="../../references/#parno2022">5</a>] provides additional implementation strategies for large-scale problems.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting_started/">« Getting Started</a><a class="docs-footer-nextpage" href="../bod_example/">BOD Parameter Estimation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 09:39">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 4.287758570728263e-18</code></pre><h2 id="Interpretation"><a class="docs-heading-anchor" href="#Interpretation">Interpretation</a><a id="Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpretation" title="Permalink"></a></h2><p>The variance diagnostic provides a measure of how well the transport map approximates the target distribution. Lower values indicate better approximation.</p><p>The scatter plot should show the characteristic &quot;banana&quot; shape, with samples curved according to the relationship x₂ ≈ x₁².</p><h2 id="Further-Experiments"><a class="docs-heading-anchor" href="#Further-Experiments">Further Experiments</a><a id="Further-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Experiments" title="Permalink"></a></h2><p>You can experiment with:</p><ul><li>Different polynomial degrees (see [<a href="../../references/#baptista2023">3</a>] for monotone map theory)</li><li>Different rectifier functions (<code>IdentityRectifier()</code>, <code>ShiftedELU()</code>)</li><li>Different quadrature methods (<code>MonteCarloWeights</code>, <code>LatinHypercubeWeights</code>)</li><li>More quadrature points for higher accuracy</li></ul><p>For advanced techniques in transport map construction and applications, refer to [<a href="../../references/#ramgraber2025">2</a>] and [<a href="../../references/#grashorn2024">4</a>]. The MParT toolkit [<a href="../../references/#parno2022">5</a>] provides additional implementation strategies for large-scale problems.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting_started/">« Getting Started</a><a class="docs-footer-nextpage" href="../bod_example/">BOD Parameter Estimation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 12:34">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
