@@ -65,6 +65,10 @@ export variance_diagnostic
 # Utilities
 export hybridrootfinder
 
+# Test densities
+export capybara_density
+export irregular_density
+
 # Export structs/types
 export IdentityRectifier
 export HermiteBasis
@@ -80,6 +84,7 @@ export TargetDensity
 
 # Include files
 include("util/targetdensity.jl")
+include("util/test_densities.jl")
 
 include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/hermitebasis.jl")

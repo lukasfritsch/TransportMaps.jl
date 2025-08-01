@@ -21,5 +21,6 @@ using Test
         include("util/test_gaussquadrature.jl")
         include("util/test_hybridrootfinder.jl")
         include("util/test_quadraturepoints.jl")
+        include("util/test_densities.jl")
     end
 end
