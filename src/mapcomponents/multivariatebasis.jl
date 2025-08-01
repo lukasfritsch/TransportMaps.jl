@@ -31,3 +31,43 @@ function multivariate_indices(p::Int, d::Int)
 
     return map(collect, eachrow(idx))
 end
+
+# Display methods for MultivariateBasis
+function Base.show(io::IO, basis::MultivariateBasis)
+    basis_type = typeof(basis.basis_type)
+    basis_name = string(basis_type)
+    if basis_name == "HermiteBasis"
+        basis_name = "Hermite"
+    end
+
+    degree = sum(basis.multi_index)
+    dimension = length(basis.multi_index)
+
+    print(io, "MultivariateBasis(")
+    print(io, "$(basis.multi_index), ")
+    print(io, "degree=$degree, ")
+    print(io, "dim=$dimension, ")
+    print(io, "basis=$basis_name)")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis)
+    basis_type = typeof(basis.basis_type)
+    basis_name = string(basis_type)
+    if basis_name == "HermiteBasis"
+        basis_name = "Hermite"
+    end
+
+    degree = sum(basis.multi_index)
+    dimension = length(basis.multi_index)
+
+    println(io, "MultivariateBasis:")
+    println(io, "  Multi-index: $(basis.multi_index)")
+    println(io, "  Total degree: $degree")
+    println(io, "  Dimension: $dimension")
+    println(io, "  Basis type: $basis_name")
+
+    # Show individual polynomial degrees for each dimension
+    if dimension > 1
+        println(io, "  Individual degrees: $(basis.multi_index)")
+    end
+end

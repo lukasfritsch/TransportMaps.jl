@@ -83,14 +83,14 @@ using Test
         pmc = PolynomialMapComponent(basisfunctions, coefficients, IdentityRectifier(), 1)
 
         # Test partial derivative: ∂M¹/∂x₁ = g(∂f/∂x₁) = g(2) = 2 (with IdentityRectifier)
-        pd = partial_derivative_xk(pmc, [1.0])
+        pd = partial_derivative_zk(pmc, [1.0])
         @test pd ≈ 2.0 atol=1e-6
 
         # Test at different points
-        pd_zero = partial_derivative_xk(pmc, [0.0])
+        pd_zero = partial_derivative_zk(pmc, [0.0])
         @test pd_zero ≈ 2.0 atol=1e-6  # Should be constant for linear function
 
-        pd_neg = partial_derivative_xk(pmc, [-1.0])
+        pd_neg = partial_derivative_zk(pmc, [-1.0])
         @test pd_neg ≈ 2.0 atol=1e-6
     end
 
@@ -102,17 +102,17 @@ using Test
         coefficients = [0.0, 1.0]  # f(x) = x, so ∂f/∂x = 1
 
         pmc_softplus = PolynomialMapComponent(basisfunctions, coefficients, Softplus(), 1)
-        pd_softplus = partial_derivative_xk(pmc_softplus, [1.0])
+        pd_softplus = partial_derivative_zk(pmc_softplus, [1.0])
         @test pd_softplus ≈ log1p(exp(1.0)) atol=1e-6  # Softplus(1) = log(1 + e¹)
 
         # Test with ShiftedELU rectifier
         pmc_elu = PolynomialMapComponent(basisfunctions, coefficients, ShiftedELU(), 1)
-        pd_elu = partial_derivative_xk(pmc_elu, [1.0])
+        pd_elu = partial_derivative_zk(pmc_elu, [1.0])
         @test pd_elu ≈ 2.0 atol=1e-6  # ShiftedELU(1) = 1 + 1 = 2
 
         # Test with IdentityRectifier
         pmc_identity = PolynomialMapComponent(basisfunctions, coefficients, IdentityRectifier(), 1)
-        pd_identity = partial_derivative_xk(pmc_identity, [1.0])
+        pd_identity = partial_derivative_zk(pmc_identity, [1.0])
         @test pd_identity ≈ 1.0 atol=1e-6  # Identity(1) = 1
     end
 
@@ -131,7 +131,7 @@ using Test
         @test isfinite(result_2d)
 
         # Test partial derivative
-        pd_2d = partial_derivative_xk(pmc_2d, [1.0, 2.0])
+        pd_2d = partial_derivative_zk(pmc_2d, [1.0, 2.0])
         @test pd_2d isa Float64
         @test isfinite(pd_2d)
         @test pd_2d > 0  # Softplus ensures positivity
@@ -165,8 +165,60 @@ using Test
         result_min = evaluate(pmc_min, [0.5])
         @test isfinite(result_min)
 
-        pd_min = partial_derivative_xk(pmc_min, [0.5])
+        pd_min = partial_derivative_zk(pmc_min, [0.5])
         @test isfinite(pd_min)
         @test pd_min > 0  # Softplus ensures positivity
+    end
+
+    @testset "Gradient with respect to coefficients" begin
+        # Test gradient computation for a 2D component
+        pmc = PolynomialMapComponent(2, 2, IdentityRectifier())
+        n_coeffs = length(pmc.coefficients)
+        coefficients = randn(n_coeffs)  # Generate the correct number of coefficients
+        setcoefficients!(pmc, coefficients)
+
+        z = [0.5, 1.0]
+
+        # Test that gradient function returns correct size
+        grad = gradient_coefficients(pmc, z)
+        @test length(grad) == length(coefficients)
+        @test all(isfinite, grad)
+
+        # Verify gradient using finite differences
+        ε = 1e-8
+        numerical_grad = zeros(length(coefficients))
+
+        for i in 1:length(coefficients)
+            coeffs_plus = copy(coefficients)
+            coeffs_minus = copy(coefficients)
+            coeffs_plus[i] += ε
+            coeffs_minus[i] -= ε
+
+            setcoefficients!(pmc, coeffs_plus)
+            f_plus = evaluate(pmc, z)
+
+            setcoefficients!(pmc, coeffs_minus)
+            f_minus = evaluate(pmc, z)
+
+            numerical_grad[i] = (f_plus - f_minus) / (2 * ε)
+
+            # Reset coefficients
+            setcoefficients!(pmc, coefficients)
+        end
+
+        # Check agreement within tolerance
+        @test all(abs.(grad - numerical_grad) .< 1e-6)
+
+        # Test with Softplus rectifier
+        pmc_softplus = PolynomialMapComponent(2, 1, Softplus())
+        n_coeffs_softplus = length(pmc_softplus.coefficients)
+        setcoefficients!(pmc_softplus, randn(n_coeffs_softplus))
+        grad_softplus = gradient_coefficients(pmc_softplus, [0.3, 0.7])
+        @test length(grad_softplus) == n_coeffs_softplus
+        @test all(isfinite, grad_softplus)
+
+        # Test dimension mismatch
+        @test_throws AssertionError gradient_coefficients(pmc, [0.5])  # Wrong dimension
+        @test_throws AssertionError gradient_coefficients(pmc, [0.5, 1.0, 0.3])  # Wrong dimension
     end
 end
