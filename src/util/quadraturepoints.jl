@@ -39,6 +39,11 @@ struct MonteCarloWeights <: AbstractQuadratureWeights
         points, weights = montecarlo_weights(numberpoints, dimension)
         return new(points, weights)
     end
+
+    function MonteCarloWeights(points::Matrix{Float64})
+        weights = 1/size(points, 1) * ones(size(points, 1))
+        return new(points, weights)
+    end
 end
 
 function montecarlo_weights(numberpoints::Int64, dimension::Int64)

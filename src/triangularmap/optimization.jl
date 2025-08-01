@@ -127,6 +127,15 @@ function optimize!(
     return result
 end
 
+function optimize!(M::PolynomialMap, target::TargetDensity, samples::AbstractArray{<:Real})
+
+    # Create quadrature weights based on the number of dimensions
+    quadrature = MonteCarloWeights(samples)
+
+    # Optimize the polynomial map
+    return optimize!(M, target, quadrature)
+end
+
 # Compute the variance diagnostic for the polynomial map
 function variance_diagnostic(
     M::PolynomialMap,
