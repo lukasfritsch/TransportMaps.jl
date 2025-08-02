@@ -14,7 +14,7 @@ using Plots
 using Distributions
 using SpecialFunctions
 
-# ## The Forward Model
+# ### The Forward Model
 #
 # The BOD model is given by:
 # ```math
@@ -34,16 +34,16 @@ function forward_model(t, x)
     B = 0.01 + 0.15 * (1 + erf(x[2] / sqrt(2)))
     return A * (1 - exp(-B * t))
 end
-#hide nothing
+nothing # hide
 
-# ## Experimental Data
+# ### Experimental Data
 #
 # We have BOD measurements at five time points:
 
 t = [1, 2, 3, 4, 5]
 D = [0.18, 0.32, 0.42, 0.49, 0.54]
 σ = sqrt(1e-3)
-#hide nothing
+nothing # hide
 
 # Let's visualize the data along with model predictions for different parameter values:
 
@@ -60,7 +60,7 @@ end
 #md savefig("realizations-bod.svg"); nothing # hide
 # ![BOD Realizations](realizations-bod.svg)
 
-# ## Bayesian Inference Setup
+# ### Bayesian Inference Setup
 #
 # We define the posterior distribution using a standard normal prior on both parameters
 # and a Gaussian likelihood for the observations:
@@ -78,7 +78,7 @@ end
 
 target = TargetDensity(posterior, :auto_diff)
 
-# ## Creating and Optimizing the Transport Map
+# ### Creating and Optimizing the Transport Map
 #
 # We use a 2-dimensional polynomial transport map with degree 3 and Softplus rectifier:
 
@@ -91,7 +91,7 @@ quadrature = GaussHermiteWeights(10, 2)
 @time res = optimize!(M, target, quadrature)
 println("Optimization result: ", res)
 
-# ## Generating Posterior Samples
+# ### Generating Posterior Samples
 #
 # Generate samples from the standard normal distribution and map them to the posterior:
 
@@ -100,14 +100,14 @@ samples_z = randn(1000, 2)
 # Map the samples through our transport map:
 mapped_samples = reduce(vcat, [evaluate(M, z)' for z in eachrow(samples_z)])
 
-# ## Quality Assessment
+# ### Quality Assessment
 #
 # Compute the variance diagnostic to assess the quality of our approximation:
 
 var_diag = variance_diagnostic(M, target, samples_z)
 println("Variance Diagnostic: ", var_diag)
 
-# ## Visualization
+# ### Visualization
 #
 # Plot the mapped samples along with contours of the true posterior density:
 
@@ -135,7 +135,7 @@ contour!(x₁, x₂, posterior_pullback./maximum(posterior_pullback);
 #md savefig("pullback-bod.svg"); nothing # hide
 # ![BOD Pullback Density](pullback-bod.svg)
 
-# ## Model Parameter Interpretation
+# ### Model Parameter Interpretation
 #
 # The posterior samples provide uncertainty quantification for the BOD model parameters:
 # - **x₁**: Controls the maximum BOD level (parameter A)
@@ -143,16 +143,3 @@ contour!(x₁, x₂, posterior_pullback./maximum(posterior_pullback);
 #
 # The correlation structure in the posterior reflects the interdependence between
 # these parameters in explaining the observed data.
-
-# ## Further Analysis
-#
-# You can extend this example by:
-# - Increasing the polynomial degree for higher accuracy
-# - Using different rectifier functions for improved monotonicity
-# - Adding more measurement data points
-# - Comparing with MCMC methods for validation
-# - Performing forward uncertainty propagation through the model
-#
-# This example demonstrates the effectiveness of transport maps for Bayesian inference
-# in environmental modeling applications, providing efficient posterior sampling
-# for parameter estimation and uncertainty quantification.
