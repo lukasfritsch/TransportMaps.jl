@@ -36,10 +36,12 @@ Literate.markdown(
 
 makedocs(
     sitename = "TransportMaps.jl",
+    authors="Lukas Fritsch and Jan Grashorn",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
         canonical = "https://lukasfritsch.github.io/TransportMaps.jl",
         assets = String[],
+        repolink = "https://github.com/lukasfritsch/TransportMaps.jl",
     ),
     modules = [TransportMaps],
     plugins = [bib],
@@ -50,7 +52,7 @@ makedocs(
             "Banana Distribution" => "Examples/banana_example.md",
             "BOD Parameter Estimation" => "Examples/bod_example.md"
         ],
-        "API Reference" => "api.md",
+        "API" => "api.md",
         "References" => "references.md"
     ],
     repo = "https://github.com/lukasfritsch/TransportMaps.jl/blob/{commit}{path}#{line}",
