@@ -1,27 +1,25 @@
-# TransportMaps.jl Documentation
+# TransportMaps.jl
 
 ```@meta
 CurrentModule = TransportMaps
 ```
 
-## Overview
-
-This implementation is based on the adaptive transport map framework. For a comprehensive introduction to transport maps, see [marzouk2016](@cite) and [ramgraber2025](@cite). The theoretical foundations for monotone triangular transport maps are detailed in [baptista2023](@cite). For practical applications in structural health monitoring and Bayesian inference, see [grashorn2024](@cite). Related software implementations can be found in [parno2022](@cite).l is a pure Julia implementation of transport maps for probability density transformation and sampling. This package provides tools for constructing polynomial transport maps that can transform samples from simple reference distributions (e.g., standard Gaussian) to complex target distributions.
+This is an implementation of triangular transport maps in Julia based on the description in [marzouk2016](@cite).
+For a comprehensive introduction to transport maps, see [ramgraber2025](@cite). The theoretical foundations for monotone triangular transport maps are detailed in [marzouk2016](@cite), [baptista2023](@cite). For practical applications in structural health monitoring and Bayesian inference, see [grashorn2024](@cite).
 
 ## What are Transport Maps?
 
-Transport maps are smooth, invertible functions that can transform one probability distribution into another [marzouk2016](@cite). They are particularly useful for:
+Transport maps are smooth, invertible functions that can transform one probability distribution into another [marzouk2016](@cite).
+The mathematical foundation builds on the Rosenblatt transformation [rosenblatt1952](@cite) and the Knothe-Rosenblatt rearrangement [knothe1957](@cite).
+They are particularly useful for:
 
 - **Sampling**: Generate samples from complex distributions by transforming samples from simple distributions
+- **Variational inference**: Approximate complex posterior distributions in Bayesian updating problems [grashorn2024](@cite)
 - **Density estimation**: Learn the structure of complex probability distributions
-- **Uncertainty quantification**: Efficient sampling and analysis of complex parameter spaces [grashorn2024](@cite)
-- **Variational inference**: Approximate complex posterior distributions
-
-The mathematical foundation builds on the Rosenblatt transformation [rosenblatt1952](@cite) and the Knothe-Rosenblatt rearrangement [knothe1957](@cite), with modern developments enabling practical implementation for high-dimensional problems [baptista2023](@cite).
 
 ## Key Features
 
-- **Polynomial Maps**: Triangular polynomial transport maps with various basis functions
+- **Polynomial Maps**: Triangular polynomial transport maps
 - **Adaptive Construction**: Automatic selection of polynomial terms for efficient approximation
 - **Multiple Rectifiers**: Support for different activation functions (Softplus, ShiftedELU, Identity)
 - **Quadrature Integration**: Multiple quadrature schemes for map optimization
@@ -94,17 +92,15 @@ The package is organized around several key components:
 Pages = ["api.md"]
 ```
 
-## Examples
+## Authors
 
-For more detailed examples, see the Examples section in the sidebar.
+- **Lukas Fritsch**, Institute for Risk and Reliability, Leibniz University Hannover
+- **Jan Grashorn**, Chair for Engineering Materials and Building Preservation, Helmut-Schmidt-University Hamburg
 
-## References
+## Related Implementation
 
-This implementation is based on the adaptive transport map framework. For theoretical background, see:
-
-1. Youssef Marzouk and Tarek Moselhy. "Bayesian inference with optimal maps." Journal of Computational Physics 231.23 (2012): 7815-7850.
-2. Matthew Parno and Youssef Marzouk. "Transport map accelerated Markov chain Monte Carlo." SIAM Journal on Scientific Computing 40.2 (2018): A1340-A1358.
-
-## Contributing
-
-Contributions are welcome! Please see the GitHub repository for issues and contribution guidelines.
+- [ATM](https://github.com/baptistar/ATM): Matlab code for adaptive transport maps [baptista2023](@cite)
+- [MParT](https://github.com/MeasureTransport/MParT): C++-based library for transport maps [parno2022](@cite)
+- [TransportBasedInference.jl](https://github.com/mleprovost/TransportBasedInference.jl): Julia implementation of adaptive transport maps (ATM) and Kalman filters
+- [SequentialMeasureTransport.jl](https://github.com/benjione/SequentialMeasureTransport.jl): Julia implementation of transport maps from sum-of-squares densities [zanger2024](@cite)
+- [Triangular-Transport-Toolbox](https://github.com/MaxRamgraber/Triangular-Transport-Toolbox): Python code for the triangular transport tutorial paper [ramgraber2025](@cite)
