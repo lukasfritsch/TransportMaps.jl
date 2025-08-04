@@ -53,8 +53,8 @@ function correlated_gaussian(x; ρ=0.8)
 end
 #hide
 
-# Create a TargetDensity object for optimization
-target_density = TargetDensity(correlated_gaussian, :auto_diff)
+# Create a MapTargetDensity object for optimization
+target_density = MapTargetDensity(correlated_gaussian, :auto_diff)
 
 # ## Setting up Quadrature
 #
@@ -146,7 +146,7 @@ println("  ShiftedELU: ", var_diag_elu)
 
 # Define banana density
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-target_density_banana = TargetDensity(banana_density, :auto_diff)
+target_density_banana = MapTargetDensity(banana_density, :auto_diff)
 
 # Create a new map for this target
 M_banana = PolynomialMap(2, 2, Softplus())

@@ -90,7 +90,7 @@ function posterior(x)
     return prior * likelihood
 end
 
-target = TargetDensity(posterior, :auto_diff)
+target = MapTargetDensity(posterior, :auto_diff)
 ````
 
 ## Creating and Optimizing the Transport Map
@@ -98,13 +98,13 @@ target = TargetDensity(posterior, :auto_diff)
 We use a 2-dimensional polynomial transport map with degree 3 and Softplus rectifier:
 
 ````@example bod_example
-M = PolynomialMap(2, 3, Softplus())
+M = PolynomialMap(2, 3, :normal, Softplus())
 ````
 
 Set up Gauss-Hermite quadrature for optimization:
 
 ````@example bod_example
-quadrature = GaussHermiteWeights(10, 2)
+quadrature = GaussHermiteWeights(10, M)
 ````
 
 Optimize the map coefficients:

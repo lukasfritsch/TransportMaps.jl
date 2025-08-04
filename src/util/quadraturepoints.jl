@@ -10,6 +10,13 @@ struct GaussHermiteWeights <: AbstractQuadratureWeights
         points, weights = gausshermite_weights(numberpoints, dimension)
         return new(points, weights)
     end
+
+    function GaussHermiteWeights(numberpoints::Int64, map::AbstractTransportMap)
+        @warn "Using standard Gauss-Hermite quadrature with standard Gaussian reference density."
+        # Generate Gauss-Hermite points in the reference space
+        points, weights = gausshermite_weights(numberpoints, numberdimensions(map))
+        return new(points, weights)
+    end
 end
 
 function gausshermite_weights(numberpoints::Int64, dimension::Int64)
@@ -40,14 +47,24 @@ struct MonteCarloWeights <: AbstractQuadratureWeights
         return new(points, weights)
     end
 
-    function MonteCarloWeights(points::Matrix{Float64})
-        weights = 1/size(points, 1) * ones(size(points, 1))
+    function MonteCarloWeights(numberpoints::Int64, map::AbstractTransportMap)
+        # Generate random points in the reference space
+        points, weights = montecarlo_weights(numberpoints, numberdimensions(map), map.reference.densitytype)
+
+        return new(points, weights)
+    end
+    
+    function MonteCarloWeights(points::Matrix{Float64}, weights::Vector{Float64} = Float64[])
+        if isempty(weights)
+            # If no weights are provided, assume uniform weights
+            weights = 1/size(points, 1) * ones(size(points, 1))
+        end
         return new(points, weights)
     end
 end
 
-function montecarlo_weights(numberpoints::Int64, dimension::Int64)
-    points = randn(numberpoints, dimension)
+function montecarlo_weights(numberpoints::Int64, dimension::Int64, distr::Distributions.UnivariateDistribution = Normal())
+    points = rand(distr, numberpoints, dimension)
     weights = 1/numberpoints*ones(numberpoints)
     return points, weights
 end
@@ -60,10 +77,16 @@ struct LatinHypercubeWeights <: AbstractQuadratureWeights
         points, weights = latinhypercube_weights(n, d)
         return new(points, weights)
     end
+
+    function LatinHypercubeWeights(n::Int64, map::AbstractTransportMap)
+        # Generate Latin Hypercube points in the reference space
+        points, weights = latinhypercube_weights(n, numberdimensions(map), map.reference.densitytype)
+        return new(points, weights)
+    end
 end
 
-function latinhypercube_weights(numberpoints::Int64, dimension::Int64)
-    points = reshape([quantile(Normal(), u) for u in QuasiMonteCarlo.sample(numberpoints, dimension, LatinHypercubeSample())], numberpoints, dimension)
+function latinhypercube_weights(numberpoints::Int64, dimension::Int64, distr::Distributions.UnivariateDistribution = Normal())
+    points = reshape([quantile(distr, u) for u in QuasiMonteCarlo.sample(numberpoints, dimension, LatinHypercubeSample())], numberpoints, dimension)
     weights = 1/numberpoints*ones(numberpoints)
     return points, weights
 end

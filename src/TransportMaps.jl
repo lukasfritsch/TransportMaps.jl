@@ -13,20 +13,22 @@ using StatsFuns
 abstract type AbstractBasisFunction end
 abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
 abstract type AbstractMapComponent end
-abstract type AbstractTriangularMap end
+abstract type AbstractTransportMap end
+abstract type AbstractTriangularMap <: AbstractTransportMap end
 abstract type AbstractMultivariateBasis end
 abstract type AbstractRectifierFunction end
 abstract type AbstractQuadratureWeights end
-abstract type AbstractTargetDensity end
+abstract type AbstractMapDensity end
 
 # Export abstract types
 export AbstractBasisFunction
 export AbstractPolynomialBasis
 export AbstractMapComponent
 export AbstractTransportMap
+export AbstractTriangularMap
 export AbstractRectifierFunction
 export AbstractQuadratureWeights
-export AbstractTargetDensity
+export AbstractMapDensity
 
 # Export functions/methods
 # Basis functions and evaluation
@@ -76,10 +78,11 @@ export ShiftedELU
 export GaussHermiteWeights
 export MonteCarloWeights
 export LatinHypercubeWeights
-export TargetDensity
+export MapTargetDensity
+export MapReferenceDensity
 
 # Include files
-include("util/targetdensity.jl")
+include("util/mapdensity.jl")
 
 include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/hermitebasis.jl")

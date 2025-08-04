@@ -1,18 +1,47 @@
 mutable struct PolynomialMap <: AbstractTriangularMap
     components::Vector{PolynomialMapComponent}  # Vector of map components
+    reference::MapReferenceDensity
 
     function PolynomialMap(
         dimension::Int,
         degree::Int,
+        referencetype::Symbol = :normal,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis()
+        basis::AbstractPolynomialBasis = HermiteBasis(),
     )
         components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
-        return new(components)
+
+        return PolynomialMap(components, referencetype)
+    end
+
+    function PolynomialMap(
+        dimension::Int,
+        degree::Int,
+        reference::Distributions.UnivariateDistribution,
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = HermiteBasis(),
+    )
+        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
+
+        return PolynomialMap(components, reference)
     end
 
     function PolynomialMap(components::Vector{PolynomialMapComponent})
-        return new(components)
+        return PolynomialMap(components, :normal)
+    end
+
+    function PolynomialMap(components::Vector{PolynomialMapComponent}, referencetype::Symbol)
+        if referencetype == :normal
+            refdensity = Normal(0,1)
+            reference = MapReferenceDensity(refdensity)
+            return new(components, reference)
+        else
+            error("Reference type $referencetype not supported")
+        end
+    end
+
+    function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution)
+        return new(components, MapReferenceDensity(reference))
     end
 end
 
@@ -158,10 +187,8 @@ end
 function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
-    reference_density(z) = pdf(MvNormal(zeros(length(M.components)), I(length(M.components))), z)
-
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
-    return reference_density(inverse(M, x)) * abs(inverse_jacobian(M, x))
+    return M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x))
 end
 
 # Pushforward density: Map from target to reference space

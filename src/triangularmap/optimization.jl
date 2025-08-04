@@ -9,7 +9,7 @@ Compute the Kullback-Leibler divergence between the polynomial map and a target 
 """
 function kldivergence(
     M::PolynomialMap,
-    target::TargetDensity,
+    target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights,
     )
 
@@ -30,7 +30,7 @@ function kldivergence(
 end
 
 """
-    kldivergence_gradient(M::PolynomialMap, target::TargetDensity, quadrature::AbstractQuadratureWeights)
+    kldivergence_gradient(M::PolynomialMap, target::MapTargetDensity, quadrature::AbstractQuadratureWeights)
 
 Compute the gradient of the KL divergence with respect to polynomial map coefficients.
 
@@ -39,16 +39,16 @@ the gradient is: ∂KL/∂c = ∫ w(z) [-∇π(M(z))/π(M(z)) · ∂M/∂c - ∂
 
 # Arguments
 - `M::PolynomialMap`: The polynomial map
-- `target::TargetDensity`: Target density object
+- `target::MapTargetDensity`: Target density object
 - `quadrature::AbstractQuadratureWeights`: Quadrature points and weights
 
 # Returns
 - `Vector{Float64}`: Gradient vector with respect to all coefficients
 """
 function kldivergence_gradient(
-    M::PolynomialMap,
-    target::TargetDensity,
-    quadrature::AbstractQuadratureWeights,
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        quadrature::AbstractQuadratureWeights,
     )
 
     n_coeffs = numbercoefficients(M)
@@ -70,7 +70,7 @@ function kldivergence_gradient(
         weight_factor = -quadrature.weights[i] / π_val
 
         for j in 1:n_coeffs
-            for k in 1:length(∇π)
+            for k in axes(∇π, 1)  # Iterate over dimensions
                 gradient_total[j] += weight_factor * ∇π[k] * ∂M_∂c[k, j]
             end
         end
@@ -101,7 +101,7 @@ Optimize polynomial map coefficients to minimize KL divergence to target density
 """
 function optimize!(
     M::PolynomialMap,
-    target::TargetDensity,
+    target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights,
     )
 
@@ -127,11 +127,11 @@ function optimize!(
     return result
 end
 
-function optimize!(M::PolynomialMap, target::TargetDensity, samples::AbstractArray{<:Real})
+function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
 
     # Create quadrature weights based on the number of dimensions
     quadrature = MonteCarloWeights(samples)
-
+    target = M.reference
     # Optimize the polynomial map
     return optimize!(M, target, quadrature)
 end
@@ -139,7 +139,7 @@ end
 # Compute the variance diagnostic for the polynomial map
 function variance_diagnostic(
     M::PolynomialMap,
-    target::TargetDensity,
+    target::MapTargetDensity,
     Z::AbstractArray{<:Real},
 )
     @assert size(Z, 2) == numberdimensions(M) "Z must have the same number of columns as number of map components in M"
@@ -147,13 +147,13 @@ function variance_diagnostic(
     # Initialize
     δ = eps()  # Small value to avoid log(0)
     total = zeros(Float64, size(Z, 1))
-    mvn = MvNormal(I(numberdimensions(M)))
+    mvn = M.reference.density
 
     for (i, zᵢ) in enumerate(eachrow(Z))
         Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
         log_π = log(target.density(Mᵢ) + δ)
         log_detJ = log(abs(jacobian(M, zᵢ)))
-        total[i] = log_π + log_detJ - logpdf(mvn, zᵢ)
+        total[i] = log_π + log_detJ - log.(mvn(zᵢ))
     end
 
     return 0.5 * var(total)

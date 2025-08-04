@@ -37,8 +37,8 @@ quadrature = GaussHermiteWeights(3, 2)
 target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 #hide
 
-# Create a TargetDensity object for optimization
-target = TargetDensity(target_density, :auto_diff)
+# Create a MapTargetDensity object for optimization
+target = MapTargetDensity(target_density, :auto_diff)
 
 # ## Optimizing the Map
 #
