@@ -254,6 +254,7 @@ function Base.show(io::IO, M::PolynomialMap)
         print(io, "$n_dims-dimensional, ")
         print(io, "degree=$max_degree, ")
         print(io, "basis=$basis_name, ")
+        print(io, "reference=$(M.reference.density), ")
         print(io, "rectifier=$rectifier_name, ")
         print(io, "$n_coeffs total coefficients)")
     else
@@ -268,6 +269,7 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
     println(io, "PolynomialMap:")
     println(io, "  Dimensions: $n_dims")
     println(io, "  Total coefficients: $n_coeffs")
+    println(io, "  Reference density: $(M.reference.density)")
 
     if n_dims > 0
         # Get properties from the first component (assuming all components have similar properties)
