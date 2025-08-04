@@ -11,13 +11,13 @@ using Optim
         Random.seed!(42)
 
         # Test with 2D degree-1 polynomial map
-        M = PolynomialMap(2, 1, Softplus(), HermiteBasis())
+        M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         initial_coeffs = 0.1 * randn(numbercoefficients(M))
         setcoefficients!(M, initial_coeffs)
 
         # Simple target density
         target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
-        target_density = TargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func, :auto_diff)
 
         # Small quadrature for testing
         quadrature = LatinHypercubeWeights(50, 2)
@@ -56,17 +56,17 @@ using Optim
 
         # Test different map configurations
         map_configs = [
-            (2, 1, Softplus(), HermiteBasis()),
-            (2, 1, IdentityRectifier(), HermiteBasis()),
-            (2, 2, Softplus(), HermiteBasis())  # Higher degree
+            (2, 1, :normal, Softplus(), HermiteBasis()),
+            (2, 1, :normal, IdentityRectifier(), HermiteBasis()),
+            (2, 2, :normal, Softplus(), HermiteBasis())  # Higher degree
         ]
 
         target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
-        target_density = TargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(30, 2)
 
-        for (dim, degree, rectifier, basis) in map_configs
-            M = PolynomialMap(dim, degree, rectifier, basis)
+        for (dim, degree, reftype, rectifier, basis) in map_configs
+            M = PolynomialMap(dim, degree, reftype, rectifier, basis)
             coeffs = 0.1 * randn(numbercoefficients(M))
             setcoefficients!(M, coeffs)
 
@@ -88,9 +88,9 @@ using Optim
         Random.seed!(456)
 
         # Test at multiple random starting points
-        M = PolynomialMap(2, 1, Softplus(), HermiteBasis())
+        M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
-        target_density = TargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(25, 2)
 
         function objective(coeffs)
@@ -168,7 +168,7 @@ using Optim
     @testset "Full Map Gradient Matrix Tests" begin
         Random.seed!(101112)
 
-        M = PolynomialMap(2, 1, Softplus(), HermiteBasis())
+        M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         setcoefficients!(M, 0.1 * randn(numbercoefficients(M)))
 
         z = [0.3, 0.7]
@@ -197,12 +197,12 @@ using Optim
         Random.seed!(131415)
 
         # Test that optimization actually improves the objective
-        M = PolynomialMap(2, 1, Softplus(), HermiteBasis())
+        M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         initial_coeffs = 0.2 * randn(numbercoefficients(M))
         setcoefficients!(M, initial_coeffs)
 
         target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
-        target_density = TargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(30, 2)
 
         # Initial KL divergence
@@ -235,7 +235,7 @@ using Optim
         Random.seed!(192021)
 
         # Test with target densities that have known analytical gradients
-        M = PolynomialMap(2, 1, Softplus(), HermiteBasis())
+        M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         setcoefficients!(M, 0.1 * randn(numbercoefficients(M)))
 
         quadrature = LatinHypercubeWeights(40, 2)
@@ -252,7 +252,7 @@ using Optim
             return -density_val .* x
         end
 
-        target_density = TargetDensity(gaussian_density, gaussian_density_gradient)
+        target_density = MapTargetDensity(gaussian_density, gaussian_density_gradient)
 
         # Test that gradient computation works with analytical target gradient
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
@@ -262,7 +262,7 @@ using Optim
         @test length(grad1) == numbercoefficients(M)
 
         # Compare with finite difference version (should be similar)
-        target_density_fd = TargetDensity(gaussian_density, :auto_diff)
+        target_density_fd = MapTargetDensity(gaussian_density, :auto_diff)
         grad1_fd = TransportMaps.kldivergence_gradient(M, target_density_fd, quadrature)
         @test all(isfinite.(grad1_fd))
 
@@ -277,7 +277,7 @@ using Optim
             return exp(-abs(x[1]) - abs(x[2]))
         end
 
-        target_density_exp = TargetDensity(exponential_density, :auto_diff)
+        target_density_exp = MapTargetDensity(exponential_density, :auto_diff)
 
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
         grad2 = TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
@@ -296,14 +296,14 @@ using Optim
             return [grad_x1, grad_x2]
         end
 
-        target_density_quad = TargetDensity(quadratic_density, quadratic_density_gradient)
+        target_density_quad = MapTargetDensity(quadratic_density, quadratic_density_gradient)
 
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_quad, quadrature)
         grad3 = TransportMaps.kldivergence_gradient(M, target_density_quad, quadrature)
         @test all(isfinite.(grad3))
 
         # Compare with finite difference version for the quadratic density
-        target_density_quad_fd = TargetDensity(quadratic_density, :auto_diff)
+        target_density_quad_fd = MapTargetDensity(quadratic_density, :auto_diff)
         grad3_fd = TransportMaps.kldivergence_gradient(M, target_density_quad_fd, quadrature)
         for i in 1:length(grad3)
             rel_error = abs(grad3[i] - grad3_fd[i]) / (abs(grad3_fd[i]) + 1e-12)
@@ -325,7 +325,7 @@ using Optim
         @test !isapprox(grad1, grad1_alt, rtol=0.1)  # Different coefficients should give different gradients
 
         # Test 6: Higher degree map with analytical gradient
-        M_deg2 = PolynomialMap(2, 2, Softplus(), HermiteBasis())
+        M_deg2 = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis())
         setcoefficients!(M_deg2, 0.05 * randn(numbercoefficients(M_deg2)))
 
         grad_deg2 = TransportMaps.kldivergence_gradient(M_deg2, target_density, quadrature)
@@ -338,9 +338,9 @@ using Optim
     @testset "Edge Cases and Robustness" begin
         Random.seed!(161718)
 
-        M = PolynomialMap(2, 1, Softplus(), HermiteBasis())
+        M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
-        target_density = TargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(20, 2)
 
         # Test with very small coefficients
@@ -360,7 +360,7 @@ using Optim
         # Test with different target densities
         # Banana-shaped distribution
         banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-        target_density_banana = TargetDensity(banana_density, :auto_diff)
+        target_density_banana = MapTargetDensity(banana_density, :auto_diff)
         setcoefficients!(M, 0.1 * randn(numbercoefficients(M)))
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_banana, quadrature)
 

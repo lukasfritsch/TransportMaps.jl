@@ -16,7 +16,7 @@ using LinearAlgebra
         @test pm.components[2].index == 2
 
         # Test construction with custom rectifier
-        pm_identity = PolynomialMap(3, 1, IdentityRectifier())
+        pm_identity = PolynomialMap(3, 1, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_identity.components[1], [1.0, 0.5])  # 2 coefficients for 1D degree 1
         setcoefficients!(pm_identity.components[2], [1.0, 0.3, 0.2])  # 3 coefficients for 2D degree 1
@@ -25,7 +25,7 @@ using LinearAlgebra
         @test all(comp.rectifier isa IdentityRectifier for comp in pm_identity.components)
 
         # Test construction with custom basis
-        pm_hermite = PolynomialMap(2, 2, Softplus(), HermiteBasis())
+        pm_hermite = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_hermite.components[1], [1.0, 0.4, 0.15])  # 3 coefficients for 1D degree 2
         setcoefficients!(pm_hermite.components[2], [1.0, 0.25, 0.1, 0.05, 0.02, 0.01])  # 6 coefficients for 2D degree 2
@@ -64,7 +64,7 @@ using LinearAlgebra
 
     @testset "Evaluation" begin
         # Test 1D case
-        pm_1d = PolynomialMap(1, 2, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 2, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_1d.components[1], [1.0, 0.5, 0.2])
         result_1d = evaluate(pm_1d, [1.0])
@@ -72,7 +72,7 @@ using LinearAlgebra
         @test result_1d[1] isa Float64
 
         # Test 2D case - use simpler settings
-        pm_2d = PolynomialMap(2, 1, IdentityRectifier())  # Use degree 1
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())  # Use degree 1
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_2d.components[1], [1.0, 0.5])
         setcoefficients!(pm_2d.components[2], [1.0, 0.3, 0.2])
@@ -81,7 +81,7 @@ using LinearAlgebra
         @test all(r isa Float64 for r in result_2d)
 
         # Test 3D case
-        pm_3d = PolynomialMap(3, 1, IdentityRectifier())
+        pm_3d = PolynomialMap(3, 1, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_3d.components[1], [1.0, 0.5])
         setcoefficients!(pm_3d.components[2], [1.0, 0.3, 0.2])
@@ -97,7 +97,7 @@ using LinearAlgebra
 
     @testset "Jacobian Determinant" begin
         # Test 1D case
-        pm_1d = PolynomialMap(1, 2, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 2, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_1d.components[1], [1.0, 0.5, 0.2])
         jac_1d = jacobian(pm_1d, [1.0])
@@ -105,7 +105,7 @@ using LinearAlgebra
         @test isfinite(jac_1d)
 
         # Test 2D case
-        pm_2d = PolynomialMap(2, 2, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 2, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_2d.components[1], [1.0, 0.5, 0.2])
         setcoefficients!(pm_2d.components[2], [1.0, 0.3, 0.1, 0.05, 0.02, 0.01])
@@ -114,7 +114,7 @@ using LinearAlgebra
         @test isfinite(jac_2d)
 
         # Test 3D case
-        pm_3d = PolynomialMap(3, 1, IdentityRectifier())
+        pm_3d = PolynomialMap(3, 1, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_3d.components[1], [1.0, 0.5])
         setcoefficients!(pm_3d.components[2], [1.0, 0.3, 0.2])
@@ -124,7 +124,7 @@ using LinearAlgebra
         @test isfinite(jac_3d)
 
         # With Softplus rectifier, Jacobian should be positive
-        pm_softplus = PolynomialMap(2, 2, Softplus())
+        pm_softplus = PolynomialMap(2, 2, :normal, Softplus())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm_softplus.components[1], [1.0, 0.5, 0.2])
         setcoefficients!(pm_softplus.components[2], [1.0, 0.3, 0.1, 0.05, 0.02, 0.01])
@@ -138,7 +138,7 @@ using LinearAlgebra
 
     @testset "Forward-Inverse Consistency" begin
         # Test 1D case with very simple map to avoid numerical issues
-        pm_1d = PolynomialMap(1, 1, IdentityRectifier())  # Use degree 1
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())  # Use degree 1
         # Initialize coefficients to be well-behaved
         setcoefficients!(pm_1d.components[1], [0.0, 1.0])  # Linear map: f(x) = x
 
@@ -171,7 +171,7 @@ using LinearAlgebra
 
     @testset "Triangular Structure" begin
         # The map should be triangular: M¹ depends only on x₁, M² on x₁,x₂, etc.
-        pm = PolynomialMap(3, 1, IdentityRectifier())  # Use degree 1 for stability
+        pm = PolynomialMap(3, 1, :normal, IdentityRectifier())  # Use degree 1 for stability
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm.components[1], [1.0, 0.5])
         setcoefficients!(pm.components[2], [1.0, 0.3, 0.2])
@@ -195,7 +195,7 @@ using LinearAlgebra
     @testset "Different Rectifiers" begin
         # Test with different rectifiers - use simpler cases
         for rectifier in [IdentityRectifier(), Softplus()]  # Remove ShiftedELU for now
-            pm = PolynomialMap(2, 1, rectifier)  # Use degree 1 for stability
+            pm = PolynomialMap(2, 1, :normal, rectifier)  # Use degree 1 for stability
             # Set manual coefficients to avoid undefined/NaN values
             setcoefficients!(pm.components[1], [1.0, 0.5])
             setcoefficients!(pm.components[2], [1.0, 0.3, 0.2])
@@ -226,7 +226,7 @@ using LinearAlgebra
     end
 
     @testset "Scaling Properties" begin
-        pm = PolynomialMap(2, 2, IdentityRectifier())
+        pm = PolynomialMap(2, 2, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm.components[1], [1.0, 0.5, 0.2])
         setcoefficients!(pm.components[2], [1.0, 0.3, 0.1, 0.05, 0.02, 0.01])
@@ -281,7 +281,7 @@ using LinearAlgebra
     end
 
     @testset "Coefficient Modification" begin
-        pm = PolynomialMap(2, 2, IdentityRectifier())
+        pm = PolynomialMap(2, 2, :normal, IdentityRectifier())
         # Set manual coefficients to avoid undefined/NaN values
         setcoefficients!(pm.components[1], [1.0, 0.5, 0.2])
         setcoefficients!(pm.components[2], [1.0, 0.3, 0.1, 0.05, 0.02, 0.01])
@@ -336,7 +336,7 @@ using LinearAlgebra
 
     @testset "Gradient with respect to coefficients" begin
         # Test 2D polynomial map gradient
-        pm = PolynomialMap(2, 2, IdentityRectifier())
+        pm = PolynomialMap(2, 2, :normal, IdentityRectifier())
 
         # Set specific coefficients for reproducible testing
         n_total_coeffs = numbercoefficients(pm)
@@ -388,7 +388,7 @@ using LinearAlgebra
         @test all(abs.(grad_matrix - numerical_grad) .< 1e-6)
 
         # Test with 1D map (simpler case)
-        pm_1d = PolynomialMap(1, 2, Softplus())
+        pm_1d = PolynomialMap(1, 2, :normal, Softplus())
         n_coeffs_1d = numbercoefficients(pm_1d)
         setcoefficients!(pm_1d, randn(n_coeffs_1d))
 
@@ -398,7 +398,7 @@ using LinearAlgebra
         @test all(isfinite, grad_1d)
 
         # Test with 3D map
-        pm_3d = PolynomialMap(3, 1, ShiftedELU())
+        pm_3d = PolynomialMap(3, 1, :normal, ShiftedELU())
         n_coeffs_3d = numbercoefficients(pm_3d)
         setcoefficients!(pm_3d, randn(n_coeffs_3d))
 
@@ -425,7 +425,7 @@ using LinearAlgebra
 
     @testset "Inverse Jacobian" begin
         # Test 1D case
-        pm_1d = PolynomialMap(1, 1, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])  # Linear map: f(z) = z
 
         x_1d = [0.5]
@@ -433,7 +433,7 @@ using LinearAlgebra
         @test inv_jac_1d ≈ 1.0 atol=1e-10  # For identity map, inverse jacobian should be 1
 
         # Test 2D case with simple map
-        pm_2d = PolynomialMap(2, 1, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])  # First component: f₁(z₁) = z₁
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])  # Second component: f₂(z₁,z₂) = z₂
 
@@ -442,7 +442,7 @@ using LinearAlgebra
         @test inv_jac_2d ≈ 1.0 atol=1e-10  # For identity-like map, inverse jacobian should be 1
 
         # Test with Softplus rectifier (should be positive)
-        pm_softplus = PolynomialMap(2, 2, Softplus())
+        pm_softplus = PolynomialMap(2, 2, :normal, Softplus())
         setcoefficients!(pm_softplus, randn(numbercoefficients(pm_softplus)) * 0.1)
 
         x_test = [0.5, 1.0]
@@ -456,7 +456,7 @@ using LinearAlgebra
         end
 
         # Test consistency: 1/jacobian(M, inverse(M, x)) should equal inverse_jacobian(M, x)
-        pm_test = PolynomialMap(2, 1, Softplus())
+        pm_test = PolynomialMap(2, 1, :normal, Softplus())
         setcoefficients!(pm_test, abs.(randn(numbercoefficients(pm_test))) .+ 0.1)  # Positive coefficients
 
         x_consistency = [0.2, 0.8]
@@ -477,7 +477,7 @@ using LinearAlgebra
 
     @testset "Pullback Density" begin
         # Test 1D case with identity map
-        pm_1d = PolynomialMap(1, 1, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])  # Linear map: f(z) = z
 
         x_1d = [0.5]
@@ -487,7 +487,7 @@ using LinearAlgebra
         @test pb_1d ≈ ref_1d atol=1e-10
 
         # Test 2D case with identity-like map
-        pm_2d = PolynomialMap(2, 1, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
 
@@ -497,7 +497,7 @@ using LinearAlgebra
         @test pb_2d ≈ ref_2d atol=1e-10
 
         # Test mathematical consistency: pullback(M, x) = reference_density(inverse(M, x)) * |inverse_jacobian(M, x)|
-        pm_test = PolynomialMap(2, 2, Softplus())
+        pm_test = PolynomialMap(2, 2, :normal, Softplus())
         setcoefficients!(pm_test, randn(numbercoefficients(pm_test)) * 0.1)
 
         test_points = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
@@ -519,7 +519,7 @@ using LinearAlgebra
 
         # Test with different polynomial degrees
         for degree in [1, 2, 3]
-            pm_deg = PolynomialMap(2, degree, Softplus())
+            pm_deg = PolynomialMap(2, degree, :normal, Softplus())
             setcoefficients!(pm_deg, randn(numbercoefficients(pm_deg)) * 0.05)
 
             x_test = [0.1, 0.2]
@@ -542,7 +542,7 @@ using LinearAlgebra
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
 
         # Test 1D case
-        pm_1d = PolynomialMap(1, 1, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])
 
         z_1d = [0.5]
@@ -551,7 +551,7 @@ using LinearAlgebra
         @test pf_1d ≈ target_density(z_1d) atol=1e-10
 
         # Test 2D case
-        pm_2d = PolynomialMap(2, 1, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
 
@@ -560,7 +560,7 @@ using LinearAlgebra
         @test pf_2d ≈ target_density(z_2d) atol=1e-10
 
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
-        pm_test = PolynomialMap(2, 2, Softplus())
+        pm_test = PolynomialMap(2, 2, :normal, Softplus())
         setcoefficients!(pm_test, randn(numbercoefficients(pm_test)) * 0.1)
 
         test_points = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
@@ -584,7 +584,7 @@ using LinearAlgebra
         uniform_target(x) = all(0 ≤ xi ≤ 1 for xi in x) ? 1.0 : 0.0
         exponential_target(x) = prod(exp(-xi) for xi in x if xi ≥ 0)
 
-        pm_simple = PolynomialMap(2, 1, Softplus())
+        pm_simple = PolynomialMap(2, 1, :normal, Softplus())
         setcoefficients!(pm_simple, ones(numbercoefficients(pm_simple)) * 0.1)
 
         z_test = [0.2, 0.3]
@@ -606,7 +606,7 @@ using LinearAlgebra
 
     @testset "Density Transformation Consistency" begin
         # Test the fundamental relationship between pullback and pushforward
-        pm = PolynomialMap(2, 2, Softplus())
+        pm = PolynomialMap(2, 2, :normal, Softplus())
         setcoefficients!(pm, randn(numbercoefficients(pm)) * 0.1)
 
         # Define a simple target density

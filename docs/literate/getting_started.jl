@@ -42,7 +42,7 @@ Random.seed!(1234)
 nothing # hide
 
 # Create a 2D polynomial map with degree 2
-M = PolynomialMap(2, 2, Softplus())
+M = PolynomialMap(2, 2, Normal(), Softplus())
 
 # The map is initially identity (coefficients are zero)
 println("Initial coefficients: ", getcoefficients(M))
@@ -59,9 +59,8 @@ function correlated_gaussian(x; ρ=0.8)
 end
 nothing # hide
 
-# Create a TargetDensity object for optimization
-target_density = TargetDensity(correlated_gaussian, :auto_diff)
-nothing # hide
+# Create a MapTargetDensity object for optimization
+target_density = MapTargetDensity(correlated_gaussian, :auto_diff)
 
 # ### Setting up Quadrature
 #
@@ -133,7 +132,7 @@ println("Jacobian determinant at origin: ", det_jac)
 # The rectifier function affects the map's behavior. Let's compare different options:
 
 # ShiftedELU rectifier
-M_elu = PolynomialMap(2, 2, ShiftedELU())
+M_elu = PolynomialMap(2, 2, Normal(), ShiftedELU())
 result_elu = optimize!(M_elu, target_density, quadrature)
 var_diag_elu = variance_diagnostic(M_elu, target_density, reference_samples)
 
@@ -147,10 +146,10 @@ println("  ShiftedELU: ", var_diag_elu)
 
 # Define banana density
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-target_density_banana = TargetDensity(banana_density, :auto_diff)
+target_density_banana = MapTargetDensity(banana_density, :auto_diff)
 
 # Create a new map for this target
-M_banana = PolynomialMap(2, 2, Softplus())
+M_banana = PolynomialMap(2, 2, Normal(), Softplus())
 result_banana = optimize!(M_banana, target_density_banana, quadrature)
 
 # Display optimized map
