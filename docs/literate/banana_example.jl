@@ -19,7 +19,7 @@ using Plots
 # We start by creating a 2-dimensional polynomial transport map with degree 2
 # and a Softplus rectifier function.
 
-M = PolynomialMap(2, 2, Softplus())
+M = PolynomialMap(2, 2, Normal(), Softplus())
 
 # ### Setting up Quadrature
 #
@@ -37,7 +37,7 @@ quadrature = GaussHermiteWeights(3, 2)
 # where $\phi$ is the standard normal PDF.
 
 target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-#hide
+nothing # hide
 
 # Create a MapTargetDensity object for optimization
 target = MapTargetDensity(target_density, :auto_diff)

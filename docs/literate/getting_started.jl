@@ -42,7 +42,7 @@ Random.seed!(1234)
 nothing # hide
 
 # Create a 2D polynomial map with degree 2
-M = PolynomialMap(2, 2, Softplus())
+M = PolynomialMap(2, 2, Normal(), Softplus())
 
 # The map is initially identity (coefficients are zero)
 println("Initial coefficients: ", getcoefficients(M))
@@ -132,7 +132,7 @@ println("Jacobian determinant at origin: ", det_jac)
 # The rectifier function affects the map's behavior. Let's compare different options:
 
 # ShiftedELU rectifier
-M_elu = PolynomialMap(2, 2, ShiftedELU())
+M_elu = PolynomialMap(2, 2, Normal(), ShiftedELU())
 result_elu = optimize!(M_elu, target_density, quadrature)
 var_diag_elu = variance_diagnostic(M_elu, target_density, reference_samples)
 
@@ -149,7 +149,7 @@ banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 target_density_banana = MapTargetDensity(banana_density, :auto_diff)
 
 # Create a new map for this target
-M_banana = PolynomialMap(2, 2, Softplus())
+M_banana = PolynomialMap(2, 2, Normal(), Softplus())
 result_banana = optimize!(M_banana, target_density_banana, quadrature)
 
 # Display optimized map
