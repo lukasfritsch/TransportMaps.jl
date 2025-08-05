@@ -34,6 +34,14 @@ Literate.markdown(
     credit = false
 )
 
+# Process map from samples example
+Literate.markdown(
+    joinpath(LITERATE_DIR, "mapfromsamples_example.jl"),
+    joinpath(OUTPUT_DIR, "Examples");
+    documenter = true,
+    credit = false
+)
+
 makedocs(
     sitename = "TransportMaps.jl",
     authors="Lukas Fritsch and Jan Grashorn",
