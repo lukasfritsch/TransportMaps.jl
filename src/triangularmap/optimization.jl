@@ -129,6 +129,8 @@ end
 
 function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
 
+    setforwarddirection!(M, :reference)
+
     # Create quadrature weights based on the number of dimensions
     quadrature = MonteCarloWeights(samples)
     target = M.reference
@@ -150,10 +152,10 @@ function variance_diagnostic(
     mvn = M.reference.density
 
     for (i, zᵢ) in enumerate(eachrow(Z))
-        Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
-        log_π = log(target.density(Mᵢ) + δ)
-        log_detJ = log(abs(jacobian(M, zᵢ)))
-        total[i] = log_π + log_detJ - log.(mvn(zᵢ))
+        # Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
+        # log_π = log(target.density(Mᵢ) + δ)
+        # log_detJ = log(abs(jacobian(M, zᵢ)))
+        total[i] = log(pushforward(M, target.density, zᵢ)) - log.(mvn(zᵢ))
     end
 
     return 0.5 * var(total)
