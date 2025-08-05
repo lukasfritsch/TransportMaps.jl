@@ -17,7 +17,6 @@ using Plots
 
 # ### Generating Target Samples
 #
-# First, we generate samples from the banana distribution using MCMC sampling.
 # The banana distribution has the density:
 # ```math
 # p(x) = \phi(x_1) \cdot \phi(x_2 - x_1^2)
