@@ -92,7 +92,7 @@ println(res)
 samples_z = randn(1000, 2)
 
 # Map the samples
-mapped_samples = reduce(vcat, [evaluate(M, z)' for z in eachrow(samples_z)])
+mapped_samples = evaluate(M, samples_z)
 
 # Compute the variance Diagnostic
 var_diag = variance_diagnostic(M, target, samples_z)

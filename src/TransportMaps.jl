@@ -43,6 +43,7 @@ export multivariate_indices
 export gradient
 export gradient_coefficients
 export gradient_z
+export gradient_zk
 export jacobian
 export inverse
 export inverse_jacobian

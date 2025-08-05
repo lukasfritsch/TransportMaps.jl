@@ -46,18 +46,56 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     end
 end
 
-# Evaluate the polynomial map at z
-function evaluate(M::PolynomialMap, z::AbstractArray{<:Real})
+# Evaluate the polynomial map at z (single vector)
+function evaluate(M::PolynomialMap, z::AbstractVector{<:Real})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     return [evaluate(component, z[1:i]) for (i, component) in enumerate(M.components)]
 end
 
-# Gradient of the polynomial map at z
-function gradient_zk(M::PolynomialMap, z::AbstractArray{<:Real})
+# Evaluate the polynomial map at multiple points (matrix input) using multithreading
+function evaluate(M::PolynomialMap, Z::AbstractMatrix{<:Real})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+    n_dims = length(M.components)
+
+    # Preallocate result matrix
+    results = Matrix{Float64}(undef, n_points, n_dims)
+
+    # Use multithreading to evaluate each point
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i, :] = evaluate(M, z_point)
+    end
+
+    return results
+end
+
+# Gradient of the polynomial map at z (single vector)
+function gradient_zk(M::PolynomialMap, z::AbstractVector{<:Real})
     @assert length(z) == length(M.components) "Dimension mismatch: z and components must have same length"
     # Compute the derivatives ∂Mᵏ/∂zₖ for each component
     return [partial_derivative_zk(component, z[1:i]) for (i, component) in enumerate(M.components)]
+end
+
+# Gradient of the polynomial map at multiple points (matrix input) using multithreading
+function gradient_zk(M::PolynomialMap, Z::AbstractMatrix{<:Real})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+    n_dims = length(M.components)
+
+    # Preallocate result matrix
+    results = Matrix{Float64}(undef, n_points, n_dims)
+
+    # Use multithreading to compute gradient for each point
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i, :] = gradient_zk(M, z_point)
+    end
+
+    return results
 end
 
 # Gradient of the map with respect to the coefficients at z
@@ -126,11 +164,29 @@ function gradient_coefficients(M::PolynomialMap, z::AbstractArray{<:Real})
     return gradient_matrix
 end
 
-# Compute the Jacobian determinant of the polynomial map at z
-function jacobian(M::PolynomialMap, z::AbstractArray{<:Real})
+# Compute the Jacobian determinant of the polynomial map at z (single vector)
+function jacobian(M::PolynomialMap, z::AbstractVector{<:Real})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
     # Compute the jacobian determinant as ∏ₖ ∂Mᵏ/∂zₖ
     return prod(gradient_zk(M, z))
+end
+
+# Compute the Jacobian determinant of the polynomial map at multiple points (matrix input) using multithreading
+function jacobian(M::PolynomialMap, Z::AbstractMatrix{<:Real})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+
+    # Preallocate result vector
+    results = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to compute Jacobian for each point
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i] = jacobian(M, z_point)
+    end
+
+    return results
 end
 
 # Compute the gradient of log|det J_M| with respect to coefficients
@@ -162,8 +218,8 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{Float64})
     return gradient
 end
 
-# Compute the inverse of the polynomial map at x
-function inverse(M::PolynomialMap, x::AbstractArray{<:Real})
+# Compute the inverse of the polynomial map at x (single vector)
+function inverse(M::PolynomialMap, x::AbstractVector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     # Initialize the inverse map
@@ -175,8 +231,27 @@ function inverse(M::PolynomialMap, x::AbstractArray{<:Real})
     return z
 end
 
-# Compute the Jacobian determinant of the inverse polynomial map at x
-function inverse_jacobian(M::PolynomialMap, x::AbstractArray{<:Real})
+# Compute the inverse of the polynomial map at multiple points (matrix input) using multithreading
+function inverse(M::PolynomialMap, X::AbstractMatrix{<:Real})
+    @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(X, 1)
+    n_dims = length(M.components)
+
+    # Preallocate result matrix
+    results = Matrix{Float64}(undef, n_points, n_dims)
+
+    # Use multithreading to compute inverse for each point
+    Threads.@threads for i in 1:n_points
+        x_point = X[i, :]
+        results[i, :] = inverse(M, x_point)
+    end
+
+    return results
+end
+
+# Compute the Jacobian determinant of the inverse polynomial map at x (single vector)
+function inverse_jacobian(M::PolynomialMap, x::AbstractVector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     # For triangular maps, det(J_{M⁻¹}(x)) = 1/det(J_M(M⁻¹(x)))
@@ -184,8 +259,26 @@ function inverse_jacobian(M::PolynomialMap, x::AbstractArray{<:Real})
     return 1.0 / jacobian(M, inverse(M, x))
 end
 
-# Pullback density: Map from reference to target space
-function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
+# Compute the Jacobian determinant of the inverse polynomial map at multiple points (matrix input) using multithreading
+function inverse_jacobian(M::PolynomialMap, X::AbstractMatrix{<:Real})
+    @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(X, 1)
+
+    # Preallocate result vector
+    results = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to compute inverse Jacobian for each point
+    Threads.@threads for i in 1:n_points
+        x_point = X[i, :]
+        results[i] = inverse_jacobian(M, x_point)
+    end
+
+    return results
+end
+
+# Pullback density: Map from reference to target space (single vector)
+function pullback(M::PolynomialMap, x::AbstractVector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     value = M.forwarddirection == :target ? M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x)) :
@@ -195,15 +288,51 @@ function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     return value
 end
 
-# Pushforward density: Map from target to reference space
-function pushforward(M::PolynomialMap, target_density::Function, z::AbstractArray{<:Real})
+# Pullback density: Map from reference to target space (matrix input) using multithreading
+function pullback(M::PolynomialMap, X::AbstractMatrix{<:Real})
+    @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(X, 1)
+
+    # Preallocate result vector
+    results = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to compute pullback for each point
+    Threads.@threads for i in 1:n_points
+        x_point = X[i, :]
+        results[i] = pullback(M, x_point)
+    end
+
+    return results
+end
+
+# Pushforward density: Map from target to reference space (single vector)
+function pushforward(M::PolynomialMap, target::MapTargetDensity, z::AbstractVector{<:Real})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
-    value = M.forwarddirection == :target ? target_density(evaluate(M, z)) * abs(jacobian(M, z)) :
+    value = M.forwarddirection == :target ? target.density(evaluate(M, z)) * abs(jacobian(M, z)) :
                                             error("Can't evaluate pushforward for a map from samples!")
 
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|
     return value
+end
+
+# Pushforward density: Map from target to reference space (matrix input) using multithreading
+function pushforward(M::PolynomialMap, target::MapTargetDensity, Z::AbstractMatrix{<:Real})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+
+    # Preallocate result vector
+    results = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to compute pushforward for each point
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i] = pushforward(M, target, z_point)
+    end
+
+    return results
 end
 
 # Set the coefficients in all map components.

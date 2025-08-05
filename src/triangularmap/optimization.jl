@@ -155,7 +155,7 @@ function variance_diagnostic(
         # Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
         # log_π = log(target.density(Mᵢ) + δ)
         # log_detJ = log(abs(jacobian(M, zᵢ)))
-        total[i] = log(pushforward(M, target.density, zᵢ)) - log.(mvn(zᵢ))
+        total[i] = log(pushforward(M, target, zᵢ)) - log.(mvn(zᵢ))
     end
 
     return 0.5 * var(total)

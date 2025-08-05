@@ -92,10 +92,7 @@ n_samples = 1000
 reference_samples = randn(n_samples, 2)
 
 # Transform to target distribution
-target_samples = zeros(n_samples, 2)
-for i in 1:n_samples
-    target_samples[i, :] = evaluate(M, reference_samples[i, :])
-end
+target_samples = evaluate(M, reference_samples)
 
 # ### Visualizing Results
 #
@@ -156,10 +153,7 @@ result_banana = optimize!(M_banana, target_density_banana, quadrature)
 display(M_banana)
 
 # Generate samples
-banana_samples = zeros(n_samples, 2)
-for i in 1:n_samples
-    banana_samples[i, :] = evaluate(M_banana, reference_samples[i, :])
-end
+banana_samples = evaluate(M_banana, reference_samples)
 
 # Visualize the banana distribution
 x1_grid = range(-3, 3, length=100)
