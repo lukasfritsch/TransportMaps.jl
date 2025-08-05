@@ -35,14 +35,14 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         if referencetype == :normal
             refdensity = Normal(0,1)
             reference = MapReferenceDensity(refdensity)
-            return new(components, reference, :undef)
+            return new(components, reference, :target)
         else
             error("Reference type $referencetype not supported")
         end
     end
 
     function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution)
-        return new(components, MapReferenceDensity(reference), :undef)
+        return new(components, MapReferenceDensity(reference), :target)
     end
 end
 

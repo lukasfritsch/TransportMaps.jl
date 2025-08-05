@@ -105,11 +105,6 @@ function optimize!(
     quadrature::AbstractQuadratureWeights,
     )
 
-    #!TODO this sucks
-    if M.forwarddirection == :undef
-        setforwarddirection!(M, :target)
-    end
-
     # Define objective function and gradient
     function objective_with_gradient(a)
         setcoefficients!(M, a)
