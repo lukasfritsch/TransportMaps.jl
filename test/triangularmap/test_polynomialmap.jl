@@ -647,8 +647,5 @@ using LinearAlgebra
         catch
             @test true  # Skip if numerical issues
         end
-
-        
-
     end
 end

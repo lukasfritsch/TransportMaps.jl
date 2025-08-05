@@ -200,7 +200,7 @@ function pushforward(M::PolynomialMap, target_density::Function, z::AbstractArra
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     value = M.forwarddirection == :target ? target_density(evaluate(M, z)) * abs(jacobian(M, z)) :
-                                            error("I think this direction doesn't make sense")
+                                            error("Can't evaluate pushforward for a map from samples!")
 
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|
     return value

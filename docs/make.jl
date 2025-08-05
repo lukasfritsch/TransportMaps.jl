@@ -57,8 +57,9 @@ makedocs(
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
         "Examples" => [
-            "Banana Distribution" => "Examples/banana_example.md",
-            "BOD Parameter Estimation" => "Examples/bod_example.md"
+            "Banana: Map from Density" => "Examples/banana_example.md",
+            "Banana: Map from Samples" => "Examples/mapfromsamples_example.md",
+            "BOD Parameter Estimation" => "Examples/bod_example.md",
         ],
         "API" => "api.md",
         "References" => "references.md"

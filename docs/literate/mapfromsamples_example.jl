@@ -48,8 +48,8 @@ function generate_banana_samples(n_samples::Int)
 end
 
 println("Generating samples from banana distribution...")
-samples_banana = generate_banana_samples(num_samples)
-println("Generated $(size(samples_banana, 1)) samples")
+target_samples = generate_banana_samples(num_samples)
+println("Generated $(size(target_samples, 1)) samples")
 
 # ### Creating the Transport Map
 #
@@ -64,44 +64,61 @@ M = PolynomialMap(2, 2)
 # The key difference from density-based optimization is that we optimize
 # directly from the sample data without requiring the density function. Inside the optimization the map is arranged s.t. the "forward" direction is from the (unknown) target distribution to the standard normal distribution:
 
-@time res = optimize!(M, samples_banana)
+@time res = optimize!(M, target_samples)
 println("Optimization result: ", res)
 
 # ### Testing the Map
 #
-# Let's generate samples from the standard normal distribution
-# and map them through our optimized transport map:
+# Let's generate new samples from the banana density and standard normal samples and map them through our optimized transport map to verify the learned distribution:
 
-samples_z = randn(1000, 2)
-
-# Map the samples through our transport map:
-mapped_samples = reduce(vcat, [evaluate(M, x)' for x in eachrow(samples_z)])
+new_samples = generate_banana_samples(1000)
+norm_samples = randn(1000, 2)
+# Map the samples through our transport map. Note that `evaluate` now transports from reference to target, i.e. `mapped_samples` should be standard normal samples:
+mapped_samples = reduce(vcat, [evaluate(M, x)' for x in eachrow(new_samples)])
+# while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:
+mapped_banana_samples = reduce(vcat, [inverse(M, x)' for x in eachrow(norm_samples)])
 
 # ### Visualizing Results
 #
 # Let's create a scatter plot comparing the original samples with
 # the mapped samples to see how well our transport map learned the distribution:
 
-p1 = scatter(samples_banana[:, 1], samples_banana[:, 2],
+p11 = scatter(new_samples[:, 1], new_samples[:, 2],
             label="Original Samples", alpha=0.5, color=1,
             title="Original Banana Distribution Samples",
             xlabel="x₁", ylabel="x₂")
 
-p2 = scatter(mapped_samples[:, 1], mapped_samples[:, 2],
+scatter!(p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
             label="Mapped Samples", alpha=0.5, color=2,
             title="Transport Map Generated Samples",
             xlabel="x₁", ylabel="x₂")
 
-plot(p1, p2, layout=(1, 2), size=(800, 400))
-#md savefig("samples-comparison.svg"); nothing # hide
-# ![Sample Comparison](samples-comparison.svg)
+plot(p11, size=(800, 400))
+#md savefig("samples-comparison-target.svg"); nothing # hide
+# ![Sample Comparison](samples-comparison-target.svg)
+
+# and the resulting samples in standard normal space:
+
+p12 = scatter(norm_samples[:, 1], norm_samples[:, 2],
+            label="Original Samples", alpha=0.5, color=1,
+            title="Original Banana Distribution Samples",
+            xlabel="x₁", ylabel="x₂")
+
+scatter!(p12, mapped_samples[:, 1], mapped_samples[:, 2],
+            label="Mapped Samples", alpha=0.5, color=2,
+            title="Transport Map Generated Samples",
+            xlabel="x₁", ylabel="x₂")
+
+plot(p12, size=(800, 400))
+#md savefig("samples-comparison-reference.svg"); nothing # hide
+# ![Sample Comparison](samples-comparison-reference.svg)
 
 # ### Density Comparison
 #
 # We can also compare the learned density (via pullback) with the true density:
 
 x₁ = range(-3, 3, length=100)
-x₂ = range(-1, 8, length=100)
+x₂ = range(-2.5, 4.0, length=100)
 
 # True banana density values:
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
@@ -129,7 +146,7 @@ plot(p3, p4, layout=(1, 2), size=(800, 400))
 # Finally, let's create a combined plot showing both the original samples
 # and the density contours:
 
-scatter(samples_banana[:, 1], samples_banana[:, 2],
+scatter(target_samples[:, 1], target_samples[:, 2],
         label="Original Samples", alpha=0.3, color=1,
         xlabel="x₁", ylabel="x₂", 
         title="Banana Distribution: Samples and Learned Density")
@@ -139,7 +156,7 @@ contour!(x₁, x₂, learned_density./maximum(learned_density),
         label="Learned Density Contours")
 
 xlims!(-3, 3)
-ylims!(-1, 8)
+ylims!(-2.5, 4.0)
 #md savefig("combined-result.svg"); nothing # hide
 # ![Combined Result](combined-result.svg)
 
@@ -149,8 +166,8 @@ ylims!(-1, 8)
 # statistics of the original and mapped samples:
 
 println("\nSample Statistics Comparison:")
-println("Original samples - Mean: ", Distributions.mean(samples_banana, dims=1))
-println("Original samples - Std:  ", Distributions.std(samples_banana, dims=1))
+println("Original samples - Mean: ", Distributions.mean(target_samples, dims=1))
+println("Original samples - Std:  ", Distributions.std(target_samples, dims=1))
 println("Mapped samples - Mean:   ", Distributions.mean(mapped_samples, dims=1))
 println("Mapped samples - Std:    ", Distributions.std(mapped_samples, dims=1))
 
