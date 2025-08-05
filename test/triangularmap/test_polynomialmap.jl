@@ -540,13 +540,14 @@ using LinearAlgebra
     @testset "Pushforward Density" begin
         # Test with simple target density
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
+        target = MapTargetDensity(target_density, :auto_diff)
 
         # Test 1D case
         pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
         setcoefficients!(pm_1d, [0.0, 1.0])
 
         z_1d = [0.5]
-        pf_1d = pushforward(pm_1d, target_density, z_1d)
+        pf_1d = pushforward(pm_1d, target, z_1d)
         # For identity map with standard normal target, pushforward should equal target at z
         @test pf_1d ≈ target_density(z_1d) atol=1e-10
 
@@ -556,8 +557,8 @@ using LinearAlgebra
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
 
         z_2d = [0.3, 0.7]
-        pf_2d = pushforward(pm_2d, target_density, z_2d)
-        @test pf_2d ≈ target_density(z_2d) atol=1e-10
+        pf_2d = pushforward(pm_2d, target, z_2d)
+        @test pf_2d ≈ target.density(z_2d) atol=1e-10
 
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())
@@ -581,8 +582,11 @@ using LinearAlgebra
         end
 
         # Test with different target densities
-        uniform_target(x) = all(0 ≤ xi ≤ 1 for xi in x) ? 1.0 : 0.0
-        exponential_target(x) = prod(exp(-xi) for xi in x if xi ≥ 0)
+        uniform_target_pdf(x) = all(0 ≤ xi ≤ 1 for xi in x) ? 1.0 : 0.0
+        exponential_target_pdf(x) = prod(exp(-xi) for xi in x if xi ≥ 0)
+
+        uniform_target = MapTargetDensity(uniform_target_pdf, :auto_diff)
+        exponential_target = MapTargetDensity(exponential_target_pdf, :auto_diff)
 
         pm_simple = PolynomialMap(2, 1, :normal, Softplus())
         setcoefficients!(pm_simple, ones(numbercoefficients(pm_simple)) * 0.1)
@@ -600,8 +604,8 @@ using LinearAlgebra
         end
 
         # Test dimension mismatch
-        @test_throws AssertionError pushforward(pm_2d, target_density, [1.0])
-        @test_throws AssertionError pushforward(pm_2d, target_density, [1.0, 2.0, 3.0])
+        @test_throws AssertionError pushforward(pm_2d, target, [1.0])
+        @test_throws AssertionError pushforward(pm_2d, target, [1.0, 2.0, 3.0])
     end
 
     @testset "Density Transformation Consistency" begin
@@ -611,6 +615,7 @@ using LinearAlgebra
 
         # Define a simple target density
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
+        target = MapTargetDensity(target_density, :auto_diff)
 
         # Test points
         z_point = [0.3, 0.4]
@@ -620,7 +625,7 @@ using LinearAlgebra
             x_point = evaluate(pm, z_point)
 
             # Compute pushforward at z
-            pf_val = pushforward(pm, target_density, z_point)
+            pf_val = pushforward(pm, target, z_point)
 
             # Compute pullback at x
             pb_val = pullback(pm, x_point)

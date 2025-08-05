@@ -24,24 +24,36 @@ using TransportMaps
 using Distributions
 
 # Create a 2D polynomial map with degree 2 and Softplus rectifier
-M = PolynomialMap(2, 2, Softplus())
+M = PolynomialMap(2, 2, Normal(), Softplus())
 
 # Set up quadrature for optimization
 quadrature = GaussHermiteWeights(3, 2)
 
 # Define target density (banana distribution)
 target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+target = MapTargetDensity(target_density, :auto_diff)
 
 # Optimize the map coefficients
-result = optimize!(M, target_density, quadrature)
+result = optimize!(M, target, quadrature)
 
 # Generate samples by mapping standard Gaussian samples
 samples_z = randn(1000, 2)
-mapped_samples = reduce(vcat, [evaluate(M, x)' for x in eachrow(samples_z)])
+# Matrix input automatically uses multithreading for better performance
+mapped_samples = evaluate(M, samples_z)
 
 # Evaluate map quality
-variance_diag = variance_diagnostic(M, target_density, samples_z)
+variance_diag = variance_diagnostic(M, target, samples_z)
+
 ```
+
+## Features
+
+- **Triangular polynomial transport maps** with various polynomial bases
+- **Multiple rectifier functions**: Softplus, ShiftedELU, Identity
+- **Quadrature integration schemes**: Gauss-Hermite, Monte Carlo, Latin Hypercube
+- **Automatic optimization** of map coefficients via KL divergence minimization
+- **Multithreaded evaluation** for processing multiple points efficiently
+- **Matrix input support** for all core functions (evaluate, inverse, jacobian, etc.)
 
 Please refer to the [documentation](https://lukasfritsch.github.io/TransportMaps.jl/dev/) for more extensive examples and explanations.
 
