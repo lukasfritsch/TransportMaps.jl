@@ -105,6 +105,11 @@ function optimize!(
     quadrature::AbstractQuadratureWeights,
     )
 
+    #!TODO this sucks
+    if M.forwarddirection == :undef
+        setforwarddirection!(M, :target)
+    end
+
     # Define objective function and gradient
     function objective_with_gradient(a)
         setcoefficients!(M, a)
@@ -128,6 +133,8 @@ function optimize!(
 end
 
 function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
+
+    setforwarddirection!(M, :reference)
 
     # Create quadrature weights based on the number of dimensions
     quadrature = MonteCarloWeights(samples)

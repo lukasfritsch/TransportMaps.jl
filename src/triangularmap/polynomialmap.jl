@@ -1,6 +1,7 @@
 mutable struct PolynomialMap <: AbstractTriangularMap
     components::Vector{PolynomialMapComponent}  # Vector of map components
     reference::MapReferenceDensity
+    forwarddirection::Symbol
 
     function PolynomialMap(
         dimension::Int,
@@ -34,14 +35,14 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         if referencetype == :normal
             refdensity = Normal(0,1)
             reference = MapReferenceDensity(refdensity)
-            return new(components, reference)
+            return new(components, reference, :undef)
         else
             error("Reference type $referencetype not supported")
         end
     end
 
     function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution)
-        return new(components, MapReferenceDensity(reference))
+        return new(components, MapReferenceDensity(reference), :undef)
     end
 end
 
@@ -187,16 +188,22 @@ end
 function pullback(M::PolynomialMap, x::AbstractArray{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
+    value = M.forwarddirection == :target ? M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x)) :
+                                            M.reference.density(evaluate(M, x)) * abs(jacobian(M, x))
+
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
-    return M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x))
+    return value
 end
 
 # Pushforward density: Map from target to reference space
 function pushforward(M::PolynomialMap, target_density::Function, z::AbstractArray{<:Real})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
+    value = M.forwarddirection == :target ? target_density(evaluate(M, z)) * abs(jacobian(M, z)) :
+                                            error("I think this direction doesn't make sense")
+
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|
-    return target_density(evaluate(M, z)) * abs(jacobian(M, z))
+    return value
 end
 
 # Set the coefficients in all map components.
@@ -217,6 +224,16 @@ function getcoefficients(M::PolynomialMap)
         counter += length(component.basisfunctions)
     end
     return coefficients
+end
+
+function setforwarddirection!(M::PolynomialMap, forwarddirection::Symbol)
+    @assert forwarddirection in [:reference, :target] "Direction must be :reference, :target"
+    M.forwarddirection = forwarddirection
+end
+
+function setoptimizationdirection!(M::PolynomialMap, optimizationdirection::Symbol)
+    @assert optimizationdirection in [:forward, :backward] "Direction must be :forward, :backward"
+    M.optimizationdirection = optimizationdirection
 end
 
 # Number of coefficients in the polynomial map
