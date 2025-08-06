@@ -306,23 +306,6 @@ function pullback(M::PolynomialMap, X::AbstractMatrix{<:Real})
     return results
 end
 
-# Pullback density: Map from reference to target space (matrix input) using multithreading
-function pullback(M::PolynomialMap, X::AbstractMatrix{<:Real})
-    @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
-
-    n_points = size(X, 1)
-
-    # Preallocate result vector
-    results = Vector{Float64}(undef, n_points)
-
-    # Use multithreading to compute pullback for each point
-    Threads.@threads for i in 1:n_points
-        x_point = X[i, :]
-        results[i] = pullback(M, x_point)
-    end
-
-    return results
-end
 
 # Pushforward density: Map from target to reference space (single vector)
 function pushforward(M::PolynomialMap, target::MapTargetDensity, z::AbstractVector{<:Real})
