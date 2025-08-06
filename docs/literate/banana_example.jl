@@ -57,7 +57,7 @@ println("Optimization result: ", res)
 samples_z = randn(1000, 2)
 
 # Map the samples through our transport map:
-mapped_samples = reduce(vcat, [evaluate(M, x)' for x in eachrow(samples_z)])
+mapped_samples = evaluate(M, samples_z)
 
 # ### Visualizing Results
 #

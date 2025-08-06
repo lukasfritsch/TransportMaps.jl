@@ -14,6 +14,7 @@ using Test
         include("triangularmap/test_polynomialmap.jl")
         include("triangularmap/test_optimization.jl")
         include("triangularmap/test_gradients.jl")
+        include("triangularmap/test_multithreading.jl")
     end
 
     # Test Utilities

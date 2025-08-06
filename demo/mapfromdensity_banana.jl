@@ -16,7 +16,7 @@ println(res)
 samples_z = randn(1000, 2)
 
 # Map the samples
-mapped_samples = reduce(vcat, [TransportMaps.evaluate(M, x)' for x in eachrow(samples_z)])
+mapped_samples = evaluate(M, samples_z)
 
 s = scatter(mapped_samples[:, 1], mapped_samples[:, 2], label="Mapped Samples", alpha=0.5, color=2)
 display(s)

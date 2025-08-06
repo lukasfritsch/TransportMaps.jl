@@ -27,22 +27,23 @@ banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 
 # Set up the log-target function for sampling:
 num_samples = 500
+nothing # hide
 
 # Generate samples using rejection sampling (no external dependencies)
 function generate_banana_samples(n_samples::Int)
     samples = Matrix{Float64}(undef, n_samples, 2)
-    
+
     count = 0
     while count < n_samples
         x1 = randn() * 2
         x2 = randn() * 3 + x1^2
-        
+
         if rand() < banana_density([x1, x2]) / 0.4
             count += 1
             samples[count, :] = [x1, x2]
         end
     end
-    
+
     return samples
 end
 
@@ -73,9 +74,9 @@ println("Optimization result: ", res)
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
 # Map the samples through our transport map. Note that `evaluate` now transports from reference to target, i.e. `mapped_samples` should be standard normal samples:
-mapped_samples = reduce(vcat, [evaluate(M, x)' for x in eachrow(new_samples)])
+mapped_samples = evaluate(M, new_samples)
 # while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:
-mapped_banana_samples = reduce(vcat, [inverse(M, x)' for x in eachrow(norm_samples)])
+mapped_banana_samples = inverse(M, norm_samples)
 
 # ### Visualizing Results
 #
@@ -126,13 +127,13 @@ true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
 learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]
 
 # Create contour plots for comparison:
-p3 = contour(x₁, x₂, true_density, 
-            title="True Banana Density", 
+p3 = contour(x₁, x₂, true_density,
+            title="True Banana Density",
             xlabel="x₁", ylabel="x₂",
             colormap=:viridis, levels=10)
 
-p4 = contour(x₁, x₂, learned_density, 
-            title="Learned Density (Pullback)", 
+p4 = contour(x₁, x₂, learned_density,
+            title="Learned Density (Pullback)",
             xlabel="x₁", ylabel="x₂",
             colormap=:viridis, levels=10)
 
@@ -147,9 +148,9 @@ plot(p3, p4, layout=(1, 2), size=(800, 400))
 
 scatter(target_samples[:, 1], target_samples[:, 2],
         label="Original Samples", alpha=0.3, color=1,
-        xlabel="x₁", ylabel="x₂", 
+        xlabel="x₁", ylabel="x₂",
         title="Banana Distribution: Samples and Learned Density")
-        
+
 contour!(x₁, x₂, learned_density./maximum(learned_density),
         levels=5, colormap=:viridis, alpha=0.8,
         label="Learned Density Contours")

@@ -28,7 +28,7 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
     end
 end
 
-# Compute Mᵏ according to Eq. (4.13)
+# Compute Mᵏ according to Eq. (4.13) for a single input vector
 function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
@@ -54,7 +54,28 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
     return f₀ + ∫g∂f
 end
 
-# Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ)
+# Compute Mᵏ according to Eq. (4.13) for multiple input vectors using multithreading
+function evaluate(map_component::PolynomialMapComponent, X::Matrix{<:Real})
+    @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
+    @assert map_component.index > 0 "index must be a positive integer"
+    @assert size(X, 2) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: X columns and multi_index must have same length"
+
+    n_points = size(X, 1)
+
+    # Preallocate result vector
+    results = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to evaluate each point
+    Threads.@threads for i in 1:n_points
+        x_point = X[i, :]
+        @assert map_component.index <= length(x_point) "index must not exceed the dimension of x_point"
+        results[i] = evaluate(map_component, x_point)
+    end
+
+    return results
+end
+
+# Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ) for a single input vector
 function partial_derivative_zk(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
 
@@ -70,6 +91,24 @@ function partial_derivative_zk(map_component::PolynomialMapComponent, x::Vector{
     ∂Mᵏ = map_component.rectifier(∂fᵏ)
 
     return ∂Mᵏ
+end
+
+# Partial derivative ∂Mᵏ/∂xₖ for multiple input vectors using multithreading
+function partial_derivative_zk(map_component::PolynomialMapComponent, X::Matrix{<:Real})
+    @assert size(X, 2) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: X columns and multi_index must have same length"
+
+    n_points = size(X, 1)
+
+    # Preallocate result vector
+    results = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to compute partial derivative for each point
+    Threads.@threads for i in 1:n_points
+        x_point = X[i, :]
+        results[i] = partial_derivative_zk(map_component, x_point)
+    end
+
+    return results
 end
 
 # Compute gradient of ∂Mᵏ/∂zₖ with respect to coefficients
