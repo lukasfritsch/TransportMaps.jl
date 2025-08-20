@@ -33,7 +33,11 @@ export AbstractMapDensity
 # Export functions/methods
 # Basis functions and evaluation
 export Psi
+export basisfunction
+export basisfunction_derivative
 export evaluate
+export edge_controlled_hermite_polynomial
+export edge_controlled_hermite_derivative
 export f
 export hermite_polynomial
 export hermite_derivative

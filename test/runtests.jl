@@ -4,9 +4,10 @@ using Test
 @testset "TransportMaps.jl" begin
     # Test Map Components
     @testset "Map Components" begin
-        include("mapcomponents/test_hermitebasis.jl")
-        include("mapcomponents/test_rectifier.jl")
-        include("mapcomponents/test_polynomialmapcomponent.jl")
+    include("mapcomponents/test_hermitebasis.jl")
+    include("mapcomponents/test_multivariatebasis.jl")
+    include("mapcomponents/test_rectifier.jl")
+    include("mapcomponents/test_polynomialmapcomponent.jl")
     end
 
     # Test Triangular Maps

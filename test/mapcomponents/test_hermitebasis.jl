@@ -17,46 +17,56 @@ using Test
             @test hermite_polynomial(2, 1.0) ≈ 0.0  # x^2 - 1 at x=1
             @test hermite_polynomial(3, 1.0) ≈ -2.0  # x^3 - 3x at x=1
 
-            # Test Psi function interface
-            @test Psi(0.0, 1.0) ≈ 1.0
-            @test Psi(1.0, 1.0) ≈ 1.0
-            @test Psi(2.0, 0.0) ≈ -1.0
+            # Test basisfunction interface (HermiteBasis default)
+            @test basisfunction(HermiteBasis(:none), 0.0, 1.0) ≈ 1.0
+            @test basisfunction(HermiteBasis(:none), 1.0, 1.0) ≈ 1.0
+            @test basisfunction(HermiteBasis(:none), 2.0, 0.0) ≈ -1.0
+
+            # Test edge-controlled Hermite polynomials
+            @test basisfunction(HermiteBasis(:gaussian), 1.0, 2.0) ≈ hermite_polynomial(1, 2.0) * exp(-.25 * 2.0^2)
+            @test basisfunction(HermiteBasis(:cubic), 2.0, 1.0) ≈ hermite_polynomial(2, 1.0) * (2 * (min(1.0, abs(1.0)/4.0))^3 - 3 * (min(1.0, abs(1.0)/4.0))^2 + 1)
         end
 
         @testset "Multivariate Hermite" begin
-            # Test multivariate Psi
+            # Test multivariate Psi (using HermiteBasis)
             alpha = [0.0, 1.0]
             x = [1.0, 2.0]
-            result = Psi(alpha, x)
-            expected = Psi(0.0, 1.0) * Psi(1.0, 2.0)
+            result = Psi(alpha, x, HermiteBasis(:none))
+            expected = basisfunction(HermiteBasis(:none), 0.0, 1.0) * basisfunction(HermiteBasis(:none), 1.0, 2.0)
             @test result ≈ expected
 
             # Test with different dimensions
             alpha3 = [1.0, 0.0, 2.0]
             x3 = [0.5, 1.0, -0.5]
-            result3 = Psi(alpha3, x3)
-            expected3 = Psi(1.0, 0.5) * Psi(0.0, 1.0) * Psi(2.0, -0.5)
+            result3 = Psi(alpha3, x3, HermiteBasis(:none))
+            expected3 = basisfunction(HermiteBasis(:none), 1.0, 0.5) * basisfunction(HermiteBasis(:none), 0.0, 1.0) * basisfunction(HermiteBasis(:none), 2.0, -0.5)
             @test result3 ≈ expected3
         end
 
         @testset "MultivariateBasis Structure" begin
             # Test MultivariateBasis creation
-            mvb = MultivariateBasis([1, 2, 0])
+            mvb = MultivariateBasis([1, 2, 0], HermiteBasis())
             @test mvb.multi_index == [1, 2, 0]
             @test mvb.basis_type isa HermiteBasis
 
-            # Test evaluation
+            # Test evaluation (default Hermite)
             x = [1.0, 0.0, 2.0]
             result = evaluate(mvb, x)
             expected = hermite_polynomial(1, 1.0) * hermite_polynomial(2, 0.0) * hermite_polynomial(0, 2.0)
             @test result ≈ expected
+
+            # Test evaluation with edge control
+            mvb_gauss = MultivariateBasis([1, 2, 0], HermiteBasis(:gaussian))
+            result_gauss = evaluate(mvb_gauss, x)
+            expected_gauss = edge_controlled_hermite_polynomial(1, 1.0, :gaussian) * edge_controlled_hermite_polynomial(2, 0.0, :gaussian) * edge_controlled_hermite_polynomial(0, 2.0, :gaussian)
+            @test result_gauss ≈ expected_gauss
         end
 
         @testset "Multivariate Function f" begin
             # Create basis functions
-            mvb1 = MultivariateBasis([0, 0])  # constant
-            mvb2 = MultivariateBasis([1, 0])  # x1
-            mvb3 = MultivariateBasis([0, 1])  # x2
+            mvb1 = MultivariateBasis([0, 0], HermiteBasis())  # constant
+            mvb2 = MultivariateBasis([1, 0], HermiteBasis())  # x1
+            mvb3 = MultivariateBasis([0, 1], HermiteBasis())  # x2
 
             Psi_vec = [mvb1, mvb2, mvb3]
             coefficients = [1.0, 2.0, 3.0]  # f = 1 + 2*x1 + 3*x2
@@ -82,17 +92,17 @@ using Test
             @test hermite_derivative(3, 1.0) ≈ 3.0 * hermite_polynomial(2, 1.0)
 
             # Test partial derivatives of MultivariateBasis
-            mvb = MultivariateBasis([1, 2])
+            mvb = MultivariateBasis([1, 2], HermiteBasis())
             x = [1.0, 0.5]
 
             # ∂/∂x1 of (x1 * (x2^2 - 1)) = (x2^2 - 1)
             pd1 = partial_derivative_z(mvb, x, 1)
-            expected1 = hermite_derivative(1, 1.0) * hermite_polynomial(2, 0.5)
+            expected1 = edge_controlled_hermite_derivative(1, 1.0, mvb.basis_type.edge_control) * edge_controlled_hermite_polynomial(2, 0.5, mvb.basis_type.edge_control)
             @test pd1 ≈ expected1
 
             # ∂/∂x2 of (x1 * (x2^2 - 1)) = x1 * 2*x2
             pd2 = partial_derivative_z(mvb, x, 2)
-            expected2 = hermite_polynomial(1, 1.0) * hermite_derivative(2, 0.5)
+            expected2 = edge_controlled_hermite_polynomial(1, 1.0, mvb.basis_type.edge_control) * edge_controlled_hermite_derivative(2, 0.5, mvb.basis_type.edge_control)
             @test pd2 ≈ expected2
 
             # Test gradient
@@ -104,8 +114,8 @@ using Test
 
         @testset "Function Derivatives" begin
             # Create a simple function f = 2*x1 + 3*x2
-            mvb1 = MultivariateBasis([1, 0])  # x1
-            mvb2 = MultivariateBasis([0, 1])  # x2
+            mvb1 = MultivariateBasis([1, 0], HermiteBasis())  # x1
+            mvb2 = MultivariateBasis([0, 1], HermiteBasis())  # x2
 
             Psi_vec = [mvb1, mvb2]
             coefficients = [2.0, 3.0]

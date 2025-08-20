@@ -2,7 +2,7 @@ using TransportMaps
 using Distributions
 using Plots
 
-M = PolynomialMap(2, 2)
+M = PolynomialMap(2, 2, Normal(), Softplus())
 quadrature = GaussHermiteWeights(3, 2)
 
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
