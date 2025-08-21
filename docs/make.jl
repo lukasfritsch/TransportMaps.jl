@@ -50,6 +50,14 @@ Literate.markdown(
     credit = true
 )
 
+# Process quadrature manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "quadrature.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
 makedocs(
     sitename = "TransportMaps.jl",
     authors="Lukas Fritsch and Jan Grashorn",
@@ -66,6 +74,7 @@ makedocs(
         "Manuals" => [
             "Getting Started" => "Manuals/getting_started.md",
             "Basis Functions" => "Manuals/hermite_basis.md",
+            "Quadrature Methods" => "Manuals/quadrature.md",
         ],
         "Examples" => [
             "Banana: Map from Density" => "Examples/banana_example.md",

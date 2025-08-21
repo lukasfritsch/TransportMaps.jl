@@ -88,6 +88,8 @@ export MonteCarloWeights
 export LatinHypercubeWeights
 export MapTargetDensity
 export MapReferenceDensity
+export SmolyakWeights
+export SparseSmolyakWeights
 
 # Include files
 include("util/mapdensity.jl")
@@ -103,5 +105,6 @@ include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")
 include("util/hybridrootfinder.jl")
 include("util/quadraturepoints.jl")
+include("util/smolyak.jl")
 
 end
