@@ -78,7 +78,7 @@ quadrature = GaussHermiteWeights(5, 2)  # 5 points per dimension, 2D
 # Fit the transport map to your target distribution:
 
 println("Optimizing the map...")
-@time result = optimize!(M, target_density, quadrature)
+result = optimize!(M, target_density, quadrature)
 
 println("Optimization result: ", result)
 println("Final coefficients: ", getcoefficients(M))

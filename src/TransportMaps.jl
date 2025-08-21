@@ -8,6 +8,7 @@ using Optim
 using QuasiMonteCarlo
 using Random
 using StatsFuns
+using Statistics
 
 # Abstract type definitions
 abstract type AbstractBasisFunction end
@@ -32,6 +33,8 @@ export AbstractMapDensity
 
 # Export functions/methods
 # Basis functions and evaluation
+export CubicSplineHermiteBasis
+export LinearizedHermiteBasis
 export Psi
 export basisfunction
 export basisfunction_derivative

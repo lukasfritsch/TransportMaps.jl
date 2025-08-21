@@ -1,5 +1,4 @@
 # Todo: Also implement Hessian
-# Todo: Implement map from samples
 
 """
     kldivergence(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights)
@@ -116,10 +115,11 @@ function optimize!(
         grad_storage .= kldivergence_gradient(M, target, quadrature)
     end
 
-    # Initialize coefficients: all zeros
-    initial_coefficients = zeros(numbercoefficients(M))
+    # Set linearization bounds for all HermiteBasis components if needed
+    setlinearizationbounds!(M, quadrature.points)
 
     # Optimize with analytical gradient
+    initial_coefficients = getcoefficients(M)
     result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, LBFGS())
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients
@@ -147,15 +147,10 @@ function variance_diagnostic(
     @assert size(Z, 2) == numberdimensions(M) "Z must have the same number of columns as number of map components in M"
 
     # Initialize
-    δ = eps()  # Small value to avoid log(0)
     total = zeros(Float64, size(Z, 1))
-    mvn = M.reference.density
 
     for (i, zᵢ) in enumerate(eachrow(Z))
-        # Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
-        # log_π = log(target.density(Mᵢ) + δ)
-        # log_detJ = log(abs(jacobian(M, zᵢ)))
-        total[i] = log(pushforward(M, target, zᵢ)) - log.(mvn(zᵢ))
+        total[i] = log(pushforward(M, target, zᵢ)) - log.(M.reference.density(zᵢ))
     end
 
     return 0.5 * var(total)

@@ -1,5 +1,6 @@
 using TransportMaps
 using Test
+using Statistics
 
 @testset "Hermite Polynomials and Multivariate Basis" begin
     @testset "Hermite Polynomials" begin
@@ -137,4 +138,59 @@ using Test
         @test HermiteBasis() isa AbstractBasisFunction
         @test AbstractPolynomialBasis <: AbstractBasisFunction
     end
+end
+
+@testset "Linearized HermiteBasis" begin
+    # Create samples from a normal distribution
+    samples = randn(1000)
+    max_degree = 4
+    k = 2
+    basis = LinearizedHermiteBasis(samples, max_degree, k)
+
+    # Test bounds are set to quantiles
+    lower, upper = basis.bounds_linearization
+    @test isapprox(lower, quantile(samples, 0.01); atol=1e-8)
+    @test isapprox(upper, quantile(samples, 0.99); atol=1e-8)
+
+    # Test normalization for k and not k
+    for n in 0:max_degree
+        if n == k
+            @test basis.normalization[n+1] == factorial(n+1)
+        else
+            @test basis.normalization[n+1] == factorial(n)
+        end
+    end
+
+    # Test piecewise polynomial and derivative
+    n = 3
+    z_a = lower - 1.0
+    z_b = upper + 1.0
+    z_mid = (lower + upper) / 2
+    # Left linear region
+    ψ_left = basisfunction(basis, n, z_a)
+    ψ_left_expected = hermite_polynomial(n, lower) + hermite_derivative(n, lower) * (z_a - lower)
+    ψ_left_expected /= sqrt(basis.normalization[n])
+    @test isapprox(ψ_left, ψ_left_expected; atol=1e-10)
+    # Right linear region
+    ψ_right = basisfunction(basis, n, z_b)
+    ψ_right_expected = hermite_polynomial(n, upper) + hermite_derivative(n, upper) * (z_b - upper)
+    ψ_right_expected /= sqrt(basis.normalization[n])
+    @test isapprox(ψ_right, ψ_right_expected; atol=1e-10)
+    # Middle region
+    ψ_mid = basisfunction(basis, n, z_mid)
+    ψ_mid_expected = hermite_polynomial(n, z_mid) / sqrt(basis.normalization[n])
+    @test isapprox(ψ_mid, ψ_mid_expected; atol=1e-10)
+
+    # Derivative left
+    dψ_left = basisfunction_derivative(basis, n, z_a)
+    dψ_left_expected = hermite_derivative(n, lower) / sqrt(basis.normalization[n])
+    @test isapprox(dψ_left, dψ_left_expected; atol=1e-10)
+    # Derivative right
+    dψ_right = basisfunction_derivative(basis, n, z_b)
+    dψ_right_expected = hermite_derivative(n, upper) / sqrt(basis.normalization[n])
+    @test isapprox(dψ_right, dψ_right_expected; atol=1e-10)
+    # Derivative mid
+    dψ_mid = basisfunction_derivative(basis, n, z_mid)
+    dψ_mid_expected = hermite_derivative(n, z_mid) / sqrt(basis.normalization[n])
+    @test isapprox(dψ_mid, dψ_mid_expected; atol=1e-10)
 end

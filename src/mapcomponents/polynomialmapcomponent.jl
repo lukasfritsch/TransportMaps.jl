@@ -15,7 +15,7 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
 
         multi_indices = multivariate_indices(degree, index)
         basisfunctions = [MultivariateBasis(multi_index, basis) for multi_index in multi_indices]
-        coefficients = Vector{Float64}(undef, length(basisfunctions))
+        coefficients = zeros(length(basisfunctions))
 
         return new(basisfunctions, coefficients, rectifier, index)
     end

@@ -18,7 +18,7 @@ using SpecialFunctions
 #
 # The BOD model is given by:
 # ```math
-# \mathcal{B}(t) = A(1-\exp(-Bt))+\mathcal{E}
+# \mathcal{B}(t) = A(1-\exp(-Bt))+ \varepsilon
 # ```
 # where the parameters A and B are functions of the uncertain inputs θ₁ and θ₂:
 # ```math
@@ -27,7 +27,7 @@ using SpecialFunctions
 # B &= 0.01 + 0.15\left(1 + \text{erf}\left(\frac{\theta_2}{\sqrt{2}} \right)\right)
 # \end{aligned}
 # ```
-# and ℰ ~ 𝒩(0, 10⁻³) represents measurement noise.
+# and $\varepsilon \sim \mathcal{N}(0, 10^{-3})$ represents measurement noise.
 
 function forward_model(t, x)
     A = 0.4 + 0.4 * (1 + erf(x[1] / sqrt(2)))
@@ -82,13 +82,13 @@ target = MapTargetDensity(posterior, :auto_diff)
 #
 # We use a 2-dimensional polynomial transport map with degree 3 and Softplus rectifier:
 
-M = PolynomialMap(2, 3, :normal, Softplus())
+M = PolynomialMap(2, 3, :normal, Softplus(), HermiteBasis(:linearized))
 
 # Set up Gauss-Hermite quadrature for optimization:
 quadrature = GaussHermiteWeights(10, 2)
 
 # Optimize the map coefficients:
-@time res = optimize!(M, target, quadrature)
+res = optimize!(M, target, quadrature)
 println("Optimization result: ", res)
 
 # ### Generating Posterior Samples

@@ -57,14 +57,14 @@ println("Generated $(size(target_samples, 1)) samples")
 # For sample-based optimization, we typically start with lower degrees
 # and can increase complexity as needed.
 
-M = PolynomialMap(2, 2)
+M = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(:none))
 
 # ### Optimizing from Samples
 #
 # The key difference from density-based optimization is that we optimize
 # directly from the sample data without requiring the density function. Inside the optimization the map is arranged s.t. the "forward" direction is from the (unknown) target distribution to the standard normal distribution:
 
-@time res = optimize!(M, target_samples)
+res = optimize!(M, target_samples)
 println("Optimization result: ", res)
 
 # ### Testing the Map

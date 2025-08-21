@@ -46,7 +46,7 @@ target = MapTargetDensity(target_density, :auto_diff)
 #
 # Now we optimize the map coefficients to approximate the target density:
 
-@time res = optimize!(M, target, quadrature)
+res = optimize!(M, target, quadrature)
 println("Optimization result: ", res)
 
 # ### Testing the Map

@@ -376,6 +376,23 @@ function numberdimensions(M::PolynomialMap)
     return length(M.components)
 end
 
+# Set linearization bounds for all HermiteBasis components in the polynomial map
+function setlinearizationbounds!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
+    # samples: N x d matrix, each column is for one component
+    for (k, component) in enumerate(M.components)
+        # Only set for HermiteBasis with linearized edge control
+        for mvb in component.basisfunctions
+            if isa(mvb.basis_type, HermiteBasis) && mvb.basis_type.edge_control == :linearized
+                # The degree for the k-th variable in this basis function
+                max_degree = maximum(mvb.multi_index)
+                mvb.basis_type = LinearizedHermiteBasis(samples[:,k], max_degree, component.index)
+            elseif isa(mvb.basis_type, HermiteBasis) && mvb.basis_type.edge_control == :cubic
+                mvb.basis_type = HermiteBasis(:linearized)
+            end
+        end
+    end
+end
+
 # Display method for PolynomialMap
 function Base.show(io::IO, M::PolynomialMap)
     n_dims = length(M.components)

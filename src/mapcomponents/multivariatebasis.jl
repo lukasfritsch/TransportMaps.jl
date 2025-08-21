@@ -1,7 +1,16 @@
 # MVBasis struct for multi-indices
-struct MultivariateBasis <: AbstractMultivariateBasis
+mutable struct MultivariateBasis <: AbstractMultivariateBasis
     multi_index::Vector{Int}
     basis_type::AbstractPolynomialBasis
+
+    function MultivariateBasis(multi_index::Vector{Int}, basis_type::AbstractPolynomialBasis)
+        if basis_type isa HermiteBasis
+            if basis_type.edge_control == :linearized
+                basis_type = LinearizedHermiteBasis(maximum(multi_index))
+            end
+        end
+        return new(multi_index, basis_type)
+    end
 end
 
 # Multivariate basis function Psi(alpha::Vector{<:Real}, z::Vector{<:Real})
