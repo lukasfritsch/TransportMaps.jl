@@ -48,7 +48,7 @@ using Statistics
             # Test MultivariateBasis creation
             mvb = MultivariateBasis([1, 2, 0], HermiteBasis())
             @test mvb.multi_index == [1, 2, 0]
-            @test mvb.basis_type isa HermiteBasis
+            @test mvb.univariate_bases[1] isa HermiteBasis
 
             # Test evaluation (default Hermite)
             x = [1.0, 0.0, 2.0]
@@ -98,12 +98,12 @@ using Statistics
 
             # ∂/∂x1 of (x1 * (x2^2 - 1)) = (x2^2 - 1)
             pd1 = partial_derivative_z(mvb, x, 1)
-            expected1 = edge_controlled_hermite_derivative(1, 1.0, mvb.basis_type.edge_control) * edge_controlled_hermite_polynomial(2, 0.5, mvb.basis_type.edge_control)
+            expected1 = edge_controlled_hermite_derivative(1, 1.0, mvb.univariate_bases[1].edge_control) * edge_controlled_hermite_polynomial(2, 0.5, mvb.univariate_bases[1].edge_control)
             @test pd1 ≈ expected1
 
             # ∂/∂x2 of (x1 * (x2^2 - 1)) = x1 * 2*x2
             pd2 = partial_derivative_z(mvb, x, 2)
-            expected2 = edge_controlled_hermite_polynomial(1, 1.0, mvb.basis_type.edge_control) * edge_controlled_hermite_derivative(2, 0.5, mvb.basis_type.edge_control)
+            expected2 = edge_controlled_hermite_polynomial(1, 1.0, mvb.univariate_bases[1].edge_control) * edge_controlled_hermite_derivative(2, 0.5, mvb.univariate_bases[1].edge_control)
             @test pd2 ≈ expected2
 
             # Test gradient

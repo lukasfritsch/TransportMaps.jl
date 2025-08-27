@@ -1,11 +1,9 @@
-# Concrete type for Hermite polynomials
-
 struct HermiteBasis <: AbstractPolynomialBasis
     edge_control::Symbol
     bounds_linearization::Vector{Float64}
     normalization::Vector{Float64}
 
-    function HermiteBasis(edge_control::Symbol=:linearized; lower_bound_linearization=-Inf, upper_bound_linearization=Inf, normalization=Float64[])
+    function HermiteBasis(edge_control::Symbol=:none; lower_bound_linearization=-Inf, upper_bound_linearization=Inf, normalization=Float64[])
         if !(edge_control in (:none, :gaussian, :cubic, :linearized))
             throw(ArgumentError("edge_control must be :none, :gaussian, :cubic, or :linearized"))
         end
@@ -26,13 +24,31 @@ function LinearizedHermiteBasis(samples::Vector{<:Real}, max_degree::Int, k::Int
     return HermiteBasis(:linearized, lower_bound_linearization=lower_bound, upper_bound_linearization=upper_bound, normalization=normalization)
 end
 
+# Construct LinearizedHermiteBasis from an analytical univariate distribution
+function LinearizedHermiteBasis(density::Distributions.UnivariateDistribution, max_degree::Int, k::Int)
+    lower_bound, upper_bound = quantile(density, 0.01), quantile(density, 0.99)
+    normalization = Vector{Float64}(undef, max_degree+1)
+    for n in 0:max_degree
+        normalization[n+1] = n == k ? factorial(n+1) : factorial(n)
+    end
+    return HermiteBasis(:linearized, lower_bound_linearization=lower_bound, upper_bound_linearization=upper_bound, normalization=normalization)
+end
+
+# Gaussian-weighted Hermite basis
+GaussianWeightHermiteBasis() = HermiteBasis(:gaussian)
+
 function CubicSplineHermiteBasis(samples::Vector{<:Real})
     lower_bound, upper_bound = quantile(samples, 0.01), quantile(samples, 0.99)
     return HermiteBasis(:cubic, lower_bound_linearization=lower_bound, upper_bound_linearization=upper_bound)
 end
 
-# Univariate probabilist's Hermite polynomials
+# Construct CubicSplineHermiteBasis from an analytical univariate distribution
+function CubicSplineHermiteBasis(density::Distributions.UnivariateDistribution)
+    lower_bound, upper_bound = quantile(density, 0.01), quantile(density, 0.99)
+    return HermiteBasis(:cubic, lower_bound_linearization=lower_bound, upper_bound_linearization=upper_bound)
+end
 
+# Univariate probabilist's Hermite polynomials
 @inline function hermite_polynomial(n::Int, z::Real)
     if n == 0
         return 1.0
@@ -50,12 +66,9 @@ end
 end
 
 # Derivative of univariate Hermite polynomial
-
 @inline function hermite_derivative(n::Int, z::Real)
     n == 0 ? 0.0 : n * hermite_polynomial(n - 1, z)
 end
-
-# Hermite polynomial with edge control
 
 # Linearized Hermite polynomial (unnormalized)
 function _linearized_hermite(n::Int, z::Real, bounds_linearization::Vector{Float64})
@@ -90,7 +103,6 @@ function _linearized_hermite_derivative(n::Int, z::Real, bounds_linearization::V
 end
 
 # Normalized edge-controlled Hermite polynomial
-
 @inline function edge_controlled_hermite_polynomial(n::Int, z::Real, edge_control::Symbol, bounds_linearization=fill(-Inf, 2), normalization=Float64[])
     if edge_control == :linearized && isfinite(bounds_linearization[1]) && isfinite(bounds_linearization[2]) && !isempty(normalization)
         norm = normalization[n+1]
@@ -134,11 +146,9 @@ function edge_controlled_hermite_derivative(n::Int, z::Real, edge_control::Symbo
     end
 end
 
-
 @inline function basisfunction(basis::HermiteBasis, αᵢ::Real, zᵢ::Real)
     return edge_controlled_hermite_polynomial(Int(αᵢ), zᵢ, basis.edge_control, basis.bounds_linearization, basis.normalization)
 end
-
 
 @inline function basisfunction_derivative(basis::HermiteBasis, αᵢ::Real, zᵢ::Real)
     n = Int(αᵢ)

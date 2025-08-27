@@ -57,7 +57,7 @@ println("Generated $(size(target_samples, 1)) samples")
 # For sample-based optimization, we typically start with lower degrees
 # and can increase complexity as needed.
 
-M = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(:none))
+M = PolynomialMap(2, 2, :normal, Softplus())
 
 # ### Optimizing from Samples
 #
@@ -165,11 +165,11 @@ ylims!(-2.5, 4.0)
 # We can assess the quality of our sample-based approximation by comparing
 # statistics of the original and mapped samples:
 
-println("\nSample Statistics Comparison:")
+println("Sample Statistics Comparison:")
 println("Original samples - Mean: ", Distributions.mean(target_samples, dims=1))
 println("Original samples - Std:  ", Distributions.std(target_samples, dims=1))
-println("Mapped samples - Mean:   ", Distributions.mean(mapped_samples, dims=1))
-println("Mapped samples - Std:    ", Distributions.std(mapped_samples, dims=1))
+println("Mapped samples - Mean:   ", Distributions.mean(mapped_banana_samples, dims=1))
+println("Mapped samples - Std:    ", Distributions.std(mapped_banana_samples, dims=1))
 
 # ### Interpretation
 #

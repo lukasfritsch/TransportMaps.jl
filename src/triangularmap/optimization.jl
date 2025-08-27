@@ -115,9 +115,6 @@ function optimize!(
         grad_storage .= kldivergence_gradient(M, target, quadrature)
     end
 
-    # Set linearization bounds for all HermiteBasis components if needed
-    setlinearizationbounds!(M, quadrature.points)
-
     # Optimize with analytical gradient
     initial_coefficients = getcoefficients(M)
     result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, LBFGS())
@@ -129,11 +126,15 @@ end
 
 function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
 
+    # Set direction to reference (from target to reference)
     setforwarddirection!(M, :reference)
+    # Redefine bases from samples
+    redefinebases!(M, samples)
 
     # Create quadrature weights based on the number of dimensions
     quadrature = MonteCarloWeights(samples)
     target = M.reference
+
     # Optimize the polynomial map
     return optimize!(M, target, quadrature)
 end

@@ -59,7 +59,7 @@ p_lhs = scatter(lhs.points[:,1], lhs.points[:,2], ms=3,
 # Gauss–Hermite quadrature provides nodes $\boldsymbol{z}_{q, i}$ and weights $w_{q, i}$ such that for
 # smooth integrands the integral with respect to the Gaussian density is
 # approximated very accurately. Tensor-product rules take the 1D rule in each
-# coordinate and form all combinations, producing n^d nodes for n points per
+# coordinate and form all combinations, producing $N=n^d$ nodes for $n$ points per
 # dimension.
 #
 hermite = GaussHermiteWeights(5, 2)
@@ -89,5 +89,5 @@ p_sparse = scatter(sparse.points[:,1], sparse.points[:,2], ms=6,
 #   quadrature is infeasible.
 # - Use tensor Gauss–Hermite in very low dimensions when the integrand is
 #   smooth and high accuracy is required.
-# - Use Sparse Smolyak for intermediate dimensions (e.g. d ≤ 6) to get higher
+# - Use Sparse Smolyak for intermediate dimensions (e.g. $d \leq 6$) to get higher
 #   accuracy at much lower cost than the full tensor rule.

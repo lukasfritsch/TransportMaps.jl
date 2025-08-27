@@ -1,29 +1,39 @@
-# MVBasis struct for multi-indices
-mutable struct MultivariateBasis <: AbstractMultivariateBasis
+struct MultivariateBasis <: AbstractMultivariateBasis
     multi_index::Vector{Int}
-    basis_type::AbstractPolynomialBasis
+    univariate_bases::Vector{AbstractPolynomialBasis}  # per-dimension univariate bases
 
+    # Constructor taking a single univariate basis and expanding it to all dimensions
     function MultivariateBasis(multi_index::Vector{Int}, basis_type::AbstractPolynomialBasis)
-        if basis_type isa HermiteBasis
-            if basis_type.edge_control == :linearized
-                basis_type = LinearizedHermiteBasis(maximum(multi_index))
-            end
-        end
-        return new(multi_index, basis_type)
+        # expand the single basis to all dimensions
+        univariate_bases = [basis_type for _ in 1:length(multi_index)]
+        return new(multi_index, univariate_bases)
+    end
+
+    # Constructor taking explicit per-dimension bases
+    function MultivariateBasis(multi_index::Vector{Int}, univariate_bases::Vector{AbstractPolynomialBasis})
+        @assert length(univariate_bases) == length(multi_index) "basis_functions length must match multi_index length"
+        return new(multi_index, univariate_bases)
     end
 end
 
 # Multivariate basis function Psi(alpha::Vector{<:Real}, z::Vector{<:Real})
-function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, basis::AbstractPolynomialBasis)
+function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, bases::AbstractVector{<:AbstractPolynomialBasis})
     @assert length(alpha) == length(z) "Dimension mismatch: alpha and z must have same length"
-    return prod(basisfunction(basis, αᵢ, zᵢ) for (αᵢ, zᵢ) in zip(alpha, z))
+    @assert length(bases) == length(z) "Dimension mismatch: bases and z must have same length"
+    return prod(basisfunction(b, αᵢ, zᵢ) for (b, αᵢ, zᵢ) in zip(bases, alpha, z))
+end
+
+# Convenience overload: single univariate basis expanded to all dimensions
+function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, basis::AbstractPolynomialBasis)
+    bases = [basis for _ in 1:length(z)]
+    return Psi(alpha, z, bases)
 end
 
 # Evaluate MultivariateBasis at point z
 function evaluate(mvb::MultivariateBasis, z::Vector{<:Real})
     @assert length(mvb.multi_index) == length(z) "Dimension mismatch: multi_index and z must have same length"
     alpha = Real.(mvb.multi_index)
-    return Psi(alpha, z, mvb.basis_type)
+    return Psi(alpha, z, mvb.univariate_bases)
 end
 
 # Multivariate function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real})
@@ -48,10 +58,10 @@ function partial_derivative_z(mvb::MultivariateBasis, z::Vector{<:Real}, j::Int)
     @assert length(mvb.multi_index) == length(z) "Dimension mismatch"
 
     # Compute the product of all terms except the j-th, times the derivative of the j-th term
-    result = basisfunction_derivative(mvb.basis_type, mvb.multi_index[j], z[j])
+    result = basisfunction_derivative(mvb.univariate_bases[j], mvb.multi_index[j], z[j])
     for (i, (αᵢ, zᵢ)) in enumerate(zip(mvb.multi_index, z))
         if i != j
-            result *= basisfunction(mvb.basis_type, αᵢ, zᵢ)
+            result *= basisfunction(mvb.univariate_bases[i], αᵢ, zᵢ)
         end
     end
     return result
@@ -73,40 +83,77 @@ function gradient_coefficients(Ψ::Vector{MultivariateBasis}, z::Vector{<:Real})
     return [evaluate(mvb, z) for mvb in Ψ]
 end
 
-# Return multi-indices for a polynomial of degree p in d dimensions
-# shamelessly copied from UncertaintyQuantification.jl
-function multivariate_indices(p::Int, d::Int)
-    No = Int64(factorial(p + d) / factorial(p) / factorial(d))
+# Return multi-indices for a polynomial of degree p in k dimensions.
+function multivariate_indices(p::Int, k::Int; mode::Symbol = :total)
+    @assert p >= 0 "Degree p must be non-negative"
+    @assert k >= 1 "Dimension k must be at least 1"
 
-    idx = vcat(zeros(Int64, 1, d), Matrix(I, d, d), zeros(Int64, No - d - 1, d))
+    if mode == :total
+        # original total-order implementation
+        No = Int64(factorial(p + k) / factorial(p) / factorial(k))
 
-    pᵢ = ones(Int64, d, No)
+        idx = vcat(zeros(Int64, 1, k), Matrix(I, k, k), zeros(Int64, No - k - 1, k))
 
-    for k in 2:No
-        for i in 1:d
-            pᵢ[i, k] = sum(pᵢ[i:d, k - 1])
+        pᵢ = ones(Int64, k, No)
+
+        for kk in 2:No
+            for i in 1:k
+                pᵢ[i, kk] = sum(pᵢ[i:k, kk - 1])
+            end
         end
-    end
 
-    P = d + 1
-    for k in 2:p
-        L = P
-        for j in 1:d, m in (L - pᵢ[j, k] + 1):L
-            P += 1
-            idx[P, :] = idx[m, :]
-            idx[P, j] = idx[P, j] + 1
+        P = k + 1
+        for kk in 2:p
+            L = P
+            for j in 1:k, m in (L - pᵢ[j, kk] + 1):L
+                P += 1
+                idx[P, :] = idx[m, :]
+                idx[P, j] = idx[P, j] + 1
+            end
         end
-    end
 
-    return map(collect, eachrow(idx))
+        return map(collect, eachrow(idx))
+
+    elseif mode == :diagonal
+        # Diagonal multi-index set for a fixed coordinate k:
+        # J_k^D = { j : ||j||_1 <= p  and j_i = 0 for all i != k }
+        # i.e., vectors with only the k-th entry possibly non-zero (0..p)
+        # diagonal for the fixed component k: only j_{k} may be non-zero
+        inds = Vector{Vector{Int}}()
+        for t in 0:p
+            v = zeros(Int, k)
+            v[k] = t
+            push!(inds, v)
+        end
+        return inds
+
+    elseif mode == :no_mixed
+        # No-mixed terms (possibly restricted to first k coordinates):
+        # J_k^{NM} = { j : ||j||_1 <= p, j_i * j_l = 0 for i != l, and j_i = 0 for i > k }
+        inds = Vector{Vector{Int}}()
+        # constant term
+        push!(inds, zeros(Int, k))
+        # for each allowed coordinate 1..k, add pure powers 1..p
+        for j in 1:k
+            for t in 1:p
+                v = zeros(Int, k)
+                v[j] = t
+                push!(inds, v)
+            end
+        end
+        return inds
+
+    else
+        error("Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed")
+    end
 end
 
 # Display methods for MultivariateBasis
 function Base.show(io::IO, basis::MultivariateBasis)
-    basis_type = typeof(basis.basis_type)
+    basis_type = typeof(basis.univariate_bases[1])
     basis_name = string(basis_type)
     if basis_name == "HermiteBasis"
-        basis_name = "HermiteBasis(edge_control=:$(basis.basis_type.edge_control))"
+        basis_name = "HermiteBasis(edge_control=:$(basis.univariate_bases[1].edge_control))"
     end
 
     degree = sum(basis.multi_index)
@@ -120,10 +167,11 @@ function Base.show(io::IO, basis::MultivariateBasis)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis)
-    basis_type = typeof(basis.basis_type)
+
+    basis_type = typeof(basis.univariate_bases[1])
     basis_name = string(basis_type)
     if basis_name == "HermiteBasis"
-        basis_name = "HermiteBasis(edge_control=:$(basis.basis_type.edge_control))"
+        basis_name = "HermiteBasis(edge_control=:$(basis.univariate_bases[1].edge_control))"
     end
 
     degree = sum(basis.multi_index)

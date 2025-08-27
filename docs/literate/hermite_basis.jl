@@ -13,7 +13,7 @@
 # the standard normal density
 #
 # ```math
-# \varphi(z) = \frac{1}{\sqrt{2 \pi}} \exp\left(-\frac{z^2}{2}\right)
+# \phi(z) = \frac{1}{\sqrt{2 \pi}} \exp\left(-\frac{z^2}{2}\right)
 # ```
 #
 # They satisfy the three-term recurrence
@@ -31,11 +31,12 @@
 #
 # We want to visualize the Hermite polynomials, first we load the necessary packages:
 
+using Distributions
 using Plots
 using TransportMaps
 
-# Then we construct the basis via `HermiteBasis(:none)` (`:none` means no edge control):
-basis = HermiteBasis(:none)
+# Then we construct the basis via `HermiteBasis()` or `HermiteBasis(:none)` (`:none` means no edge control):
+basis = HermiteBasis()
 z = -3:0.01:3
 
 p1 = plot(xlabel="z", ylabel="Basis function", title="Standard Hermite Basis")
@@ -70,12 +71,13 @@ end
 # \end{cases}
 # ```
 #
-# The bounds are chosen here as the 0.01 and 0.99 empirical quantiles of a
-# (reference) sample. The normalization constant $Z_{\alpha_j}$ follows the
+# The bounds are chosen here as the 0.01 and 0.99 empirical quantiles of
+# (reference) samples. Alternatively, they can be chosen as the quantiles of the respective
+# reference density.
+# The normalization constant $Z_{\alpha_j}$ follows the
 # definition in the paper: $Z_{\alpha_j}=\alpha_j!$ for $j<k$ and
 # $Z_{\alpha_k}=(\alpha_k+1)!$.
-samples = randn(1_000); nothing # hide
-basis = LinearizedHermiteBasis(samples, 4, 1)
+basis = LinearizedHermiteBasis(Normal(), 4, 1)
 println("Linearization bounds: ", basis.bounds_linearization)
 
 p3 = plot(xlabel="z", ylabel="Basis function", title="Linearized Hermite Basis")
@@ -93,7 +95,7 @@ end
 # ```math
 # \mathcal{H}_j^{\text{Gauss}}(z)=\mathrm{He}_j(z)\exp\left(-\tfrac{z^2}{4}\right).
 # ```
-basis = HermiteBasis(:gaussian)
+basis = GaussianWeightHermiteBasis()
 
 p4 = plot(xlabel="z", ylabel="Basis function", title="Gaussian-Weighted Hermite Basis")
 for degree in 1:4
@@ -110,7 +112,7 @@ end
 # ```math
 # \mathcal{H}_j^{\mathrm{Cub}}(z)=\operatorname{He}_j(z)\left(2 u^3-3 u^2+1\right),\qquad u=\min\!\left(1,\frac{|z|}{r}\right),\; r=2\max(|z^l|,|z^u|).
 # ```
-basis = CubicSplineHermiteBasis(samples)
+basis = CubicSplineHermiteBasis(Normal())
 
 p5 = plot(xlabel="z", ylabel="Basis function", title="Cubic Spline Weighted Hermite Basis")
 for degree in 1:4

@@ -20,6 +20,62 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         return new(basisfunctions, coefficients, rectifier, index)
     end
 
+    # Constructor that builds basis functions using an analytical reference density
+    function PolynomialMapComponent(
+        index::Int,
+        degree::Int,
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        density::Distributions.UnivariateDistribution,
+    )
+        @assert index > 0 "Index must be a positive integer"
+        @assert degree > 0 "Degree must be a positive integer"
+
+        multi_indices = multivariate_indices(degree, index)
+        basisfunctions = Vector{MultivariateBasis}(undef, length(multi_indices))
+
+        for (i, multi_index) in enumerate(multi_indices)
+            # Default univariate basis
+            uni_basis = basis
+
+            # Radial: if placeholder (no centers) estimate number from multi_index
+            if isa(basis, RadialBasis)
+                num_centers = length(basis.centers)
+                if num_centers == 0
+                    num_centers = maximum(multi_index) + 1
+                end
+                try
+                    uni_basis = RadialBasis(density, num_centers)
+                catch err
+                    @warn "Could not construct RadialBasis from density for component $index: $err"
+                    uni_basis = basis
+                end
+
+            # Hermite: linearized or cubic variants built from density
+            elseif isa(basis, HermiteBasis) && basis.edge_control == :linearized
+                max_degree = maximum(multi_index)
+                try
+                    uni_basis = LinearizedHermiteBasis(density, max_degree, index)
+                catch err
+                    @warn "Could not construct LinearizedHermiteBasis from density for component $index: $err"
+                    uni_basis = HermiteBasis(:linearized)
+                end
+            elseif isa(basis, HermiteBasis) && basis.edge_control == :cubic
+                try
+                    uni_basis = CubicSplineHermiteBasis(density)
+                catch err
+                    @warn "Could not construct CubicSplineHermiteBasis from density for component $index: $err"
+                    uni_basis = HermiteBasis(:cubic)
+                end
+            end
+
+            basisfunctions[i] = MultivariateBasis(multi_index, uni_basis)
+        end
+
+        coefficients = zeros(length(basisfunctions))
+        return new(basisfunctions, coefficients, rectifier, index)
+    end
+
     function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, rectifier::AbstractRectifierFunction, index::Int)
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
@@ -239,7 +295,7 @@ function Base.show(io::IO, component::PolynomialMapComponent)
     max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
 
     # Get basis type from the first basis function
-    basis_type = typeof(component.basisfunctions[1].basis_type)
+    basis_type = typeof(component.basisfunctions[1].univariate_bases[1])
     basis_name = string(basis_type)
     if basis_name == "HermiteBasis"
         basis_name = "Hermite"
@@ -262,7 +318,7 @@ function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent
     max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
 
     # Get basis type
-    basis_type = typeof(component.basisfunctions[1].basis_type)
+    basis_type = typeof(component.basisfunctions[1].univariate_bases[1])
     basis_name = string(basis_type)
     if basis_name == "HermiteBasis"
         basis_name = "Hermite"
