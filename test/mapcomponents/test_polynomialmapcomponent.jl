@@ -19,7 +19,7 @@ using Test
         # Test construction with custom basis
         pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis())
         @test pmc_hermite.rectifier isa Softplus
-        @test all(bf.univariate_bases[1] isa HermiteBasis for bf in pmc_hermite.basisfunctions)
+        @test all(bf.basis_type isa HermiteBasis for bf in pmc_hermite.basisfunctions)
 
         # Test invalid construction
         @test_throws AssertionError PolynomialMapComponent(0, 2)  # Invalid index

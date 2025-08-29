@@ -8,17 +8,11 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         degree::Int,
         referencetype::Symbol = :normal,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis(:linearized),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
     )
-        # create a reference density for the symbol and initialize bases accordingly
-        if referencetype == :normal
-            refdensity = Normal()
-        else
-            error("Reference type $referencetype not supported")
-        end
+        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
 
-    components = [PolynomialMapComponent(k, degree, rectifier, basis, refdensity) for k in 1:dimension]
-    return new(components, MapReferenceDensity(refdensity), :target)
+        return PolynomialMap(components, referencetype)
     end
 
     function PolynomialMap(
@@ -26,10 +20,11 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         degree::Int,
         reference::Distributions.UnivariateDistribution,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis(:linearized),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
     )
-    components = [PolynomialMapComponent(k, degree, rectifier, basis, reference) for k in 1:dimension]
-    return new(components, MapReferenceDensity(reference), :target)
+        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
+
+        return PolynomialMap(components, reference)
     end
 
     function PolynomialMap(components::Vector{PolynomialMapComponent})
@@ -381,75 +376,21 @@ function numberdimensions(M::PolynomialMap)
     return length(M.components)
 end
 
-# Rebuild polynomial map components and univariate bases from sample columns
-function redefinebases!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
-    @assert size(samples, 2) == length(M.components) "samples must have one column per map component"
-
-    new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
-
-    for (k, old_comp) in enumerate(M.components)
-        # infer degree from existing basisfunctions (total degree)
-        degree = maximum(sum(b.multi_index) for b in old_comp.basisfunctions)
-        rectifier = old_comp.rectifier
-
-        # get a template univariate basis instance from the first multivariate basis
-        basis_template = old_comp.basisfunctions[1].univariate_bases[1]
-
-        multi_indices = multivariate_indices(degree, k)
-        basisfunctions = Vector{MultivariateBasis}(undef, length(multi_indices))
-
-        for (i, multi_index) in enumerate(multi_indices)
-            # build per-dimension univariate bases for this multi_index
-            dim = length(multi_index)
-            uni_bases = Vector{AbstractPolynomialBasis}(undef, dim)
-
-            for j in 1:dim
-                deg_j = multi_index[j]
-                # default to template
-                uni_b = basis_template
-
-                if isa(basis_template, RadialBasis)
-                    num_centers = length(basis_template.centers)
-                    if num_centers == 0
-                        num_centers = max(deg_j + 1, 1)
-                    end
-                    try
-                        uni_b = RadialBasis(samples[:, j], num_centers)
-                    catch err
-                        @warn "Could not construct RadialBasis from samples for component $k dim $j: $err"
-                        uni_b = basis_template
-                    end
-
-                elseif isa(basis_template, HermiteBasis) && basis_template.edge_control == :linearized
-                    try
-                        uni_b = LinearizedHermiteBasis(samples[:, j], max(deg_j, 0), j)
-                    catch err
-                        @warn "Could not construct LinearizedHermiteBasis from samples for component $k dim $j: $err"
-                        uni_b = HermiteBasis(:linearized)
-                    end
-                elseif isa(basis_template, HermiteBasis) && basis_template.edge_control == :cubic
-                    try
-                        uni_b = CubicSplineHermiteBasis(samples[:, j])
-                    catch err
-                        @warn "Could not construct CubicSplineHermiteBasis from samples for component $k dim $j: $err"
-                        uni_b = HermiteBasis(:cubic)
-                    end
-                end
-
-                uni_bases[j] = uni_b
+# Set linearization bounds for all HermiteBasis components in the polynomial map
+function setlinearizationbounds!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
+    # samples: N x d matrix, each column is for one component
+    for (k, component) in enumerate(M.components)
+        # Only set for HermiteBasis with linearized edge control
+        for mvb in component.basisfunctions
+            if isa(mvb.basistype, HermiteBasis) && mvb.basistype.edge_control == :linearized
+                # The degree for the k-th variable in this basis function
+                max_degree = maximum(mvb.multiindexset)
+                mvb.basistype = LinearizedHermiteBasis(samples[:,k], max_degree, component.index)
+            elseif isa(mvb.basistype, HermiteBasis) && mvb.basistype.edge_control == :cubic
+                mvb.basistype = HermiteBasis(:linearized)
             end
-
-            basisfunctions[i] = MultivariateBasis(multi_index, uni_bases)
         end
-
-        coefficients = zeros(length(basisfunctions))
-        new_components[k] = PolynomialMapComponent(basisfunctions, coefficients, rectifier, k)
-
     end
-    println("Redefined polynomial map bases from samples.")
-
-    M.components = new_components
-    return M
 end
 
 # Display method for PolynomialMap
@@ -460,11 +401,11 @@ function Base.show(io::IO, M::PolynomialMap)
     # Get common properties from the first component
     if n_dims > 0
         first_component = M.components[1]
-        max_degree = maximum(sum(basis.multi_index) for basis in first_component.basisfunctions)
+        max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
         # Get basis type
-    basis_type = typeof(first_component.basisfunctions[1].univariate_bases[1])
-        basis_name = string(basis_type)
+        basistype = typeof(first_component.basisfunctions[1].basistype)
+        basis_name = string(basistype)
         if basis_name == "HermiteBasis"
             basis_name = "Hermite"
         end
@@ -497,11 +438,11 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
     if n_dims > 0
         # Get properties from the first component (assuming all components have similar properties)
         first_component = M.components[1]
-        max_degree = maximum(sum(basis.multi_index) for basis in first_component.basisfunctions)
+        max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
         # Get basis type
-    basis_type = typeof(first_component.basisfunctions[1].univariate_bases[1])
-        basis_name = string(basis_type)
+        basistype = typeof(first_component.basisfunctions[1].basistype)
+        basis_name = string(basistype)
         if basis_name == "HermiteBasis"
             basis_name = "Hermite"
         end

@@ -34,7 +34,6 @@ export AbstractMapDensity
 # Export functions/methods
 # Basis functions and evaluation
 export CubicSplineHermiteBasis
-export GaussianWeightHermiteBasis
 export LinearizedHermiteBasis
 export Psi
 export basisfunction
@@ -79,8 +78,8 @@ export hybridrootfinder
 # Export structs/types
 export IdentityRectifier
 export HermiteBasis
+export LinearizedHermiteBasis
 export MultivariateBasis
-export RadialBasis
 export PolynomialMapComponent
 export PolynomialMap
 export Softplus
@@ -96,9 +95,10 @@ export SparseSmolyakWeights
 # Include files
 include("util/mapdensity.jl")
 
+include("mapcomponents/univariatebases/hermitebasis.jl")
+include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
+
 include("mapcomponents/multivariatebasis.jl")
-include("mapcomponents/hermitebasis.jl")
-include("mapcomponents/radialbasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
 include("triangularmap/polynomialmap.jl")

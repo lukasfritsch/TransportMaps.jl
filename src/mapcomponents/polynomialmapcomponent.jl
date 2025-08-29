@@ -14,7 +14,7 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         @assert degree > 0 "Degree must be a positive integer"
 
         multi_indices = multivariate_indices(degree, index)
-        basisfunctions = [MultivariateBasis(multi_index, basis) for multi_index in multi_indices]
+        basisfunctions = [MultivariateBasis(multiindexset, basis) for multiindexset in multi_indices]
         coefficients = zeros(length(basisfunctions))
 
         return new(basisfunctions, coefficients, rectifier, index)
@@ -34,42 +34,39 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         multi_indices = multivariate_indices(degree, index)
         basisfunctions = Vector{MultivariateBasis}(undef, length(multi_indices))
 
-        for (i, multi_index) in enumerate(multi_indices)
-            # Default univariate basis
-            uni_basis = basis
+        for (i, multiindexset) in enumerate(multi_indices)
+            # Build per-dimension univariate bases with the correct degree
+            dim = length(multiindexset)
+            uni_bases = Vector{AbstractPolynomialBasis}(undef, dim)
 
-            # Radial: if placeholder (no centers) estimate number from multi_index
+            # Precompute radial num_centers if needed
+            num_centers = 0
             if isa(basis, RadialBasis)
                 num_centers = length(basis.centers)
                 if num_centers == 0
-                    num_centers = maximum(multi_index) + 1
-                end
-                try
-                    uni_basis = RadialBasis(density, num_centers)
-                catch err
-                    @warn "Could not construct RadialBasis from density for component $index: $err"
-                    uni_basis = basis
-                end
-
-            # Hermite: linearized or cubic variants built from density
-            elseif isa(basis, HermiteBasis) && basis.edge_control == :linearized
-                max_degree = maximum(multi_index)
-                try
-                    uni_basis = LinearizedHermiteBasis(density, max_degree, index)
-                catch err
-                    @warn "Could not construct LinearizedHermiteBasis from density for component $index: $err"
-                    uni_basis = HermiteBasis(:linearized)
-                end
-            elseif isa(basis, HermiteBasis) && basis.edge_control == :cubic
-                try
-                    uni_basis = CubicSplineHermiteBasis(density)
-                catch err
-                    @warn "Could not construct CubicSplineHermiteBasis from density for component $index: $err"
-                    uni_basis = HermiteBasis(:cubic)
+                    num_centers = maximum(multiindexset) + 1
                 end
             end
 
-            basisfunctions[i] = MultivariateBasis(multi_index, uni_basis)
+            for j in 1:dim
+                deg_j = multiindexset[j]
+
+                if isa(basis, RadialBasis)
+                    uni_bases[j] = RadialBasis(density, num_centers)
+
+                elseif isa(basis, LinearizedHermiteBasis)
+                    uni_bases[j] = LinearizedHermiteBasis(density, deg_j, index)
+
+                elseif isa(basis, CubicSplineHermiteBasis)
+                    uni_bases[j] = CubicSplineHermiteBasis(deg_j,density)
+
+                else
+                    # Generic attempt: construct a new basis of same type with degree if supported
+                    uni_bases[j] = typeof(basis)(deg_j)
+                end
+            end
+
+            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
         end
 
         coefficients = zeros(length(basisfunctions))
@@ -89,7 +86,7 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
     @assert map_component.index <= length(x) "index must not exceed the dimension of x"
-    @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
+    @assert length(x) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: x and multiindexset must have same length"
 
     # First part: f(x₁, ..., x_{k-1}, 0, a)
     x₀ = copy(x)
@@ -114,7 +111,7 @@ end
 function evaluate(map_component::PolynomialMapComponent, X::Matrix{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
-    @assert size(X, 2) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: X columns and multi_index must have same length"
+    @assert size(X, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: X columns and multiindexset must have same length"
 
     n_points = size(X, 1)
 
@@ -133,7 +130,7 @@ end
 
 # Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ) for a single input vector
 function partial_derivative_zk(map_component::PolynomialMapComponent, x::Vector{<:Real})
-    @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
+    @assert length(x) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: x and multiindexset must have same length"
 
     # Define the integrand for the partial derivative
     integrand(xₖ) = begin
@@ -151,7 +148,7 @@ end
 
 # Partial derivative ∂Mᵏ/∂xₖ for multiple input vectors using multithreading
 function partial_derivative_zk(map_component::PolynomialMapComponent, X::Matrix{<:Real})
-    @assert size(X, 2) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: X columns and multi_index must have same length"
+    @assert size(X, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: X columns and multiindexset must have same length"
 
     n_points = size(X, 1)
 
@@ -221,7 +218,7 @@ grad = gradient_coefficients(pmc, z)
 ```
 """
 function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{<:Real})
-    @assert length(z) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: z and basis functions must have same length"
+    @assert length(z) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: z and basis functions must have same length"
 
     # First part: gradient of f₀ = f(x₁, ..., x_{k-1}, 0) w.r.t. coefficients
     z₀ = copy(z)
@@ -292,10 +289,10 @@ function Base.show(io::IO, component::PolynomialMapComponent)
     n_coeffs = length(component.coefficients)
 
     # Get the maximum degree from the basis functions
-    max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
+    max_degree = maximum(sum(basis.multiindexset) for basis in component.basisfunctions)
 
     # Get basis type from the first basis function
-    basis_type = typeof(component.basisfunctions[1].univariate_bases[1])
+    basis_type = typeof(component.basisfunctions[1].univariatebases[1])
     basis_name = string(basis_type)
     if basis_name == "HermiteBasis"
         basis_name = "Hermite"
@@ -315,10 +312,10 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent)
     n_basis = length(component.basisfunctions)
-    max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
+    max_degree = maximum(sum(basis.multiindexset) for basis in component.basisfunctions)
 
     # Get basis type
-    basis_type = typeof(component.basisfunctions[1].univariate_bases[1])
+    basis_type = typeof(component.basisfunctions[1].univariatebases[1])
     basis_name = string(basis_type)
     if basis_name == "HermiteBasis"
         basis_name = "Hermite"
@@ -339,7 +336,7 @@ function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent
     if n_basis > 0
         println(io, "  Multi-indices (first $(min(5, n_basis))):")
         for i in 1:min(5, n_basis)
-            println(io, "    $(component.basisfunctions[i].multi_index)")
+            println(io, "    $(component.basisfunctions[i].multiindexset)")
         end
         if n_basis > 5
             println(io, "    ... and $(n_basis - 5) more")

@@ -1,39 +1,31 @@
+# MVBasis struct for multi-indices
 struct MultivariateBasis <: AbstractMultivariateBasis
-    multi_index::Vector{Int}
-    univariate_bases::Vector{AbstractPolynomialBasis}  # per-dimension univariate bases
+    multiindexset::Vector{Int}
+    basistype::AbstractPolynomialBasis
+    univariatebases::Vector{<:AbstractPolynomialBasis}  # Store univariate basis for each dimension
 
-    # Constructor taking a single univariate basis and expanding it to all dimensions
-    function MultivariateBasis(multi_index::Vector{Int}, basis_type::AbstractPolynomialBasis)
-        # expand the single basis to all dimensions
-        univariate_bases = [basis_type for _ in 1:length(multi_index)]
-        return new(multi_index, univariate_bases)
-    end
-
-    # Constructor taking explicit per-dimension bases
-    function MultivariateBasis(multi_index::Vector{Int}, univariate_bases::Vector{AbstractPolynomialBasis})
-        @assert length(univariate_bases) == length(multi_index) "basis_functions length must match multi_index length"
-        return new(multi_index, univariate_bases)
+    # Todo: Add constructors for different bases; set linearization bounds
+    function MultivariateBasis(multiindexset::Vector{Int}, basistype::AbstractPolynomialBasis)
+        if basistype isa HermiteBasis
+            univariatebases = [HermiteBasis() for _ in multiindexset]
+        elseif basistype isa LinearizedHermiteBasis
+            univariatebases = [LinearizedHermiteBasis(degree) for degree in multiindexset]
+        end
+        return new(multiindexset, basistype, univariatebases)
     end
 end
 
 # Multivariate basis function Psi(alpha::Vector{<:Real}, z::Vector{<:Real})
-function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, bases::AbstractVector{<:AbstractPolynomialBasis})
+function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, univariatebases::Vector{<:AbstractPolynomialBasis})
     @assert length(alpha) == length(z) "Dimension mismatch: alpha and z must have same length"
-    @assert length(bases) == length(z) "Dimension mismatch: bases and z must have same length"
-    return prod(basisfunction(b, αᵢ, zᵢ) for (b, αᵢ, zᵢ) in zip(bases, alpha, z))
-end
-
-# Convenience overload: single univariate basis expanded to all dimensions
-function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, basis::AbstractPolynomialBasis)
-    bases = [basis for _ in 1:length(z)]
-    return Psi(alpha, z, bases)
+    return prod(basisfunction(ub, αᵢ, zᵢ) for (αᵢ, zᵢ, ub) in zip(alpha, z, univariatebases))
 end
 
 # Evaluate MultivariateBasis at point z
 function evaluate(mvb::MultivariateBasis, z::Vector{<:Real})
-    @assert length(mvb.multi_index) == length(z) "Dimension mismatch: multi_index and z must have same length"
-    alpha = Real.(mvb.multi_index)
-    return Psi(alpha, z, mvb.univariate_bases)
+    @assert length(mvb.multiindexset) == length(z) "Dimension mismatch: multiindexset and z must have same length"
+    alpha = Real.(mvb.multiindexset)
+    return Psi(alpha, z, mvb.univariatebases)
 end
 
 # Multivariate function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real})
@@ -49,23 +41,26 @@ end
 
 # Gradient of MultivariateBasis w.r.t. z
 function gradient_z(mvb::MultivariateBasis, z::Vector{<:Real})
-    return [partial_derivative_z(mvb, z, j) for j in 1:length(z)]
+    return [partial_derivative_z(mvb.univariatebases, mvb.multiindexset, z, j) for j in 1:length(z)]
 end
 
 # Partial derivative of multivariate basis w.r.t. z_j
-function partial_derivative_z(mvb::MultivariateBasis, z::Vector{<:Real}, j::Int)
+function partial_derivative_z(bases::Vector{<:AbstractPolynomialBasis}, α::Vector{Int}, z::Vector{<:Real}, j::Int)
     @assert 1 <= j <= length(z) "Index j must be within bounds of z"
-    @assert length(mvb.multi_index) == length(z) "Dimension mismatch"
+    @assert length(bases) == length(z) "Dimension mismatch"
 
     # Compute the product of all terms except the j-th, times the derivative of the j-th term
-    result = basisfunction_derivative(mvb.univariate_bases[j], mvb.multi_index[j], z[j])
-    for (i, (αᵢ, zᵢ)) in enumerate(zip(mvb.multi_index, z))
+    # todo: need to somehow incorporate the univariate basis in an efficient way
+    result = basisfunction_derivative(bases[j], α[j], z[j])
+    for (i, (αᵢ, zᵢ)) in enumerate(zip(α, z))
         if i != j
-            result *= basisfunction(mvb.univariate_bases[i], αᵢ, zᵢ)
+            result *= basisfunction(bases[i], αᵢ, zᵢ)
         end
     end
     return result
 end
+
+partial_derivative_z(mvb::MultivariateBasis, z::Vector{<:Real}, j::Int) = partial_derivative_z(mvb.basis, mvb.multiindexset, z, j)
 
 # Partial derivative of f w.r.t. z_j
 function partial_derivative_z(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, z::Vector{<:Real}, j::Int)
@@ -150,41 +145,40 @@ end
 
 # Display methods for MultivariateBasis
 function Base.show(io::IO, basis::MultivariateBasis)
-    basis_type = typeof(basis.univariate_bases[1])
-    basis_name = string(basis_type)
+    basistype = typeof(basis.basistype)
+    basis_name = string(basistype)
     if basis_name == "HermiteBasis"
-        basis_name = "HermiteBasis(edge_control=:$(basis.univariate_bases[1].edge_control))"
+        basis_name = "HermiteBasis(edge_control=:$(basis.basistype.edge_control))"
     end
 
-    degree = sum(basis.multi_index)
-    dimension = length(basis.multi_index)
+    degree = sum(basis.multiindexset)
+    dimension = length(basis.multiindexset)
 
     print(io, "MultivariateBasis(")
-    print(io, "$(basis.multi_index), ")
+    print(io, "$(basis.multiindexset), ")
     print(io, "degree=$degree, ")
     print(io, "dim=$dimension, ")
     print(io, "basis=$basis_name)")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis)
-
-    basis_type = typeof(basis.univariate_bases[1])
-    basis_name = string(basis_type)
+    basistype = typeof(basis.basistype)
+    basis_name = string(basistype)
     if basis_name == "HermiteBasis"
-        basis_name = "HermiteBasis(edge_control=:$(basis.univariate_bases[1].edge_control))"
+        basis_name = "HermiteBasis(edge_control=:$(basis.basistype.edge_control))"
     end
 
-    degree = sum(basis.multi_index)
-    dimension = length(basis.multi_index)
+    degree = sum(basis.multiindexset)
+    dimension = length(basis.multiindexset)
 
     println(io, "MultivariateBasis:")
-    println(io, "  Multi-index: $(basis.multi_index)")
+    println(io, "  Multi-index: $(basis.multiindexset)")
     println(io, "  Total degree: $degree")
     println(io, "  Dimension: $dimension")
     println(io, "  Basis type: $basis_name")
 
     # Show individual polynomial degrees for each dimension
     if dimension > 1
-        println(io, "  Individual degrees: $(basis.multi_index)")
+        println(io, "  Individual degrees: $(basis.multiindexset)")
     end
 end
