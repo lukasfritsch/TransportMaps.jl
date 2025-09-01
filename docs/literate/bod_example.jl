@@ -82,7 +82,7 @@ target = MapTargetDensity(posterior, :auto_diff)
 #
 # We use a 2-dimensional polynomial transport map with degree 3 and Softplus rectifier:
 
-M = PolynomialMap(2, 3, :normal, Softplus(), HermiteBasis(:linearized))
+M = PolynomialMap(2, 3, :normal, Softplus(), LinearizedHermiteBasis())
 
 # Set up Gauss-Hermite quadrature for optimization:
 quadrature = GaussHermiteWeights(10, 2)

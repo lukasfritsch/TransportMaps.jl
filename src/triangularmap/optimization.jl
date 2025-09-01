@@ -126,10 +126,8 @@ end
 
 function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
 
-    # Set direction to reference (from target to reference)
-    setforwarddirection!(M, :reference)
-    # Redefine bases
-    setlinearizationbounds!(M, samples)
+    # Initialize map from samples: set map direction and bounds
+    initializemapfromsamples!(M, samples)
 
     # Create quadrature weights based on the number of dimensions
     quadrature = MonteCarloWeights(samples)

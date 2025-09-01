@@ -1,17 +1,22 @@
 # MVBasis struct for multi-indices
 struct MultivariateBasis <: AbstractMultivariateBasis
     multiindexset::Vector{Int}
-    basistype::AbstractPolynomialBasis
     univariatebases::Vector{<:AbstractPolynomialBasis}  # Store univariate basis for each dimension
 
-    # Todo: Add constructors for different bases; set linearization bounds
     function MultivariateBasis(multiindexset::Vector{Int}, basistype::AbstractPolynomialBasis)
         if basistype isa HermiteBasis
             univariatebases = [HermiteBasis() for _ in multiindexset]
         elseif basistype isa LinearizedHermiteBasis
             univariatebases = [LinearizedHermiteBasis(degree) for degree in multiindexset]
+        elseif basistype isa GaussianWeightedHermiteBasis
+            univariatebases = [GaussianWeightedHermiteBasis() for _ in multiindexset]
         end
-        return new(multiindexset, basistype, univariatebases)
+
+        return new(multiindexset, univariatebases)
+    end
+
+    function MultivariateBasis(multiindexset::Vector{Int}, univariatebases::Vector{<:AbstractPolynomialBasis})
+        return new(multiindexset, univariatebases)
     end
 end
 
@@ -50,7 +55,6 @@ function partial_derivative_z(bases::Vector{<:AbstractPolynomialBasis}, α::Vect
     @assert length(bases) == length(z) "Dimension mismatch"
 
     # Compute the product of all terms except the j-th, times the derivative of the j-th term
-    # todo: need to somehow incorporate the univariate basis in an efficient way
     result = basisfunction_derivative(bases[j], α[j], z[j])
     for (i, (αᵢ, zᵢ)) in enumerate(zip(α, z))
         if i != j
@@ -60,7 +64,7 @@ function partial_derivative_z(bases::Vector{<:AbstractPolynomialBasis}, α::Vect
     return result
 end
 
-partial_derivative_z(mvb::MultivariateBasis, z::Vector{<:Real}, j::Int) = partial_derivative_z(mvb.basis, mvb.multiindexset, z, j)
+partial_derivative_z(mvb::MultivariateBasis, z::Vector{<:Real}, j::Int) = partial_derivative_z(mvb.univariatebases, mvb.multiindexset, z, j)
 
 # Partial derivative of f w.r.t. z_j
 function partial_derivative_z(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, z::Vector{<:Real}, j::Int)
@@ -84,7 +88,7 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol = :total)
     @assert k >= 1 "Dimension k must be at least 1"
 
     if mode == :total
-        # original total-order implementation
+        # total-order multi-indices
         No = Int64(factorial(p + k) / factorial(p) / factorial(k))
 
         idx = vcat(zeros(Int64, 1, k), Matrix(I, k, k), zeros(Int64, No - k - 1, k))
@@ -143,13 +147,14 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol = :total)
     end
 end
 
+function basistype(mvb::MultivariateBasis)
+    return eltype(mvb.univariatebases)
+end
+
 # Display methods for MultivariateBasis
 function Base.show(io::IO, basis::MultivariateBasis)
-    basistype = typeof(basis.basistype)
-    basis_name = string(basistype)
-    if basis_name == "HermiteBasis"
-        basis_name = "HermiteBasis(edge_control=:$(basis.basistype.edge_control))"
-    end
+    basis_name = string(basistype(basis))
+
 
     degree = sum(basis.multiindexset)
     dimension = length(basis.multiindexset)
@@ -162,11 +167,7 @@ function Base.show(io::IO, basis::MultivariateBasis)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis)
-    basistype = typeof(basis.basistype)
-    basis_name = string(basistype)
-    if basis_name == "HermiteBasis"
-        basis_name = "HermiteBasis(edge_control=:$(basis.basistype.edge_control))"
-    end
+    basis_name = string(basistype(basis))
 
     degree = sum(basis.multiindexset)
     dimension = length(basis.multiindexset)

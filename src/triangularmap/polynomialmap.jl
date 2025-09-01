@@ -10,9 +10,14 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         rectifier::AbstractRectifierFunction = Softplus(),
         basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
     )
-        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
 
-        return PolynomialMap(components, referencetype)
+        if referencetype == :normal
+            referencedensity = Normal()
+        else
+            error("Unsupported reference density type: $referencetype")
+        end
+
+        return PolynomialMap(dimension, degree, referencedensity, rectifier, basis)
     end
 
     function PolynomialMap(
@@ -22,26 +27,12 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         rectifier::AbstractRectifierFunction = Softplus(),
         basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
     )
-        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
+        components = [PolynomialMapComponent(k, degree, rectifier, basis, reference) for k in 1:dimension]
 
         return PolynomialMap(components, reference)
     end
 
-    function PolynomialMap(components::Vector{PolynomialMapComponent})
-        return PolynomialMap(components, :normal)
-    end
-
-    function PolynomialMap(components::Vector{PolynomialMapComponent}, referencetype::Symbol)
-        if referencetype == :normal
-            refdensity = Normal(0,1)
-            reference = MapReferenceDensity(refdensity)
-            return new(components, reference, :target)
-        else
-            error("Reference type $referencetype not supported")
-        end
-    end
-
-    function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution)
+    function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution=Normal())
         return new(components, MapReferenceDensity(reference), :target)
     end
 end
@@ -376,21 +367,22 @@ function numberdimensions(M::PolynomialMap)
     return length(M.components)
 end
 
-# Set linearization bounds for all HermiteBasis components in the polynomial map
-function setlinearizationbounds!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
-    # samples: N x d matrix, each column is for one component
-    for (k, component) in enumerate(M.components)
-        # Only set for HermiteBasis with linearized edge control
-        for mvb in component.basisfunctions
-            if isa(mvb.basistype, HermiteBasis) && mvb.basistype.edge_control == :linearized
-                # The degree for the k-th variable in this basis function
-                max_degree = maximum(mvb.multiindexset)
-                mvb.basistype = LinearizedHermiteBasis(samples[:,k], max_degree, component.index)
-            elseif isa(mvb.basistype, HermiteBasis) && mvb.basistype.edge_control == :cubic
-                mvb.basistype = HermiteBasis(:linearized)
-            end
-        end
+function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
+    setforwarddirection!(M, :reference)
+
+    new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
+
+    for (i, component) in enumerate(M.components)
+
+        k = component.index
+        d = degree(component)
+        rec = component.rectifier
+        basis = component.basisfunctions[1].univariatebases[1]
+
+        new_components[i] = PolynomialMapComponent(k, d, rec, basis, samples)
     end
+
+    M.components .= new_components
 end
 
 # Display method for PolynomialMap
@@ -404,11 +396,7 @@ function Base.show(io::IO, M::PolynomialMap)
         max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
         # Get basis type
-        basistype = typeof(first_component.basisfunctions[1].basistype)
-        basis_name = string(basistype)
-        if basis_name == "HermiteBasis"
-            basis_name = "Hermite"
-        end
+        basis_name = string(basistype(first_component.basisfunctions[1]))
 
         # Get rectifier type
         rectifier_type = typeof(first_component.rectifier)
@@ -441,11 +429,7 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
         max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
         # Get basis type
-        basistype = typeof(first_component.basisfunctions[1].basistype)
-        basis_name = string(basistype)
-        if basis_name == "HermiteBasis"
-            basis_name = "Hermite"
-        end
+        basis_name = basis_name = string(basistype(first_component.basisfunctions[1]))
 
         # Get rectifier type
         rectifier_type = typeof(first_component.rectifier)

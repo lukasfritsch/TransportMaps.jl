@@ -78,7 +78,7 @@ end
 # definition in the paper: $Z_{\alpha_j}=\alpha_j!$ for $j<k$ and
 # $Z_{\alpha_k}=(\alpha_k+1)!$.
 basis = LinearizedHermiteBasis(Normal(), 4, 1)
-println("Linearization bounds: ", basis.bounds_linearization)
+println("Linearization bounds: ", basis.linearizationbounds)
 
 p3 = plot(xlabel="z", ylabel="Basis function", title="Linearized Hermite Basis")
 for degree in 1:4
@@ -95,7 +95,7 @@ end
 # ```math
 # \mathcal{H}_j^{\text{Gauss}}(z)=\mathrm{He}_j(z)\exp\left(-\tfrac{z^2}{4}\right).
 # ```
-basis = GaussianWeightHermiteBasis()
+basis = GaussianWeightedHermiteBasis()
 
 p4 = plot(xlabel="z", ylabel="Basis function", title="Gaussian-Weighted Hermite Basis")
 for degree in 1:4
@@ -112,14 +112,8 @@ end
 # ```math
 # \mathcal{H}_j^{\mathrm{Cub}}(z)=\operatorname{He}_j(z)\left(2 u^3-3 u^2+1\right),\qquad u=\min\!\left(1,\frac{|z|}{r}\right),\; r=2\max(|z^l|,|z^u|).
 # ```
-basis = CubicSplineHermiteBasis(Normal())
 
-p5 = plot(xlabel="z", ylabel="Basis function", title="Cubic Spline Weighted Hermite Basis")
-for degree in 1:4
-    plot!(p5, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
-end
-#md savefig("hermite_basis_cubic.svg"); nothing # hide
-# ![Cubic Spline Weighted Hermite Basis](hermite_basis_cubic.svg)
+# tbd
 
 # ## Summary
 #

@@ -5,7 +5,7 @@
 #
 # The banana distribution is a common test case in transport map literature [marzouk2016](@cite),
 # defined as a standard normal in the first dimension and a normal distribution
-# centered at x₁² in the second dimension. This example showcases the effectiveness
+# centered at $x_1^2$ in the second dimension. This example showcases the effectiveness
 # of triangular transport maps for capturing nonlinear dependencies [baptista2023](@cite).
 
 # We start with the necessary packages:
@@ -24,9 +24,9 @@ M = PolynomialMap(2, 2, Normal(), Softplus())
 # ### Setting up Quadrature
 #
 # For optimization, we need to specify quadrature weights. Here we use
-# Gauss-Hermite quadrature with 3 points per dimension.
+# a sparse Smolyak grid with level 2:
 
-quadrature = GaussHermiteWeights(3, 2)
+quadrature = SparseSmolyakWeights(2, 2)
 
 # ### Defining the Target Density
 #
@@ -84,12 +84,12 @@ println("Variance Diagnostic: ", var_diag)
 # approximates the target distribution. Lower values indicate better approximation.
 #
 # The scatter plot should show the characteristic "banana" shape, with samples
-# curved according to the relationship x₂ ≈ x₁².
+# curved according to the relationship $x_2 \propto x_1^2$.
 
 # ### Further Experiments
 #
 # You can experiment with:
 # - Different polynomial degrees (see [baptista2023](@cite) for monotone map theory)
 # - Different rectifier functions (`IdentityRectifier()`, `ShiftedELU()`)
-# - Different quadrature methods (`MonteCarloWeights`, `LatinHypercubeWeights`)
+# - Different quadrature methods (`MonteCarloWeights`, `LatinHypercubeWeights`, `GaussHermiteWeights`)
 # - More quadrature points for higher accuracy

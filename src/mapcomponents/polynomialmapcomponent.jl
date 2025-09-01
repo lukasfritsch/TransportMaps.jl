@@ -37,32 +37,63 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         for (i, multiindexset) in enumerate(multi_indices)
             # Build per-dimension univariate bases with the correct degree
             dim = length(multiindexset)
-            uni_bases = Vector{AbstractPolynomialBasis}(undef, dim)
-
-            # Precompute radial num_centers if needed
-            num_centers = 0
-            if isa(basis, RadialBasis)
-                num_centers = length(basis.centers)
-                if num_centers == 0
-                    num_centers = maximum(multiindexset) + 1
-                end
-            end
+            uni_bases = Vector{typeof(basis)}(undef, dim)
 
             for j in 1:dim
                 deg_j = multiindexset[j]
 
-                if isa(basis, RadialBasis)
-                    uni_bases[j] = RadialBasis(density, num_centers)
-
+                if isa(basis, HermiteBasis)
+                    uni_bases[j] = HermiteBasis()
                 elseif isa(basis, LinearizedHermiteBasis)
                     uni_bases[j] = LinearizedHermiteBasis(density, deg_j, index)
+                elseif isa(basis, GaussianWeightedHermiteBasis)
+                    uni_bases[j] = GaussianWeightedHermiteBasis()
+                # elseif isa(basis, CubicSplineHermiteBasis)
+                #     uni_bases[j] = CubicSplineHermiteBasis(density)
+                # elseif isa(basis, RadialBasis)
+                #     uni_bases[j] = RadialBasis(density, num_centers)
+                end
+            end
 
-                elseif isa(basis, CubicSplineHermiteBasis)
-                    uni_bases[j] = CubicSplineHermiteBasis(deg_j,density)
+            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
+        end
 
-                else
-                    # Generic attempt: construct a new basis of same type with degree if supported
-                    uni_bases[j] = typeof(basis)(deg_j)
+        coefficients = zeros(length(basisfunctions))
+        return new(basisfunctions, coefficients, rectifier, index)
+    end
+
+        # Constructor that builds basis functions using an analytical reference density
+    function PolynomialMapComponent(
+        index::Int,
+        degree::Int,
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        samples::AbstractMatrix{<:Real},
+    )
+        @assert index > 0 "Index must be a positive integer"
+        @assert degree > 0 "Degree must be a positive integer"
+
+        multi_indices = multivariate_indices(degree, index)
+        basisfunctions = Vector{MultivariateBasis}(undef, length(multi_indices))
+
+        for (i, multiindexset) in enumerate(multi_indices)
+            # Build per-dimension univariate bases with the correct degree
+            dim = length(multiindexset)
+            uni_bases = Vector{typeof(basis)}(undef, dim)
+
+            for j in 1:dim
+                deg_j = multiindexset[j]
+
+                if isa(basis, HermiteBasis)
+                    uni_bases[j] = HermiteBasis()
+                elseif isa(basis, LinearizedHermiteBasis)
+                    uni_bases[j] = LinearizedHermiteBasis(samples[:,j], deg_j, index)
+                elseif isa(basis, GaussianWeightedHermiteBasis)
+                    uni_bases[j] = GaussianWeightedHermiteBasis()
+                # elseif isa(basis, CubicSplineHermiteBasis)
+                #     uni_bases[j] = CubicSplineHermiteBasis(density)
+                # elseif isa(basis, RadialBasis)
+                #     uni_bases[j] = RadialBasis(density, num_centers)
                 end
             end
 
@@ -257,6 +288,10 @@ function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{
     return ∇f₀ + ∇integral
 end
 
+function degree(map_component::PolynomialMapComponent)
+    return maximum(sum(basis.multiindexset) for basis in map_component.basisfunctions)
+end
+
 # Inverse map for the polynomial map component using one-dimensional root finding
 function inverse(
     map_component::PolynomialMapComponent,
@@ -289,14 +324,11 @@ function Base.show(io::IO, component::PolynomialMapComponent)
     n_coeffs = length(component.coefficients)
 
     # Get the maximum degree from the basis functions
-    max_degree = maximum(sum(basis.multiindexset) for basis in component.basisfunctions)
+    max_degree = degree(component)
 
     # Get basis type from the first basis function
     basis_type = typeof(component.basisfunctions[1].univariatebases[1])
     basis_name = string(basis_type)
-    if basis_name == "HermiteBasis"
-        basis_name = "Hermite"
-    end
 
     # Get rectifier type
     rectifier_type = typeof(component.rectifier)
@@ -312,14 +344,11 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent)
     n_basis = length(component.basisfunctions)
-    max_degree = maximum(sum(basis.multiindexset) for basis in component.basisfunctions)
+    max_degree = degree(component)
 
     # Get basis type
     basis_type = typeof(component.basisfunctions[1].univariatebases[1])
     basis_name = string(basis_type)
-    if basis_name == "HermiteBasis"
-        basis_name = "Hermite"
-    end
 
     # Get rectifier type
     rectifier_type = typeof(component.rectifier)

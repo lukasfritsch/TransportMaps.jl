@@ -38,6 +38,7 @@ export LinearizedHermiteBasis
 export Psi
 export basisfunction
 export basisfunction_derivative
+export basistype
 export evaluate
 export edge_controlled_hermite_polynomial
 export edge_controlled_hermite_derivative
@@ -79,6 +80,10 @@ export hybridrootfinder
 export IdentityRectifier
 export HermiteBasis
 export LinearizedHermiteBasis
+# export CubicSplineHermiteBasis #! Somehow it gets slow, when CubicSplineHermiteBasis is added
+export GaussianWeightedHermiteBasis
+# export RadialBasis #! Somehow it gets slow, when RadialBasis is added
+
 export MultivariateBasis
 export PolynomialMapComponent
 export PolynomialMap
@@ -97,6 +102,9 @@ include("util/mapdensity.jl")
 
 include("mapcomponents/univariatebases/hermitebasis.jl")
 include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
+# include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
+include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
+# include("mapcomponents/univariatebases/radialbasis.jl")
 
 include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
