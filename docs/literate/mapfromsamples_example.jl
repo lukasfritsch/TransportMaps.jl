@@ -1,4 +1,4 @@
-# # Map from Samples Example
+# # Banana: Map from Samples
 #
 # This example demonstrates how to use TransportMaps.jl to approximate
 # a "banana" distribution using polynomial transport maps when only samples

@@ -1,4 +1,4 @@
-# # Banana Distribution Example
+# # Banana: Map from Density
 #
 # This example demonstrates how to use TransportMaps.jl to approximate
 # a "banana" distribution using polynomial transport maps.

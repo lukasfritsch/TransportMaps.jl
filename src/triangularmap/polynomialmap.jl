@@ -372,6 +372,9 @@ function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:R
 
     new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
 
+    # save coefficients
+    map_coefficients = getcoefficients(M)
+
     for (i, component) in enumerate(M.components)
 
         k = component.index
@@ -382,7 +385,11 @@ function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:R
         new_components[i] = PolynomialMapComponent(k, d, rec, basis, samples)
     end
 
+    # Assign components
     M.components .= new_components
+
+    # re-set coefficients
+    setcoefficients!(M, map_coefficients)
 end
 
 # Display method for PolynomialMap

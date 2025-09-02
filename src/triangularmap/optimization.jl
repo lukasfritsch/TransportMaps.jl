@@ -1,5 +1,3 @@
-# Todo: Also implement Hessian
-
 """
     kldivergence(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights)
 
@@ -101,7 +99,9 @@ Optimize polynomial map coefficients to minimize KL divergence to target density
 function optimize!(
     M::PolynomialMap,
     target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights,
+    quadrature::AbstractQuadratureWeights;
+    optimizer::Optim.AbstractOptimizer = LBFGS(),
+    options::Optim.Options = Optim.Options()
     )
 
     # Define objective function and gradient
@@ -117,14 +117,20 @@ function optimize!(
 
     # Optimize with analytical gradient
     initial_coefficients = getcoefficients(M)
-    result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, LBFGS())
+    result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, optimizer, options)
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients
 
     return result
 end
 
-function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
+
+function optimize!(
+    M::PolynomialMap,
+    samples::AbstractArray{<:Real};
+    optimizer::Optim.AbstractOptimizer = LBFGS(),
+    options::Optim.Options = Optim.Options()
+)
 
     # Initialize map from samples: set map direction and bounds
     initializemapfromsamples!(M, samples)
@@ -134,7 +140,7 @@ function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
     target = M.reference
 
     # Optimize the polynomial map
-    return optimize!(M, target, quadrature)
+    return optimize!(M, target, quadrature, optimizer=optimizer, options=options)
 end
 
 # Compute the variance diagnostic for the polynomial map
