@@ -1,5 +1,5 @@
-struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficients that are optimized
-    basisfunctions::Vector{MultivariateBasis}  # Vector of MultivariateBasis objects
+struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent # mutable due to coefficients that are optimized
+    basisfunctions::Vector{MultivariateBasis{T}}  # Vector of MultivariateBasis objects
     coefficients::Vector{Float64}  # Coefficients for the basis functions
     rectifier::AbstractRectifierFunction  # Rectifier function to apply to the partial derivatives
     index::Int  # Index k and dimension of the map component
@@ -14,10 +14,11 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         @assert degree > 0 "Degree must be a positive integer"
 
         multi_indices = multivariate_indices(degree, index)
-        basisfunctions = [MultivariateBasis(multiindexset, basis) for multiindexset in multi_indices]
+        basisfunctions = [MultivariateBasis(multiindexset, typeof(basis)) for multiindexset in multi_indices]
         coefficients = zeros(length(basisfunctions))
+        T = typeof(basis)
 
-        return new(basisfunctions, coefficients, rectifier, index)
+        return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
     # Constructor that builds basis functions using an analytical reference density
@@ -31,13 +32,14 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
 
+        T = typeof(basis)
         multi_indices = multivariate_indices(degree, index)
-        basisfunctions = Vector{MultivariateBasis}(undef, length(multi_indices))
+        basisfunctions = Vector{MultivariateBasis{}}(undef, length(multi_indices))
 
         for (i, multiindexset) in enumerate(multi_indices)
             # Build per-dimension univariate bases with the correct degree
             dim = length(multiindexset)
-            uni_bases = Vector{typeof(basis)}(undef, dim)
+            uni_bases = Vector{T}(undef, dim)
 
             for j in 1:dim
                 deg_j = multiindexset[j]
@@ -48,8 +50,8 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
                     uni_bases[j] = LinearizedHermiteBasis(density, deg_j, index)
                 elseif isa(basis, GaussianWeightedHermiteBasis)
                     uni_bases[j] = GaussianWeightedHermiteBasis()
-                # elseif isa(basis, CubicSplineHermiteBasis)
-                #     uni_bases[j] = CubicSplineHermiteBasis(density)
+                elseif isa(basis, CubicSplineHermiteBasis)
+                    uni_bases[j] = CubicSplineHermiteBasis(density)
                 # elseif isa(basis, RadialBasis)
                 #     uni_bases[j] = RadialBasis(density, num_centers)
                 end
@@ -59,7 +61,7 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         end
 
         coefficients = zeros(length(basisfunctions))
-        return new(basisfunctions, coefficients, rectifier, index)
+        return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
         # Constructor that builds basis functions using an analytical reference density
@@ -74,7 +76,8 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         @assert degree > 0 "Degree must be a positive integer"
 
         multi_indices = multivariate_indices(degree, index)
-        basisfunctions = Vector{MultivariateBasis}(undef, length(multi_indices))
+        T = typeof(basis)
+        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
 
         for (i, multiindexset) in enumerate(multi_indices)
             # Build per-dimension univariate bases with the correct degree
@@ -90,8 +93,8 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
                     uni_bases[j] = LinearizedHermiteBasis(samples[:,j], deg_j, index)
                 elseif isa(basis, GaussianWeightedHermiteBasis)
                     uni_bases[j] = GaussianWeightedHermiteBasis()
-                # elseif isa(basis, CubicSplineHermiteBasis)
-                #     uni_bases[j] = CubicSplineHermiteBasis(density)
+                elseif isa(basis, CubicSplineHermiteBasis)
+                    uni_bases[j] = CubicSplineHermiteBasis(samples[:,j])
                 # elseif isa(basis, RadialBasis)
                 #     uni_bases[j] = RadialBasis(density, num_centers)
                 end
@@ -101,14 +104,14 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         end
 
         coefficients = zeros(length(basisfunctions))
-        return new(basisfunctions, coefficients, rectifier, index)
+        return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
-    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, rectifier::AbstractRectifierFunction, index::Int)
+    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis{T}}, coefficients::Vector{<:Real}, rectifier::AbstractRectifierFunction, index::Int) where T<:AbstractPolynomialBasis
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
 
-        return new(basisfunctions, coefficients, rectifier, index)
+        return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 end
 

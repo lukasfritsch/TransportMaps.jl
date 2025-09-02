@@ -24,8 +24,10 @@ using Statistics
             @test basisfunction(HermiteBasis(), 2.0, 0.0) ≈ -1.0
 
             # Test edge-controlled Hermite polynomials
-            @test basisfunction(GaussianWeightedHermiteBasis(), 1.0, 2.0) ≈ hermite_polynomial(1, 2.0) * exp(-.25 * 2.0^2)
-            # @test basisfunction(HermiteBasis(:cubic), 2.0, 1.0) ≈ hermite_polynomial(2, 1.0) * (2 * (min(1.0, abs(1.0)/4.0))^3 - 3 * (min(1.0, abs(1.0)/4.0))^2 + 1)
+            @test basisfunction(GaussianWeightedHermiteBasis(), 2.0, 2.0) ≈ hermite_polynomial(2, 2.0) * exp(-.25 * 2.0^2)
+            @test basisfunction(GaussianWeightedHermiteBasis(), 1.0, 2.0) ≈ hermite_polynomial(1, 2.0)
+            @test basisfunction(CubicSplineHermiteBasis(), 2.0, 1.0) ≈ hermite_polynomial(2, 1.0) * (2 * (min(1.0, abs(1.0)/4.0))^3 - 3 * (min(1.0, abs(1.0)/4.0))^2 + 1)
+            @test basisfunction(CubicSplineHermiteBasis(), 1.0, 2.0) ≈ hermite_polynomial(1, 2.0)
         end
 
         @testset "Multivariate Hermite" begin

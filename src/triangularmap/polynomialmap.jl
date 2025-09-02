@@ -1,5 +1,5 @@
 mutable struct PolynomialMap <: AbstractTriangularMap
-    components::Vector{PolynomialMapComponent}  # Vector of map components
+    components::Vector{PolynomialMapComponent{<:AbstractPolynomialBasis}}  # Vector of map components
     reference::MapReferenceDensity
     forwarddirection::Symbol
 
@@ -32,7 +32,7 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         return PolynomialMap(components, reference)
     end
 
-    function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution=Normal())
+    function PolynomialMap(components::Vector{PolynomialMapComponent{T}}, reference::Distributions.UnivariateDistribution=Normal()) where T <: AbstractPolynomialBasis
         return new(components, MapReferenceDensity(reference), :target)
     end
 end

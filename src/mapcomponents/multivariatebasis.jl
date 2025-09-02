@@ -1,56 +1,51 @@
-# MVBasis struct for multi-indices
-struct MultivariateBasis <: AbstractMultivariateBasis
+struct MultivariateBasis{T<:AbstractPolynomialBasis} <: AbstractMultivariateBasis
     multiindexset::Vector{Int}
-    univariatebases::Vector{<:AbstractPolynomialBasis}  # Store univariate basis for each dimension
-
-    function MultivariateBasis(multiindexset::Vector{Int}, basistype::AbstractPolynomialBasis)
-        if basistype isa HermiteBasis
-            univariatebases = [HermiteBasis() for _ in multiindexset]
-        elseif basistype isa LinearizedHermiteBasis
-            univariatebases = [LinearizedHermiteBasis(degree) for degree in multiindexset]
-        elseif basistype isa GaussianWeightedHermiteBasis
-            univariatebases = [GaussianWeightedHermiteBasis() for _ in multiindexset]
-        end
-
-        return new(multiindexset, univariatebases)
-    end
-
-    function MultivariateBasis(multiindexset::Vector{Int}, univariatebases::Vector{<:AbstractPolynomialBasis})
-        return new(multiindexset, univariatebases)
-    end
+    univariatebases::Vector{T}  # Store univariate basis for each dimension
 end
 
+function MultivariateBasis(multiindexset::Vector{Int}, ::Type{T}) where T<:AbstractPolynomialBasis
+    if T <: LinearizedHermiteBasis
+        univariatebases = [T(degree) for degree in multiindexset]
+    else
+        univariatebases = [T() for _ in multiindexset]
+    end
+    return MultivariateBasis{T}(multiindexset, univariatebases)
+end
+
+# Backwards-compatible constructor that accepts a basis instance
+MultivariateBasis(multiindexset::Vector{Int}, basistype::AbstractPolynomialBasis) = MultivariateBasis(multiindexset, typeof(basistype))
+
 # Multivariate basis function Psi(alpha::Vector{<:Real}, z::Vector{<:Real})
-function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, univariatebases::Vector{<:AbstractPolynomialBasis})
+function Psi(alpha::Vector{<:Real}, z::Vector{<:Real}, univariatebases::Vector{T}) where T<:AbstractPolynomialBasis
     @assert length(alpha) == length(z) "Dimension mismatch: alpha and z must have same length"
     return prod(basisfunction(ub, αᵢ, zᵢ) for (αᵢ, zᵢ, ub) in zip(alpha, z, univariatebases))
 end
 
 # Evaluate MultivariateBasis at point z
-function evaluate(mvb::MultivariateBasis, z::Vector{<:Real})
+function evaluate(mvb::MultivariateBasis{T}, z::Vector{<:Real}) where T<:AbstractPolynomialBasis
     @assert length(mvb.multiindexset) == length(z) "Dimension mismatch: multiindexset and z must have same length"
     alpha = Real.(mvb.multiindexset)
     return Psi(alpha, z, mvb.univariatebases)
 end
 
 # Multivariate function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real})
-function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, z::Vector{<:Real})
+function f(Ψ::Vector{MultivariateBasis{T}}, coefficients::Vector{<:Real}, z::Vector{<:Real}) where T<:AbstractPolynomialBasis
     @assert length(Ψ) == length(coefficients) "Number of basis functions must equal number of coefficients"
     return sum(coeff * evaluate(mvb, z) for (coeff, mvb) in zip(coefficients, Ψ))
 end
 
 # Alternative interface matching the exact specification
-function f(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real})
+function f(Ψ::Vector{MultivariateBasis{T}}, coefficients::Vector{<:Real}) where T<:AbstractPolynomialBasis
     return (z::Vector{<:Real}) -> f(Ψ, coefficients, z)
 end
 
 # Gradient of MultivariateBasis w.r.t. z
-function gradient_z(mvb::MultivariateBasis, z::Vector{<:Real})
+function gradient_z(mvb::MultivariateBasis{T}, z::Vector{<:Real}) where T<:AbstractPolynomialBasis
     return [partial_derivative_z(mvb.univariatebases, mvb.multiindexset, z, j) for j in 1:length(z)]
 end
 
 # Partial derivative of multivariate basis w.r.t. z_j
-function partial_derivative_z(bases::Vector{<:AbstractPolynomialBasis}, α::Vector{Int}, z::Vector{<:Real}, j::Int)
+function partial_derivative_z(bases::Vector{T}, α::Vector{Int}, z::Vector{<:Real}, j::Int) where T<:AbstractPolynomialBasis
     @assert 1 <= j <= length(z) "Index j must be within bounds of z"
     @assert length(bases) == length(z) "Dimension mismatch"
 
@@ -64,21 +59,21 @@ function partial_derivative_z(bases::Vector{<:AbstractPolynomialBasis}, α::Vect
     return result
 end
 
-partial_derivative_z(mvb::MultivariateBasis, z::Vector{<:Real}, j::Int) = partial_derivative_z(mvb.univariatebases, mvb.multiindexset, z, j)
+partial_derivative_z(mvb::MultivariateBasis{T}, z::Vector{<:Real}, j::Int) where T<:AbstractPolynomialBasis = partial_derivative_z(mvb.univariatebases, mvb.multiindexset, z, j)
 
 # Partial derivative of f w.r.t. z_j
-function partial_derivative_z(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, z::Vector{<:Real}, j::Int)
+function partial_derivative_z(Ψ::Vector{MultivariateBasis{T}}, coefficients::Vector{<:Real}, z::Vector{<:Real}, j::Int) where T<:AbstractPolynomialBasis
     @assert length(Ψ) == length(coefficients) "Number of basis functions must equal number of coefficients"
     return sum(coeff * partial_derivative_z(mvb, z, j) for (coeff, mvb) in zip(coefficients, Ψ))
 end
 
 # Gradient of f w.r.t. z
-function gradient_z(Ψ::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, z::Vector{<:Real})
+function gradient_z(Ψ::Vector{MultivariateBasis{T}}, coefficients::Vector{<:Real}, z::Vector{<:Real}) where T<:AbstractPolynomialBasis
     return [partial_derivative_z(Ψ, coefficients, z, j) for j in 1:length(z)]
 end
 
 # Derivative of f w.r.t. coefficients (this is just the basis function values)
-function gradient_coefficients(Ψ::Vector{MultivariateBasis}, z::Vector{<:Real})
+function gradient_coefficients(Ψ::Vector{MultivariateBasis{T}}, z::Vector{<:Real}) where T<:AbstractPolynomialBasis
     return [evaluate(mvb, z) for mvb in Ψ]
 end
 
@@ -147,12 +142,12 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol = :total)
     end
 end
 
-function basistype(mvb::MultivariateBasis)
-    return eltype(mvb.univariatebases)
+function basistype(mvb::MultivariateBasis{T}) where T<:AbstractPolynomialBasis
+    return T
 end
 
 # Display methods for MultivariateBasis
-function Base.show(io::IO, basis::MultivariateBasis)
+function Base.show(io::IO, basis::MultivariateBasis{T}) where T<:AbstractPolynomialBasis
     basis_name = string(basistype(basis))
 
 
@@ -166,7 +161,7 @@ function Base.show(io::IO, basis::MultivariateBasis)
     print(io, "basis=$basis_name)")
 end
 
-function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis)
+function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis{T}) where T<:AbstractPolynomialBasis
     basis_name = string(basistype(basis))
 
     degree = sum(basis.multiindexset)

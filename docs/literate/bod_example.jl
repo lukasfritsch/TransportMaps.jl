@@ -12,7 +12,6 @@
 using TransportMaps
 using Plots
 using Distributions
-using SpecialFunctions
 
 # ### The Forward Model
 #
@@ -20,18 +19,29 @@ using SpecialFunctions
 # ```math
 # \mathcal{B}(t) = A(1-\exp(-Bt))+ \varepsilon
 # ```
-# where the parameters A and B are functions of the uncertain inputs θ₁ and θ₂:
+# where the parameters $A$ and $B$ unknown material parameters and $\varepsilon \sim \mathcal{N}(0, 10^{-3})$ represents measurement noise.
+#
+# The parameters $A$ and $B$ follow the prior distributions
+# ```math
+# A \sim \mathcal{U}(0.4, 1.2), \quad B \sim \mathcal{U}(0.01, 0.31)
+# ```
+#
+# In order to describe the input parameters in an unbounded space, we transform them into
+# a space with standard normal prior distributions $p(\theta_i) \sim \mathcal{N}(0, 1)$.
+# We write $A$ and $B$ as functions of the new variables $\theta_1$ and $\theta_2$ with
+# the help of a density transformation with the standard normal CDF $\Phi(\theta_i)$:
 # ```math
 # \begin{aligned}
-# A &= 0.4 + 0.4\left(1 + \text{erf}\left(\frac{\theta_1}{\sqrt{2}} \right)\right) \\
-# B &= 0.01 + 0.15\left(1 + \text{erf}\left(\frac{\theta_2}{\sqrt{2}} \right)\right)
+# A &= 0.4 + (1.2 - 0.4) \cdot \Phi(\theta_1) \\
+# B &= 0.01 + (0.31 - 0.01) \cdot \Phi(\theta_2)
 # \end{aligned}
 # ```
-# and $\varepsilon \sim \mathcal{N}(0, 10^{-3})$ represents measurement noise.
 
-function forward_model(t, x)
-    A = 0.4 + 0.4 * (1 + erf(x[1] / sqrt(2)))
-    B = 0.01 + 0.15 * (1 + erf(x[2] / sqrt(2)))
+# We define the forward model as a function of $\theta$ and $t$ in Julia:
+
+function forward_model(t, θ)
+    A = 0.4 + (1.2 - 0.4) * cdf(Normal(), θ[1])
+    B = 0.01 + (0.31 - 0.01) * cdf(Normal(), θ[2])
     return A * (1 - exp(-B * t))
 end
 nothing # hide
@@ -51,10 +61,10 @@ s = scatter(t, D, label="Data", xlabel="Time (t)", ylabel="Biochemical Oxygen De
     size=(600, 400), legend=:topleft)
 ## Plot model output for some parameter values
 t_values = range(0, 5, length=100)
-for x₁ in [-0.5, 0, 0.5]
-    for x₂ in [-0.5, 0, 0.5]
-        plot!(t_values, [forward_model(ti, [x₁, x₂]) for ti in t_values],
-              label="(x₁ = $x₁, x₂ = $x₂)", linestyle=:dash)
+for θ₁ in [-0.5, 0, 0.5]
+    for θ₂ in [-0.5, 0, 0.5]
+        plot!(t_values, [forward_model(ti, [θ₁, θ₂]) for ti in t_values],
+              label="(θ₁ = $θ₁, θ₂ = $θ₂)", linestyle=:dash)
     end
 end
 #md savefig("realizations-bod.svg"); nothing # hide
@@ -68,11 +78,11 @@ end
 # \pi(\mathbf{y}|\boldsymbol{\theta}) = \prod_{t=1}^{5} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{1}{2\sigma^2}(y_t - \mathcal{B}(t))^2\right)
 # ```
 
-function posterior(x)
+function posterior(θ)
     ## Calculate the likelihood
-    likelihood = prod([pdf(Normal(forward_model(t[k], x), σ), D[k]) for k in 1:5])
+    likelihood = prod([pdf(Normal(forward_model(t[k], θ), σ), D[k]) for k in 1:5])
     ## Calculate the prior
-    prior = pdf(Normal(0,1), x[1]) * pdf(Normal(0,1), x[2])
+    prior = pdf(Normal(), θ[1]) * pdf(Normal(), θ[2])
     return prior * likelihood
 end
 
@@ -111,35 +121,28 @@ println("Variance Diagnostic: ", var_diag)
 #
 # Plot the mapped samples along with contours of the true posterior density:
 
-x₁ = range(-0.5, 1.5, length=100)
-x₂ = range(-0.5, 3, length=100)
+θ₁ = range(-0.5, 1.5, length=100)
+θ₂ = range(-0.5, 3, length=100)
 
-posterior_values = [posterior([x₁, x₂]) for x₂ in x₂, x₁ in x₁]
+posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
         label="Mapped Samples", alpha=0.5, color=1,
-        xlabel="x₁", ylabel="x₂", title="Posterior Density and Mapped Samples")
-contour!(x₁, x₂, posterior_values, colormap=:viridis, label="Posterior Density")
+        xlabel="θ₁", ylabel="θ₂", title="Posterior Density and Mapped Samples")
+contour!(θ₁, θ₂, posterior_values, colormap=:viridis, label="Posterior Density")
 #md savefig("samples-bod.svg"); nothing # hide
 # ![BOD Samples](samples-bod.svg)
 
 # Finally, we can compute the pullback density to visualize how well our transport map approximates the posterior:
-posterior_pullback = [pullback(M, [x₁, x₂]) for x₂ in x₂, x₁ in x₁]
+posterior_pullback = [pullback(M, [θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
-contour(x₁, x₂, posterior_values./maximum(posterior_values);
+contour(θ₁, θ₂, posterior_values./maximum(posterior_values);
     levels = 5, colormap = :viridis, colorbar = false,
-    label="Target", xlabel="x₁", ylabel="x₂")
-contour!(x₁, x₂, posterior_pullback./maximum(posterior_pullback);
+    label="Target", xlabel="θ₁", ylabel="θ₂")
+contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
     levels = 5, colormap = :viridis, linestyle=:dash,
     label="Pullback")
 #md savefig("pullback-bod.svg"); nothing # hide
 # ![BOD Pullback Density](pullback-bod.svg)
 
-# ### Model Parameter Interpretation
-#
-# The posterior samples provide uncertainty quantification for the BOD model parameters:
-# - **x₁**: Controls the maximum BOD level (parameter A)
-# - **x₂**: Controls the rate of BOD development (parameter B)
-#
-# The correlation structure in the posterior reflects the interdependence between
-# these parameters in explaining the observed data.
+# We can also visually observe a good agreement between the true posterior and the TM approximation.

@@ -80,9 +80,9 @@ export hybridrootfinder
 export IdentityRectifier
 export HermiteBasis
 export LinearizedHermiteBasis
-# export CubicSplineHermiteBasis #! Somehow it gets slow, when CubicSplineHermiteBasis is added
+export CubicSplineHermiteBasis
 export GaussianWeightedHermiteBasis
-# export RadialBasis #! Somehow it gets slow, when RadialBasis is added
+export RadialBasis
 
 export MultivariateBasis
 export PolynomialMapComponent
@@ -102,9 +102,9 @@ include("util/mapdensity.jl")
 
 include("mapcomponents/univariatebases/hermitebasis.jl")
 include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
-# include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
+include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
 include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
-# include("mapcomponents/univariatebases/radialbasis.jl")
+include("mapcomponents/univariatebases/radialbasis.jl")
 
 include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
