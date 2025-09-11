@@ -5,16 +5,16 @@
 # Quadrature is used in map optimization, in particular when evaluating the Kullback–Leibler divergence
 #
 # ```math
-# \mathcal{D}_{\mathrm{KL}}\left(T_{\#} \rho \| \pi\right)=\int \Big[\log \rho(\boldsymbol{z})-\log \pi(T(a, \boldsymbol{z}))-\log |\operatorname{det} \nabla T(a, \boldsymbol{z})| \Big] \rho(\boldsymbol{z}) \ \mathrm{d} \boldsymbol{z}
+# \mathcal{D}_{\mathrm{KL}}\left(T_{\#} \rho \| \pi\right)=\int \Big[\log \rho(\boldsymbol{z})-\log \pi(T(\boldsymbol{a}, \boldsymbol{z}))-\log |\operatorname{det} \nabla T(\boldsymbol{a}, \boldsymbol{z})| \Big] \rho(\boldsymbol{z}) \ \mathrm{d} \boldsymbol{z}
 # ```
 #
 # Here, $\boldsymbol{z}$ denotes the variable in the reference space with density
 # $\rho(\boldsymbol{z})$, $\pi(\boldsymbol{x})$ is the target density, and
-# $T(a, \boldsymbol{z})$ is the transport map parameterized by $a$.
+# $T(\boldsymbol{a}, \boldsymbol{z})$ is the transport map parameterized by $\boldsymbol{a}$.
 #
 # In practice we approximate the integral by a quadrature sum:
 # ```math
-# \sum_{i=1}^{N} w_{q,i}\Big[-\log\pi\bigl(T(a,\boldsymbol{z}_{q,i})\bigr)-\log |\det\nabla T(a,\boldsymbol{z}_{q,i}) |\Big]
+# \sum_{i=1}^{N} w_{q,i}\Big[-\log\pi\bigl(T(\boldsymbol{a},\boldsymbol{z}_{q,i})\bigr)-\log |\det\nabla T(\boldsymbol{a},\boldsymbol{z}_{q,i}) |\Big]
 # ```
 #
 # The quadrature points $\boldsymbol{z}_{q,i}$ and weights $w_{q,i}$ must be chosen so the
