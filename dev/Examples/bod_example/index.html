@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>BOD Parameter Estimation · TransportMaps.jl</title><meta name="title" content="BOD Parameter Estimation · TransportMaps.jl"/><meta property="og:title" content="BOD Parameter Estimation · TransportMaps.jl"/><meta property="twitter:title" content="BOD Parameter Estimation · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/bod_example/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/bod_example/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Examples/bod_example/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../getting_started/">Getting Started</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../banana_example/">Banana: Map from Density</a></li><li><a class="tocitem" href="../mapfromsamples_example/">Banana: Map from Samples</a></li><li class="is-active"><a class="tocitem" href>BOD Parameter Estimation</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>BOD Parameter Estimation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>BOD Parameter Estimation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/bod_example.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Biochemical-Oxygen-Demand-(BOD)-Example"><a class="docs-heading-anchor" href="#Biochemical-Oxygen-Demand-(BOD)-Example">Biochemical Oxygen Demand (BOD) Example</a><a id="Biochemical-Oxygen-Demand-(BOD)-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Biochemical-Oxygen-Demand-(BOD)-Example" title="Permalink"></a></h1><p>This example demonstrates Bayesian parameter estimation for a biochemical oxygen demand model using transport maps. The problem comes from environmental engineering and was originally presented in [<a href="../../references/#sullivan2010">9</a>] and later used as a benchmark in transport map applications [<a href="../../references/#marzouk2016">1</a>].</p><p>The model describes the evolution of biochemical oxygen demand (BOD) in a river system using an exponential growth model with two uncertain parameters controlling growth and decay rates.</p><pre><code class="language-julia hljs">using TransportMaps
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>BOD Parameter Estimation · TransportMaps.jl</title><meta name="title" content="BOD Parameter Estimation · TransportMaps.jl"/><meta property="og:title" content="BOD Parameter Estimation · TransportMaps.jl"/><meta property="twitter:title" content="BOD Parameter Estimation · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/bod_example/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/bod_example/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Examples/bod_example/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../../Manuals/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../Manuals/hermite_basis/">Basis Functions</a></li><li><a class="tocitem" href="../../Manuals/sparse_map/">Map Parameterization</a></li><li><a class="tocitem" href="../../Manuals/quadrature/">Quadrature Methods</a></li><li><a class="tocitem" href="../../Manuals/optimization/">Optimization</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../banana_example/">Banana: Map from Density</a></li><li><a class="tocitem" href="../mapfromsamples_example/">Banana: Map from Samples</a></li><li class="is-active"><a class="tocitem" href>BOD Parameter Estimation</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>BOD Parameter Estimation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>BOD Parameter Estimation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/bod_example.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Biochemical-Oxygen-Demand-(BOD)-Example"><a class="docs-heading-anchor" href="#Biochemical-Oxygen-Demand-(BOD)-Example">Biochemical Oxygen Demand (BOD) Example</a><a id="Biochemical-Oxygen-Demand-(BOD)-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Biochemical-Oxygen-Demand-(BOD)-Example" title="Permalink"></a></h1><p>This example demonstrates Bayesian parameter estimation for a biochemical oxygen demand model using transport maps. The problem comes from environmental engineering and was originally presented in [<a href="../../references/#sullivan2010">12</a>] and later used as a benchmark in transport map applications [<a href="../../references/#marzouk2016">1</a>].</p><p>The model describes the evolution of biochemical oxygen demand (BOD) in a river system using an exponential growth model with two uncertain parameters controlling growth and decay rates.</p><pre><code class="language-julia hljs">using TransportMaps
 using Plots
-using Distributions
-using SpecialFunctions</code></pre><h3 id="The-Forward-Model"><a class="docs-heading-anchor" href="#The-Forward-Model">The Forward Model</a><a id="The-Forward-Model-1"></a><a class="docs-heading-anchor-permalink" href="#The-Forward-Model" title="Permalink"></a></h3><p>The BOD model is given by:</p><p class="math-container">\[\mathcal{B}(t) = A(1-\exp(-Bt))+\mathcal{E}\]</p><p>where the parameters A and B are functions of the uncertain inputs θ₁ and θ₂:</p><p class="math-container">\[\begin{aligned}
-A &amp;= 0.4 + 0.4\left(1 + \text{erf}\left(\frac{\theta_1}{\sqrt{2}} \right)\right) \\
-B &amp;= 0.01 + 0.15\left(1 + \text{erf}\left(\frac{\theta_2}{\sqrt{2}} \right)\right)
-\end{aligned}\]</p><p>and ℰ ~ 𝒩(0, 10⁻³) represents measurement noise.</p><pre><code class="language-julia hljs">function forward_model(t, x)
-    A = 0.4 + 0.4 * (1 + erf(x[1] / sqrt(2)))
-    B = 0.01 + 0.15 * (1 + erf(x[2] / sqrt(2)))
+using Distributions</code></pre><h3 id="The-Forward-Model"><a class="docs-heading-anchor" href="#The-Forward-Model">The Forward Model</a><a id="The-Forward-Model-1"></a><a class="docs-heading-anchor-permalink" href="#The-Forward-Model" title="Permalink"></a></h3><p>The BOD model is given by:</p><p class="math-container">\[\mathcal{B}(t) = A(1-\exp(-Bt))+ \varepsilon\]</p><p>where the parameters <span>$A$</span> and <span>$B$</span> unknown material parameters and <span>$\varepsilon \sim \mathcal{N}(0, 10^{-3})$</span> represents measurement noise.</p><p>The parameters <span>$A$</span> and <span>$B$</span> follow the prior distributions</p><p class="math-container">\[A \sim \mathcal{U}(0.4, 1.2), \quad B \sim \mathcal{U}(0.01, 0.31)\]</p><p>In order to describe the input parameters in an unbounded space, we transform them into a space with standard normal prior distributions <span>$p(\theta_i) \sim \mathcal{N}(0, 1)$</span>. We write <span>$A$</span> and <span>$B$</span> as functions of the new variables <span>$\theta_1$</span> and <span>$\theta_2$</span> with the help of a density transformation with the standard normal CDF <span>$\Phi(\theta_i)$</span>:</p><p class="math-container">\[\begin{aligned}
+A &amp;= 0.4 + (1.2 - 0.4) \cdot \Phi(\theta_1) \\
+B &amp;= 0.01 + (0.31 - 0.01) \cdot \Phi(\theta_2)
+\end{aligned}\]</p><p>We define the forward model as a function of <span>$\theta$</span> and <span>$t$</span> in Julia:</p><pre><code class="language-julia hljs">function forward_model(t, θ)
+    A = 0.4 + (1.2 - 0.4) * cdf(Normal(), θ[1])
+    B = 0.01 + (0.31 - 0.01) * cdf(Normal(), θ[2])
     return A * (1 - exp(-B * t))
 end</code></pre><h3 id="Experimental-Data"><a class="docs-heading-anchor" href="#Experimental-Data">Experimental Data</a><a id="Experimental-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Experimental-Data" title="Permalink"></a></h3><p>We have BOD measurements at five time points:</p><pre><code class="language-julia hljs">t = [1, 2, 3, 4, 5]
 D = [0.18, 0.32, 0.42, 0.49, 0.54]
@@ -15,119 +14,110 @@ D = [0.18, 0.32, 0.42, 0.49, 0.54]
     size=(600, 400), legend=:topleft)
 # Plot model output for some parameter values
 t_values = range(0, 5, length=100)
-for x₁ in [-0.5, 0, 0.5]
-    for x₂ in [-0.5, 0, 0.5]
-        plot!(t_values, [forward_model(ti, [x₁, x₂]) for ti in t_values],
-              label=&quot;(x₁ = $x₁, x₂ = $x₂)&quot;, linestyle=:dash)
+for θ₁ in [-0.5, 0, 0.5]
+    for θ₂ in [-0.5, 0, 0.5]
+        plot!(t_values, [forward_model(ti, [θ₁, θ₂]) for ti in t_values],
+              label=&quot;(θ₁ = $θ₁, θ₂ = $θ₂)&quot;, linestyle=:dash)
     end
-end</code></pre><p><img src="../realizations-bod.svg" alt="BOD Realizations"/></p><h3 id="Bayesian-Inference-Setup"><a class="docs-heading-anchor" href="#Bayesian-Inference-Setup">Bayesian Inference Setup</a><a id="Bayesian-Inference-Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Bayesian-Inference-Setup" title="Permalink"></a></h3><p>We define the posterior distribution using a standard normal prior on both parameters and a Gaussian likelihood for the observations:</p><p class="math-container">\[\pi(\mathbf{y}|\boldsymbol{\theta}) = \prod_{t=1}^{5} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{1}{2\sigma^2}(y_t - \mathcal{B}(t))^2\right)\]</p><pre><code class="language-julia hljs">function posterior(x)
+end</code></pre><p><img src="../realizations-bod.svg" alt="BOD Realizations"/></p><h3 id="Bayesian-Inference-Setup"><a class="docs-heading-anchor" href="#Bayesian-Inference-Setup">Bayesian Inference Setup</a><a id="Bayesian-Inference-Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Bayesian-Inference-Setup" title="Permalink"></a></h3><p>We define the posterior distribution using a standard normal prior on both parameters and a Gaussian likelihood for the observations:</p><p class="math-container">\[\pi(\mathbf{y}|\boldsymbol{\theta}) = \prod_{t=1}^{5} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{1}{2\sigma^2}(y_t - \mathcal{B}(t))^2\right)\]</p><pre><code class="language-julia hljs">function posterior(θ)
     # Calculate the likelihood
-    likelihood = prod([pdf(Normal(forward_model(t[k], x), σ), D[k]) for k in 1:5])
+    likelihood = prod([pdf(Normal(forward_model(t[k], θ), σ), D[k]) for k in 1:5])
     # Calculate the prior
-    prior = pdf(Normal(0,1), x[1]) * pdf(Normal(0,1), x[2])
+    prior = pdf(Normal(), θ[1]) * pdf(Normal(), θ[2])
     return prior * likelihood
 end
 
-target = MapTargetDensity(posterior, :auto_diff)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MapTargetDensity(density=posterior, gradient_type=auto_diff)</code></pre><h3 id="Creating-and-Optimizing-the-Transport-Map"><a class="docs-heading-anchor" href="#Creating-and-Optimizing-the-Transport-Map">Creating and Optimizing the Transport Map</a><a id="Creating-and-Optimizing-the-Transport-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-and-Optimizing-the-Transport-Map" title="Permalink"></a></h3><p>We use a 2-dimensional polynomial transport map with degree 3 and Softplus rectifier:</p><pre><code class="language-julia hljs">M = PolynomialMap(2, 3, :normal, Softplus())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">PolynomialMap:
+target = MapTargetDensity(posterior, :auto_diff)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MapTargetDensity(density=posterior, gradient_type=auto_diff)</code></pre><h3 id="Creating-and-Optimizing-the-Transport-Map"><a class="docs-heading-anchor" href="#Creating-and-Optimizing-the-Transport-Map">Creating and Optimizing the Transport Map</a><a id="Creating-and-Optimizing-the-Transport-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-and-Optimizing-the-Transport-Map" title="Permalink"></a></h3><p>We use a 2-dimensional polynomial transport map with degree 3 and Softplus rectifier:</p><pre><code class="language-julia hljs">M = PolynomialMap(2, 3, :normal, Softplus(), LinearizedHermiteBasis())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">PolynomialMap:
   Dimensions: 2
   Total coefficients: 14
   Reference density: Distributions.Normal{Float64}(μ=0.0, σ=1.0)
   Maximum degree: 3
-  Basis: Hermite
+  Basis: LinearizedHermiteBasis
   Rectifier: Softplus
   Components:
     Component 1: 4 basis functions
     Component 2: 10 basis functions
-  Coefficients: min=5.0e-324, max=6.90697320812676e-310, mean=5.92025606181776e-310
+  Coefficients: min=0.0, max=0.0, mean=0.0
 </code></pre><p>Set up Gauss-Hermite quadrature for optimization:</p><pre><code class="language-julia hljs">quadrature = GaussHermiteWeights(10, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">GaussHermiteWeights:
   Number of points: 100
   Dimensions: 2
   Quadrature type: Tensor product Gauss-Hermite
   Reference measure: Standard Gaussian
   Weight range: [1.858172610271843e-11, 0.11877833902739371]
-  Weight sum: 0.9999999999999994
-  Points (first 5):
-    [-4.859462828332312, -4.859462828332312] → weight: 1.858172610271843e-11
-    [-3.581823483551927, -4.859462828332312] → weight: 3.2677804672640156e-9
-    [-2.484325841638953, -4.859462828332312] → weight: 8.238338476283024e-8
-    [-1.4659890943911627, -4.859462828332312] → weight: 5.840231806713457e-7
-    [-0.48493570751550125, -4.859462828332312] → weight: 1.4856333877315967e-6
-    ... and 95 more
-</code></pre><p>Optimize the map coefficients:</p><pre><code class="language-julia hljs">@time res = optimize!(M, target, quadrature)
-println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> 12.278328 seconds (168.44 M allocations: 9.810 GiB, 5.14% gc time, 3.59% compilation time)
-Optimization result:  * Status: success
+</code></pre><p>Optimize the map coefficients:</p><pre><code class="language-julia hljs">res = optimize!(M, target, quadrature)
+println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Optimization result:  * Status: success
 
  * Candidate solution
-    Final objective value:     -6.229888e+00
+    Final objective value:     -6.228607e+00
 
  * Found with
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 2.18e-09 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 1.35e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 1.12e-13 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 1.80e-14 ≰ 0.0e+00
-    |g(x)|                 = 6.68e-09 ≤ 1.0e-08
+    |x - x&#39;|               = 5.05e-09 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 3.10e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 5.15e-14 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 8.27e-15 ≰ 0.0e+00
+    |g(x)|                 = 9.94e-09 ≤ 1.0e-08
 
  * Work counters
-    Seconds run:   12  (vs limit Inf)
-    Iterations:    123
-    f(x) calls:    368
-    ∇f(x) calls:   368</code></pre><h3 id="Generating-Posterior-Samples"><a class="docs-heading-anchor" href="#Generating-Posterior-Samples">Generating Posterior Samples</a><a id="Generating-Posterior-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Posterior-Samples" title="Permalink"></a></h3><p>Generate samples from the standard normal distribution and map them to the posterior:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  1.63278     0.55193
-  0.409025   -1.54749
- -1.07195    -0.442258
-  0.314108    0.516037
-  0.942417   -0.0223322
- -0.13196    -1.86166
-  0.257814    1.20936
-  0.674203    1.93196
-  0.0880635  -0.199263
-  2.02855    -0.625271
+    Seconds run:   13  (vs limit Inf)
+    Iterations:    90
+    f(x) calls:    278
+    ∇f(x) calls:   278</code></pre><h3 id="Generating-Posterior-Samples"><a class="docs-heading-anchor" href="#Generating-Posterior-Samples">Generating Posterior Samples</a><a id="Generating-Posterior-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Posterior-Samples" title="Permalink"></a></h3><p>Generate samples from the standard normal distribution and map them to the posterior:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.975689   -0.428065
+ -0.380371    0.269446
+  1.00474    -1.24796
+  0.726048    0.955601
+ -0.677233   -0.580794
+  0.741719   -1.38242
+ -0.0858348  -1.76815
+  0.706738    0.790024
+ -0.997369   -0.844214
+ -0.190791    1.41471
   ⋮          
- -0.487439   -0.645701
- -0.685899   -1.78939
- -2.55992     1.10617
- -1.72507     0.284812
- -0.986415   -1.69971
- -0.877219   -1.16573
- -1.06474     0.647434
- -1.95282    -0.822925
- -1.15921     0.655103</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, samples_z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.770975    0.0918932
-  0.0631287   0.450961
- -0.29226     1.3521
-  0.0295088   0.778978
-  0.298672    0.36168
- -0.103492    0.649706
-  0.010547    0.940241
-  0.16936     0.771922
- -0.0425947   0.793069
-  1.16623    -0.108729
+ -0.833469   -0.0964888
+ -0.374548    0.571072
+  1.26579    -0.00204696
+ -0.269473    0.865799
+ -0.495463    0.435796
+  1.03505    -0.0589034
+  0.314861   -1.5069
+  0.98925    -1.45838
+ -1.21878     0.603227</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, samples_z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.339743   0.282729
+ -0.162951   1.1626
+  0.35645    0.196073
+  0.209379   0.57042
+ -0.225719   1.13213
+  0.21691    0.301002
+ -0.0884791  0.641806
+  0.200212   0.560846
+ -0.28257    1.21998
+ -0.116598   1.3247
   ⋮          
- -0.186364    1.01587
- -0.225916    0.888096
- -0.471853    3.06709
- -0.381786    1.95883
- -0.278607    1.01671
- -0.260358    1.08528
- -0.291129    1.71863
- -0.408364    1.56264
- -0.305654    1.7856</code></pre><h3 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h3><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
-println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.0177668475664198</code></pre><h3 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h3><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">x₁ = range(-0.5, 1.5, length=100)
-x₂ = range(-0.5, 3, length=100)
+ -0.254704   1.33737
+ -0.161606   1.23389
+  0.522941   0.184352
+ -0.136496   1.23642
+ -0.188594   1.27913
+  0.374251   0.288208
+  0.0383103  0.487561
+  0.347499   0.184538
+ -0.316637   1.81193</code></pre><h3 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h3><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
+println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.013712342891140181</code></pre><h3 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h3><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">θ₁ = range(-0.5, 1.5, length=100)
+θ₂ = range(-0.5, 3, length=100)
 
-posterior_values = [posterior([x₁, x₂]) for x₂ in x₂, x₁ in x₁]
+posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
         label=&quot;Mapped Samples&quot;, alpha=0.5, color=1,
-        xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;, title=&quot;Posterior Density and Mapped Samples&quot;)
-contour!(x₁, x₂, posterior_values, colormap=:viridis, label=&quot;Posterior Density&quot;)</code></pre><p><img src="../samples-bod.svg" alt="BOD Samples"/></p><p>Finally, we can compute the pullback density to visualize how well our transport map approximates the posterior:</p><pre><code class="language-julia hljs">posterior_pullback = [pullback(M, [x₁, x₂]) for x₂ in x₂, x₁ in x₁]
+        xlabel=&quot;θ₁&quot;, ylabel=&quot;θ₂&quot;, title=&quot;Posterior Density and Mapped Samples&quot;)
+contour!(θ₁, θ₂, posterior_values, colormap=:viridis, label=&quot;Posterior Density&quot;)</code></pre><p><img src="../samples-bod.svg" alt="BOD Samples"/></p><p>Finally, we can compute the pullback density to visualize how well our transport map approximates the posterior:</p><pre><code class="language-julia hljs">posterior_pullback = [pullback(M, [θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
-contour(x₁, x₂, posterior_values./maximum(posterior_values);
+contour(θ₁, θ₂, posterior_values./maximum(posterior_values);
     levels = 5, colormap = :viridis, colorbar = false,
-    label=&quot;Target&quot;, xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;)
-contour!(x₁, x₂, posterior_pullback./maximum(posterior_pullback);
+    label=&quot;Target&quot;, xlabel=&quot;θ₁&quot;, ylabel=&quot;θ₂&quot;)
+contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
     levels = 5, colormap = :viridis, linestyle=:dash,
-    label=&quot;Pullback&quot;)</code></pre><p><img src="../pullback-bod.svg" alt="BOD Pullback Density"/></p><h3 id="Model-Parameter-Interpretation"><a class="docs-heading-anchor" href="#Model-Parameter-Interpretation">Model Parameter Interpretation</a><a id="Model-Parameter-Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Model-Parameter-Interpretation" title="Permalink"></a></h3><p>The posterior samples provide uncertainty quantification for the BOD model parameters:</p><ul><li><strong>x₁</strong>: Controls the maximum BOD level (parameter A)</li><li><strong>x₂</strong>: Controls the rate of BOD development (parameter B)</li></ul><p>The correlation structure in the posterior reflects the interdependence between these parameters in explaining the observed data.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../mapfromsamples_example/">« Banana: Map from Samples</a><a class="docs-footer-nextpage" href="../../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 18 August 2025 09:56">Monday 18 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    label=&quot;Pullback&quot;)</code></pre><p><img src="../pullback-bod.svg" alt="BOD Pullback Density"/></p><p>We can also visually observe a good agreement between the true posterior and the TM approximation.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../mapfromsamples_example/">« Banana: Map from Samples</a><a class="docs-footer-nextpage" href="../../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 12 September 2025 09:06">Friday 12 September 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
