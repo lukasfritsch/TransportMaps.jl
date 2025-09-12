@@ -13,9 +13,9 @@ const OUTPUT_DIR = joinpath(@__DIR__, "src")
 # Process getting started guide
 Literate.markdown(
     joinpath(LITERATE_DIR, "getting_started.jl"),
-    OUTPUT_DIR;
+    joinpath(OUTPUT_DIR, "Manuals");
     documenter = true,
-    credit = false
+    credit = true
 )
 
 # Process banana example
@@ -23,7 +23,7 @@ Literate.markdown(
     joinpath(LITERATE_DIR, "banana_example.jl"),
     joinpath(OUTPUT_DIR, "Examples");
     documenter = true,
-    credit = false
+    credit = true
 )
 
 # Process BOD example
@@ -31,7 +31,7 @@ Literate.markdown(
     joinpath(LITERATE_DIR, "bod_example.jl"),
     joinpath(OUTPUT_DIR, "Examples");
     documenter = true,
-    credit = false
+    credit = true
 )
 
 # Process map from samples example
@@ -39,7 +39,39 @@ Literate.markdown(
     joinpath(LITERATE_DIR, "mapfromsamples_example.jl"),
     joinpath(OUTPUT_DIR, "Examples");
     documenter = true,
-    credit = false
+    credit = true
+)
+
+# Process basis functions manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "hermite_basis.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
+# Process quadrature manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "quadrature.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
+# Process optimization manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "optimization.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
+# Process sparse map manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "sparse_map.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
 )
 
 makedocs(
@@ -55,7 +87,13 @@ makedocs(
     plugins = [bib],
     pages = [
         "Home" => "index.md",
-        "Getting Started" => "getting_started.md",
+        "Manuals" => [
+            "Getting Started" => "Manuals/getting_started.md",
+            "Basis Functions" => "Manuals/hermite_basis.md",
+            "Map Parameterization" => "Manuals/sparse_map.md",
+            "Quadrature Methods" => "Manuals/quadrature.md",
+            "Optimization" => "Manuals/optimization.md",
+        ],
         "Examples" => [
             "Banana: Map from Density" => "Examples/banana_example.md",
             "Banana: Map from Samples" => "Examples/mapfromsamples_example.md",

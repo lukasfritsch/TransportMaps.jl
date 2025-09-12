@@ -1,6 +1,5 @@
 # Implementation of various quadrature rules for numerical integration
 # Todo: Add more flexible reference density (so far: only Gaussian)
-# Todo: Add more quadrature rules
 
 struct GaussHermiteWeights <: AbstractQuadratureWeights
     points::Matrix{Float64}
@@ -53,7 +52,7 @@ struct MonteCarloWeights <: AbstractQuadratureWeights
 
         return new(points, weights)
     end
-    
+
     function MonteCarloWeights(points::Matrix{Float64}, weights::Vector{Float64} = Float64[])
         if isempty(weights)
             # If no weights are provided, assume uniform weights
@@ -91,6 +90,22 @@ function latinhypercube_weights(numberpoints::Int64, dimension::Int64, distr::Di
     return points, weights
 end
 
+struct SparseSmolyakWeights <: AbstractQuadratureWeights
+    points::Matrix{Float64}
+    weights::Vector{Float64}
+
+    function SparseSmolyakWeights(level::Int64, dimension::Int64)
+        points, weights = hermite_smolyak_points(dimension, level)
+        return new(points, weights)
+    end
+
+    function SparseSmolyakWeights(level::Int64, map::AbstractTransportMap)
+        @warn "Using Smolyak sparse Gauss-Hermite quadrature with standard Gaussian reference density."
+        points, weights = hermite_smolyak_points(numberdimensions(map), level)
+        return new(points, weights)
+    end
+end
+
 # Display methods for GaussHermiteWeights
 function Base.show(io::IO, w::GaussHermiteWeights)
     npts, dim = size(w.points)
@@ -109,20 +124,6 @@ function Base.show(io::IO, ::MIME"text/plain", w::GaussHermiteWeights)
     println(io, "  Quadrature type: Tensor product Gauss-Hermite")
     println(io, "  Reference measure: Standard Gaussian")
     println(io, "  Weight range: [$weight_min, $weight_max]")
-    println(io, "  Weight sum: $weight_sum")
-
-    if npts <= 10
-        println(io, "  Points:")
-        for i in 1:npts
-            println(io, "    $(w.points[i, :]) → weight: $(w.weights[i])")
-        end
-    else
-        println(io, "  Points (first 5):")
-        for i in 1:5
-            println(io, "    $(w.points[i, :]) → weight: $(w.weights[i])")
-        end
-        println(io, "    ... and $(npts-5) more")
-    end
 end
 
 # Display methods for MonteCarloWeights
@@ -141,19 +142,6 @@ function Base.show(io::IO, ::MIME"text/plain", w::MonteCarloWeights)
     println(io, "  Sampling type: Random (Gaussian)")
     println(io, "  Reference measure: Standard Gaussian")
     println(io, "  Weight (uniform): $weight_value")
-
-    if npts <= 10
-        println(io, "  Points:")
-        for i in 1:npts
-            println(io, "    $(w.points[i, :])")
-        end
-    else
-        println(io, "  Points (first 5):")
-        for i in 1:5
-            println(io, "    $(w.points[i, :])")
-        end
-        println(io, "    ... and $(npts-5) more")
-    end
 end
 
 # Display methods for LatinHypercubeWeights
@@ -172,18 +160,23 @@ function Base.show(io::IO, ::MIME"text/plain", w::LatinHypercubeWeights)
     println(io, "  Sampling type: Latin Hypercube")
     println(io, "  Reference measure: Standard Gaussian (via inverse CDF)")
     println(io, "  Weight (uniform): $weight_value")
-    println(io, "  Property: Space-filling design with stratified sampling")
+end
 
-    if npts <= 10
-        println(io, "  Points:")
-        for i in 1:npts
-            println(io, "    $(w.points[i, :])")
-        end
-    else
-        println(io, "  Points (first 5):")
-        for i in 1:5
-            println(io, "    $(w.points[i, :])")
-        end
-        println(io, "    ... and $(npts-5) more")
-    end
+function Base.show(io::IO, w::SparseSmolyakWeights)
+    npts, dim = size(w.points)
+    print(io, "SparseSmolyakWeights($npts points, $dim dimensions)")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", w::SparseSmolyakWeights)
+    npts, dim = size(w.points)
+    weight_min = isempty(w.weights) ? 0.0 : minimum(w.weights)
+    weight_max = isempty(w.weights) ? 0.0 : maximum(w.weights)
+    weight_sum = sum(w.weights)
+
+    println(io, "SparseSmolyakWeights:")
+    println(io, "  Number of points: $npts")
+    println(io, "  Dimensions: $dim")
+    println(io, "  Quadrature type: Sparse Smolyak (Gauss-Hermite)")
+    println(io, "  Reference measure: Standard Gaussian")
+    println(io, "  Weight range: [$weight_min, $weight_max]")
 end

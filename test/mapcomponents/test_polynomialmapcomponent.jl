@@ -19,7 +19,7 @@ using Test
         # Test construction with custom basis
         pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis())
         @test pmc_hermite.rectifier isa Softplus
-        @test all(bf.basis_type isa HermiteBasis for bf in pmc_hermite.basisfunctions)
+        @test all(basistype(bf) == HermiteBasis for bf in pmc_hermite.basisfunctions)
 
         # Test invalid construction
         @test_throws AssertionError PolynomialMapComponent(0, 2)  # Invalid index
@@ -30,8 +30,8 @@ using Test
 
     @testset "Direct Construction with Basis Functions" begin
         # Create basis functions manually
-        mvb1 = MultivariateBasis([0])  # Constant
-        mvb2 = MultivariateBasis([1])  # Linear
+    mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
+    mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]
 
@@ -49,8 +49,8 @@ using Test
     @testset "Evaluation" begin
         # Create a simple 1D polynomial map component
         # f(x) = a₀ + a₁*x with coefficients [1.0, 2.0]
-        mvb1 = MultivariateBasis([0])  # ψ₀(x) = H₀(x) = 1
-        mvb2 = MultivariateBasis([1])  # ψ₁(x) = H₁(x) = x
+    mvb1 = MultivariateBasis([0], HermiteBasis())  # ψ₀(x) = H₀(x) = 1
+    mvb2 = MultivariateBasis([1], HermiteBasis())  # ψ₁(x) = H₁(x) = x
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]  # f(x) = 1 + 2x
 
@@ -75,8 +75,8 @@ using Test
 
     @testset "Partial Derivative" begin
         # Create a simple polynomial map component
-        mvb1 = MultivariateBasis([0])  # Constant
-        mvb2 = MultivariateBasis([1])  # Linear
+    mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
+    mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]  # f(x) = 1 + 2x
 
@@ -96,8 +96,8 @@ using Test
 
     @testset "Different Rectifiers" begin
         # Test with Softplus rectifier
-        mvb1 = MultivariateBasis([0])
-        mvb2 = MultivariateBasis([1])
+    mvb1 = MultivariateBasis([0], HermiteBasis())
+    mvb2 = MultivariateBasis([1], HermiteBasis())
         basisfunctions = [mvb1, mvb2]
         coefficients = [0.0, 1.0]  # f(x) = x, so ∂f/∂x = 1
 
@@ -123,7 +123,7 @@ using Test
         @test pmc_2d.index == 2
 
         # Check that basis functions have correct dimension
-        @test all(length(bf.multi_index) == 2 for bf in pmc_2d.basisfunctions)
+        @test all(length(bf.multiindexset) == 2 for bf in pmc_2d.basisfunctions)
 
         # Test evaluation with 2D input
         result_2d = evaluate(pmc_2d, [1.0, 2.0])

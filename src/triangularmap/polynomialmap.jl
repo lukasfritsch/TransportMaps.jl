@@ -1,5 +1,5 @@
 mutable struct PolynomialMap <: AbstractTriangularMap
-    components::Vector{PolynomialMapComponent}  # Vector of map components
+    components::Vector{PolynomialMapComponent{<:AbstractPolynomialBasis}}  # Vector of map components
     reference::MapReferenceDensity
     forwarddirection::Symbol
 
@@ -8,11 +8,18 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         degree::Int,
         referencetype::Symbol = :normal,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+        map_type::Symbol = :total
     )
-        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
-        return PolynomialMap(components, referencetype)
+        if referencetype == :normal
+            referencedensity = Normal()
+        else
+            error("Unsupported reference density type: $referencetype")
+        end
+
+        return PolynomialMap(dimension, degree, referencedensity, rectifier, basis, map_type)
     end
 
     function PolynomialMap(
@@ -20,30 +27,39 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         degree::Int,
         reference::Distributions.UnivariateDistribution,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+        map_type::Symbol = :total
     )
-        components = [PolynomialMapComponent(k, degree, rectifier, basis) for k in 1:dimension]
+        components = [PolynomialMapComponent(k, degree, rectifier, basis, reference, map_type) for k in 1:dimension]
 
         return PolynomialMap(components, reference)
     end
 
-    function PolynomialMap(components::Vector{PolynomialMapComponent})
-        return PolynomialMap(components, :normal)
-    end
-
-    function PolynomialMap(components::Vector{PolynomialMapComponent}, referencetype::Symbol)
-        if referencetype == :normal
-            refdensity = Normal(0,1)
-            reference = MapReferenceDensity(refdensity)
-            return new(components, reference, :target)
-        else
-            error("Reference type $referencetype not supported")
-        end
-    end
-
-    function PolynomialMap(components::Vector{PolynomialMapComponent}, reference::Distributions.UnivariateDistribution)
+    function PolynomialMap(components::Vector{PolynomialMapComponent{T}}, reference::Distributions.UnivariateDistribution=Normal()) where T <: AbstractPolynomialBasis
         return new(components, MapReferenceDensity(reference), :target)
     end
+end
+
+# Convenience constructor for DiagonalMap
+function DiagonalMap(
+    dimension::Int,
+    degree::Int,
+    referencetype::Symbol = :normal,
+    rectifier::AbstractRectifierFunction = Softplus(),
+    basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+)
+    return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :diagonal)
+end
+
+# Convenience constructor for NoMixedMap
+function NoMixedMap(
+    dimension::Int,
+    degree::Int,
+    referencetype::Symbol = :normal,
+    rectifier::AbstractRectifierFunction = Softplus(),
+    basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+)
+    return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :no_mixed)
 end
 
 # Evaluate the polynomial map at z (single vector)
@@ -376,6 +392,31 @@ function numberdimensions(M::PolynomialMap)
     return length(M.components)
 end
 
+function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
+    setforwarddirection!(M, :reference)
+
+    new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
+
+    # save coefficients
+    map_coefficients = getcoefficients(M)
+
+    for (i, component) in enumerate(M.components)
+
+        k = component.index
+        d = degree(component)
+        rec = component.rectifier
+        basis = component.basisfunctions[1].univariatebases[1]
+
+        new_components[i] = PolynomialMapComponent(k, d, rec, basis, samples)
+    end
+
+    # Assign components
+    M.components .= new_components
+
+    # re-set coefficients
+    setcoefficients!(M, map_coefficients)
+end
+
 # Display method for PolynomialMap
 function Base.show(io::IO, M::PolynomialMap)
     n_dims = length(M.components)
@@ -384,14 +425,10 @@ function Base.show(io::IO, M::PolynomialMap)
     # Get common properties from the first component
     if n_dims > 0
         first_component = M.components[1]
-        max_degree = maximum(sum(basis.multi_index) for basis in first_component.basisfunctions)
+        max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
         # Get basis type
-        basis_type = typeof(first_component.basisfunctions[1].basis_type)
-        basis_name = string(basis_type)
-        if basis_name == "HermiteBasis"
-            basis_name = "Hermite"
-        end
+        basis_name = string(basistype(first_component.basisfunctions[1]))
 
         # Get rectifier type
         rectifier_type = typeof(first_component.rectifier)
@@ -421,14 +458,10 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
     if n_dims > 0
         # Get properties from the first component (assuming all components have similar properties)
         first_component = M.components[1]
-        max_degree = maximum(sum(basis.multi_index) for basis in first_component.basisfunctions)
+        max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
         # Get basis type
-        basis_type = typeof(first_component.basisfunctions[1].basis_type)
-        basis_name = string(basis_type)
-        if basis_name == "HermiteBasis"
-            basis_name = "Hermite"
-        end
+        basis_name = basis_name = string(basistype(first_component.basisfunctions[1]))
 
         # Get rectifier type
         rectifier_type = typeof(first_component.rectifier)

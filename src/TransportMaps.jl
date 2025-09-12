@@ -8,6 +8,7 @@ using Optim
 using QuasiMonteCarlo
 using Random
 using StatsFuns
+using Statistics
 
 # Abstract type definitions
 abstract type AbstractBasisFunction end
@@ -33,13 +34,20 @@ export AbstractMapDensity
 # Export functions/methods
 # Basis functions and evaluation
 export Psi
+export basisfunction
+export basisfunction_derivative
+export basistype
 export evaluate
+export edge_controlled_hermite_polynomial
+export edge_controlled_hermite_derivative
 export f
 export hermite_polynomial
 export hermite_derivative
 export multivariate_indices
 
 # Map operations
+export DiagonalMap
+export NoMixedMap
 export gradient
 export gradient_coefficients
 export gradient_z
@@ -57,6 +65,7 @@ export setcoefficients!
 export getcoefficients
 export numbercoefficients
 export numberdimensions
+export getmultiindexsets
 
 # Quadrature and optimization
 export gaussquadrature
@@ -71,6 +80,11 @@ export hybridrootfinder
 # Export structs/types
 export IdentityRectifier
 export HermiteBasis
+export LinearizedHermiteBasis
+export CubicSplineHermiteBasis
+export GaussianWeightedHermiteBasis
+export RadialBasis
+
 export MultivariateBasis
 export PolynomialMapComponent
 export PolynomialMap
@@ -81,12 +95,18 @@ export MonteCarloWeights
 export LatinHypercubeWeights
 export MapTargetDensity
 export MapReferenceDensity
+export SparseSmolyakWeights
 
 # Include files
 include("util/mapdensity.jl")
 
+include("mapcomponents/univariatebases/hermitebasis.jl")
+include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
+include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
+include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
+include("mapcomponents/univariatebases/radialbasis.jl")
+
 include("mapcomponents/multivariatebasis.jl")
-include("mapcomponents/hermitebasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
 include("triangularmap/polynomialmap.jl")
@@ -96,5 +116,6 @@ include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")
 include("util/hybridrootfinder.jl")
 include("util/quadraturepoints.jl")
+include("util/smolyak.jl")
 
 end

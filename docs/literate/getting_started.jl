@@ -68,20 +68,16 @@ target_density = MapTargetDensity(correlated_gaussian, :auto_diff)
 
 # Gauss-Hermite quadrature (good for Gaussian-like targets)
 quadrature = GaussHermiteWeights(5, 2)  # 5 points per dimension, 2D
+## alternative options:
+## quadrature = MonteCarloWeights(1000, 2)  # 1000 samples, 2D
+## quadrature = LatinHypercubeWeights(1000, 2)
+## quadrature = SparseSmolyakWeights(3, 2)  # Level 3, 2D
 
-# Alternative options (commented out):
-# quadrature = MonteCarloWeights(1000, 2)  # 1000 samples, 2D
-# quadrature = LatinHypercubeWeights(1000, 2)
 
 # ### Optimizing the Map
 #
 # Fit the transport map to your target distribution:
-
-println("Optimizing the map...")
-@time result = optimize!(M, target_density, quadrature)
-
-println("Optimization result: ", result)
-println("Final coefficients: ", getcoefficients(M))
+result = optimize!(M, target_density, quadrature)
 
 # ### Generating Samples
 #
@@ -145,12 +141,9 @@ println("  ShiftedELU: ", var_diag_elu)
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 target_density_banana = MapTargetDensity(banana_density, :auto_diff)
 
-# Create a new map for this target
+# Create a new map for this target and optimize:
 M_banana = PolynomialMap(2, 2, Normal(), Softplus())
 result_banana = optimize!(M_banana, target_density_banana, quadrature)
-
-# Display optimized map
-display(M_banana)
 
 # Generate samples
 banana_samples = evaluate(M_banana, reference_samples)

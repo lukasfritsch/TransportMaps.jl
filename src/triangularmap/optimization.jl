@@ -1,6 +1,3 @@
-# Todo: Also implement Hessian
-# Todo: Implement map from samples
-
 """
     kldivergence(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights)
 
@@ -102,7 +99,9 @@ Optimize polynomial map coefficients to minimize KL divergence to target density
 function optimize!(
     M::PolynomialMap,
     target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights,
+    quadrature::AbstractQuadratureWeights;
+    optimizer::Optim.AbstractOptimizer = LBFGS(),
+    options::Optim.Options = Optim.Options()
     )
 
     # Define objective function and gradient
@@ -116,26 +115,32 @@ function optimize!(
         grad_storage .= kldivergence_gradient(M, target, quadrature)
     end
 
-    # Initialize coefficients: all zeros
-    initial_coefficients = zeros(numbercoefficients(M))
-
     # Optimize with analytical gradient
-    result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, LBFGS())
+    initial_coefficients = getcoefficients(M)
+    result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, optimizer, options)
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients
 
     return result
 end
 
-function optimize!(M::PolynomialMap, samples::AbstractArray{<:Real})
 
-    setforwarddirection!(M, :reference)
+function optimize!(
+    M::PolynomialMap,
+    samples::AbstractArray{<:Real};
+    optimizer::Optim.AbstractOptimizer = LBFGS(),
+    options::Optim.Options = Optim.Options()
+)
+
+    # Initialize map from samples: set map direction and bounds
+    initializemapfromsamples!(M, samples)
 
     # Create quadrature weights based on the number of dimensions
     quadrature = MonteCarloWeights(samples)
     target = M.reference
+
     # Optimize the polynomial map
-    return optimize!(M, target, quadrature)
+    return optimize!(M, target, quadrature, optimizer=optimizer, options=options)
 end
 
 # Compute the variance diagnostic for the polynomial map
@@ -147,15 +152,10 @@ function variance_diagnostic(
     @assert size(Z, 2) == numberdimensions(M) "Z must have the same number of columns as number of map components in M"
 
     # Initialize
-    δ = eps()  # Small value to avoid log(0)
     total = zeros(Float64, size(Z, 1))
-    mvn = M.reference.density
 
     for (i, zᵢ) in enumerate(eachrow(Z))
-        # Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
-        # log_π = log(target.density(Mᵢ) + δ)
-        # log_detJ = log(abs(jacobian(M, zᵢ)))
-        total[i] = log(pushforward(M, target, zᵢ)) - log.(mvn(zᵢ))
+        total[i] = log(pushforward(M, target, zᵢ)) - log.(M.reference.density(zᵢ))
     end
 
     return 0.5 * var(total)

@@ -187,9 +187,9 @@ using LinearAlgebra
         @test result_1 isa Float64
 
         # Test dimensions are correct
-        @test length(pm.components[1].basisfunctions[1].multi_index) == 1
-        @test length(pm.components[2].basisfunctions[1].multi_index) == 2
-        @test length(pm.components[3].basisfunctions[1].multi_index) == 3
+        @test length(pm.components[1].basisfunctions[1].multiindexset) == 1
+        @test length(pm.components[2].basisfunctions[1].multiindexset) == 2
+        @test length(pm.components[3].basisfunctions[1].multiindexset) == 3
     end
 
     @testset "Different Rectifiers" begin
@@ -275,8 +275,8 @@ using LinearAlgebra
         # Test that components have correct structure
         for (i, comp) in enumerate(pm.components)
             @test comp.index == i
-            @test length(comp.basisfunctions[1].multi_index) == i
-            @test all(length(bf.multi_index) == i for bf in comp.basisfunctions)
+            @test length(comp.basisfunctions[1].multiindexset) == i
+            @test all(length(bf.multiindexset) == i for bf in comp.basisfunctions)
         end
     end
 
@@ -425,7 +425,7 @@ using LinearAlgebra
 
     @testset "Inverse Jacobian" begin
         # Test 1D case
-        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier(), HermiteBasis())
         setcoefficients!(pm_1d, [0.0, 1.0])  # Linear map: f(z) = z
 
         x_1d = [0.5]
@@ -433,7 +433,7 @@ using LinearAlgebra
         @test inv_jac_1d ≈ 1.0 atol=1e-10  # For identity map, inverse jacobian should be 1
 
         # Test 2D case with simple map
-        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])  # First component: f₁(z₁) = z₁
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])  # Second component: f₂(z₁,z₂) = z₂
 
@@ -477,7 +477,7 @@ using LinearAlgebra
 
     @testset "Pullback Density" begin
         # Test 1D case with identity map
-        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier(), HermiteBasis())
         setcoefficients!(pm_1d, [0.0, 1.0])  # Linear map: f(z) = z
 
         x_1d = [0.5]
@@ -487,7 +487,7 @@ using LinearAlgebra
         @test pb_1d ≈ ref_1d atol=1e-10
 
         # Test 2D case with identity-like map
-        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
 
@@ -543,7 +543,7 @@ using LinearAlgebra
         target = MapTargetDensity(target_density, :auto_diff)
 
         # Test 1D case
-        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier())
+        pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier(), HermiteBasis())
         setcoefficients!(pm_1d, [0.0, 1.0])
 
         z_1d = [0.5]
@@ -552,7 +552,7 @@ using LinearAlgebra
         @test pf_1d ≈ target_density(z_1d) atol=1e-10
 
         # Test 2D case
-        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier())
+        pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
         setcoefficients!(pm_2d.components[1], [0.0, 1.0])
         setcoefficients!(pm_2d.components[2], [0.0, 0.0, 1.0])
 
@@ -620,37 +620,70 @@ using LinearAlgebra
         # Test points
         z_point = [0.3, 0.4]
 
-        try
-            # Map z to x
-            x_point = evaluate(pm, z_point)
+        # Map z to x
+        x_point = evaluate(pm, z_point)
 
-            # Compute pushforward at z
-            pf_val = pushforward(pm, target, z_point)
+        # Compute pushforward at z
+        pf_val = pushforward(pm, target, z_point)
 
-            # Compute pullback at x
-            pb_val = pullback(pm, x_point)
+        # Compute pullback at x
+        pb_val = pullback(pm, x_point)
 
-            # For standard normal target, these should be related by:
-            # pushforward(M, π_ref, z) * reference_density(z) = pullback(M, M(z)) * π_ref(M(z))
-            # When π_ref is standard normal, this simplifies to verification of the transform
+        # For standard normal target, these should be related by:
+        # pushforward(M, π_ref, z) * reference_density(z) = pullback(M, M(z)) * π_ref(M(z))
+        # When π_ref is standard normal, this simplifies to verification of the transform
 
-            @test isfinite(pf_val)
-            @test isfinite(pb_val)
-            @test pf_val ≥ 0
-            @test pb_val ≥ 0
+        @test isfinite(pf_val)
+        @test isfinite(pb_val)
+        @test pf_val ≥ 0
+        @test pb_val ≥ 0
 
-            # Additional consistency check:
-            # For z sampled from reference, M(z) should have density pullback(M, M(z))
-            reference_val = pdf(MvNormal(zeros(2), I(2)), z_point)
+        # Additional consistency check:
+        # For z sampled from reference, M(z) should have density pullback(M, M(z))
+        reference_val = pdf(MvNormal(zeros(2), I(2)), z_point)
 
-            # The relationship: reference_density(z) = pullback(M, M(z)) when M is the correct transport map
-            # This is an equality check for perfect transport maps
-            # For our approximate maps, we just check they're in reasonable ranges
-            ratio = pb_val / reference_val
-            @test 0.01 < ratio < 100  # Should be within reasonable bounds
+        # The relationship: reference_density(z) = pullback(M, M(z)) when M is the correct transport map
+        # This is an equality check for perfect transport maps
+        # For our approximate maps, we just check they're in reasonable ranges
+        ratio = pb_val / reference_val
+        @test 0.01 < ratio < 100  # Should be within reasonable bounds
 
-        catch
-            @test true  # Skip if numerical issues
-        end
+    end
+
+    @testset "Map Type Parameterization" begin
+        # Test total-order map
+        pm_total = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(), :total)
+        @test length(pm_total.components) == 2
+        @test length(pm_total.components[1].basisfunctions) == 3  # Total-order degree 2 in 2D
+        @test length(pm_total.components[2].basisfunctions) == 6  # Total-order degree 2 in 2D
+
+        # Test diagonal map
+        pm_diagonal = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(), :diagonal)
+        @test length(pm_diagonal.components) == 2
+        @test length(pm_diagonal.components[1].basisfunctions) == 3  # Diagonal terms only
+        @test length(pm_diagonal.components[2].basisfunctions) == 3  # Diagonal terms only
+
+        # Test no-mixed terms map
+        pm_no_mixed = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(), :no_mixed)
+        @test length(pm_no_mixed.components) == 2
+        @test length(pm_no_mixed.components[1].basisfunctions) == 3  # No mixed terms
+        @test length(pm_no_mixed.components[2].basisfunctions) == 5  # No mixed terms
+
+        # Ensure default is total-order
+        pm_default = PolynomialMap(2, 2)
+        @test length(pm_default.components) == 2
+        @test length(pm_default.components[1].basisfunctions) == 3
+        @test length(pm_default.components[2].basisfunctions) == 6
+
+        # Test convenience constructors
+        pm_diagonal = DiagonalMap(2, 2)
+        @test length(pm_diagonal.components) == 2
+        @test length(pm_diagonal.components[1].basisfunctions) == 3
+        @test length(pm_diagonal.components[2].basisfunctions) == 3
+
+        pm_no_mixed = NoMixedMap(2, 2)
+        @test length(pm_no_mixed.components) == 2
+        @test length(pm_no_mixed.components[1].basisfunctions) == 3
+        @test length(pm_no_mixed.components[2].basisfunctions) == 5
     end
 end

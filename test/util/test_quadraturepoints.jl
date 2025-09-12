@@ -117,6 +117,33 @@ using Test
         @test all(weights_lh .≈ 1/30)
     end
 
+    @testset "SparseSmolyakWeights" begin
+        # Basic construction
+        ssw = SparseSmolyakWeights(2, 2)
+        @test ssw isa AbstractQuadratureWeights
+        @test size(ssw.points, 2) == 2
+        @test length(ssw.weights) == size(ssw.points, 1)
+
+        # Weights should be finite; Smolyak may include negative weights so we don't
+        # assert positivity here.
+        @test all(isfinite.(ssw.weights))
+
+        # Sum of weights should integrate the constant function -> 1.0 (normalized rules)
+        @test sum(ssw.weights) ≈ 1.0 atol=1e-10
+
+        # 1D behavior: level 1 should produce 3 nodes (rule with 3 points)
+        ssw1 = SparseSmolyakWeights(1, 1)
+        @test size(ssw1.points, 1) == 3
+        @test size(ssw1.points, 2) == 1
+
+        # Integration sanity checks (mean ~ 0, variance ~ 1 for standard normal)
+        # Use the quadrature sum: sum(f(x) * w)
+        mean_est = sum(ssw.points[:, 1] .* ssw.weights)
+        var_est = sum((ssw.points[:, 1].^2) .* ssw.weights)
+        @test abs(mean_est) < 1e-10
+        @test abs(var_est - 1.0) < 1e-8
+    end
+
     @testset "Integration Accuracy" begin
         # Test Gauss-Hermite quadrature accuracy with a simple Gaussian integral
         # ∫ exp(-x²) dx over ℝ = √π, but we test over a finite domain

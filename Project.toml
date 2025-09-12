@@ -11,6 +11,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 QuasiMonteCarlo = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 
 [compat]
@@ -21,6 +22,7 @@ LinearAlgebra = "1.11.0"
 Optim = "1.13.2"
 QuasiMonteCarlo = "0.3.3"
 Random = "1.11.0"
+Statistics = "1.11.1"
 StatsFuns = "1.5.0"
 julia = "1.11"
 

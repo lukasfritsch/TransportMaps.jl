@@ -1,5 +1,5 @@
-struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficients that are optimized
-    basisfunctions::Vector{MultivariateBasis}  # Vector of MultivariateBasis objects
+struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent # mutable due to coefficients that are optimized
+    basisfunctions::Vector{MultivariateBasis{T}}  # Vector of MultivariateBasis objects
     coefficients::Vector{Float64}  # Coefficients for the basis functions
     rectifier::AbstractRectifierFunction  # Rectifier function to apply to the partial derivatives
     index::Int  # Index k and dimension of the map component
@@ -8,23 +8,112 @@ struct PolynomialMapComponent <: AbstractMapComponent # mutable due to coefficie
         index::Int,
         degree::Int,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis()
-        )
+        basis::AbstractPolynomialBasis = HermiteBasis(),
+        map_type::Symbol = :total
+    )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
-        multi_indices = multivariate_indices(degree, index)
-        basisfunctions = [MultivariateBasis(multi_index, basis) for multi_index in multi_indices]
-        coefficients = Vector{Float64}(undef, length(basisfunctions))
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
+        basisfunctions = [MultivariateBasis(multiindexset, typeof(basis)) for multiindexset in multi_indices]
+        coefficients = zeros(length(basisfunctions))
+        T = typeof(basis)
 
-        return new(basisfunctions, coefficients, rectifier, index)
+        return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
-    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis}, coefficients::Vector{<:Real}, rectifier::AbstractRectifierFunction, index::Int)
+    # Constructor that builds basis functions using an analytical reference density
+    function PolynomialMapComponent(
+        index::Int,
+        degree::Int,
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        density::Distributions.UnivariateDistribution,
+        map_type::Symbol = :total
+    )
+        @assert index > 0 "Index must be a positive integer"
+        @assert degree > 0 "Degree must be a positive integer"
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
+
+        T = typeof(basis)
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
+        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
+
+        for (i, multiindexset) in enumerate(multi_indices)
+            # Build per-dimension univariate bases with the correct degree
+            dim = length(multiindexset)
+            uni_bases = Vector{T}(undef, dim)
+
+            for j in 1:dim
+                deg_j = multiindexset[j]
+
+                if isa(basis, HermiteBasis)
+                    uni_bases[j] = HermiteBasis()
+                elseif isa(basis, LinearizedHermiteBasis)
+                    uni_bases[j] = LinearizedHermiteBasis(density, deg_j, index)
+                elseif isa(basis, GaussianWeightedHermiteBasis)
+                    uni_bases[j] = GaussianWeightedHermiteBasis()
+                elseif isa(basis, CubicSplineHermiteBasis)
+                    uni_bases[j] = CubicSplineHermiteBasis(density)
+                end
+            end
+
+            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
+        end
+
+        coefficients = zeros(length(basisfunctions))
+        return new{T}(basisfunctions, coefficients, rectifier, index)
+    end
+
+        # Constructor that builds basis functions using an analytical reference density
+    function PolynomialMapComponent(
+        index::Int,
+        degree::Int,
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        samples::AbstractMatrix{<:Real},
+        map_type::Symbol = :total
+    )
+        @assert index > 0 "Index must be a positive integer"
+        @assert degree > 0 "Degree must be a positive integer"
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
+
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
+        T = typeof(basis)
+        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
+
+        for (i, multiindexset) in enumerate(multi_indices)
+            # Build per-dimension univariate bases with the correct degree
+            dim = length(multiindexset)
+            uni_bases = Vector{typeof(basis)}(undef, dim)
+
+            for j in 1:dim
+                deg_j = multiindexset[j]
+
+                if isa(basis, HermiteBasis)
+                    uni_bases[j] = HermiteBasis()
+                elseif isa(basis, LinearizedHermiteBasis)
+                    uni_bases[j] = LinearizedHermiteBasis(samples[:,j], deg_j, index)
+                elseif isa(basis, GaussianWeightedHermiteBasis)
+                    uni_bases[j] = GaussianWeightedHermiteBasis()
+                elseif isa(basis, CubicSplineHermiteBasis)
+                    uni_bases[j] = CubicSplineHermiteBasis(samples[:,j])
+                end
+            end
+
+            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
+        end
+
+        coefficients = zeros(length(basisfunctions))
+        return new{T}(basisfunctions, coefficients, rectifier, index)
+    end
+
+    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis{T}}, coefficients::Vector{<:Real}, rectifier::AbstractRectifierFunction, index::Int) where T<:AbstractPolynomialBasis
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
 
-        return new(basisfunctions, coefficients, rectifier, index)
+        return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 end
 
@@ -33,7 +122,7 @@ function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
     @assert map_component.index <= length(x) "index must not exceed the dimension of x"
-    @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
+    @assert length(x) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: x and multiindexset must have same length"
 
     # First part: f(x₁, ..., x_{k-1}, 0, a)
     x₀ = copy(x)
@@ -58,7 +147,7 @@ end
 function evaluate(map_component::PolynomialMapComponent, X::Matrix{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
-    @assert size(X, 2) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: X columns and multi_index must have same length"
+    @assert size(X, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: X columns and multiindexset must have same length"
 
     n_points = size(X, 1)
 
@@ -77,7 +166,7 @@ end
 
 # Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ) for a single input vector
 function partial_derivative_zk(map_component::PolynomialMapComponent, x::Vector{<:Real})
-    @assert length(x) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: x and multi_index must have same length"
+    @assert length(x) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: x and multiindexset must have same length"
 
     # Define the integrand for the partial derivative
     integrand(xₖ) = begin
@@ -95,7 +184,7 @@ end
 
 # Partial derivative ∂Mᵏ/∂xₖ for multiple input vectors using multithreading
 function partial_derivative_zk(map_component::PolynomialMapComponent, X::Matrix{<:Real})
-    @assert size(X, 2) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: X columns and multi_index must have same length"
+    @assert size(X, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: X columns and multiindexset must have same length"
 
     n_points = size(X, 1)
 
@@ -165,7 +254,7 @@ grad = gradient_coefficients(pmc, z)
 ```
 """
 function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{<:Real})
-    @assert length(z) == length(map_component.basisfunctions[1].multi_index) "Dimension mismatch: z and basis functions must have same length"
+    @assert length(z) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: z and basis functions must have same length"
 
     # First part: gradient of f₀ = f(x₁, ..., x_{k-1}, 0) w.r.t. coefficients
     z₀ = copy(z)
@@ -204,6 +293,10 @@ function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{
     return ∇f₀ + ∇integral
 end
 
+function degree(map_component::PolynomialMapComponent)
+    return maximum(sum(basis.multiindexset) for basis in map_component.basisfunctions)
+end
+
 # Inverse map for the polynomial map component using one-dimensional root finding
 function inverse(
     map_component::PolynomialMapComponent,
@@ -230,20 +323,23 @@ function setcoefficients!(map_component::PolynomialMapComponent, coefficients::V
     map_component.coefficients .= coefficients
 end
 
+function getmultiindexsets(map_component::PolynomialMapComponent)
+    # Stack each basis.multiindexset as a row in a matrix
+    multiindices = [basis.multiindexset for basis in map_component.basisfunctions]
+    return permutedims(hcat(multiindices...))
+end
+
 # Display method for PolynomialMapComponent
 function Base.show(io::IO, component::PolynomialMapComponent)
     n_basis = length(component.basisfunctions)
     n_coeffs = length(component.coefficients)
 
     # Get the maximum degree from the basis functions
-    max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
+    max_degree = degree(component)
 
     # Get basis type from the first basis function
-    basis_type = typeof(component.basisfunctions[1].basis_type)
+    basis_type = typeof(component.basisfunctions[1].univariatebases[1])
     basis_name = string(basis_type)
-    if basis_name == "HermiteBasis"
-        basis_name = "Hermite"
-    end
 
     # Get rectifier type
     rectifier_type = typeof(component.rectifier)
@@ -259,14 +355,11 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent)
     n_basis = length(component.basisfunctions)
-    max_degree = maximum(sum(basis.multi_index) for basis in component.basisfunctions)
+    max_degree = degree(component)
 
     # Get basis type
-    basis_type = typeof(component.basisfunctions[1].basis_type)
+    basis_type = typeof(component.basisfunctions[1].univariatebases[1])
     basis_name = string(basis_type)
-    if basis_name == "HermiteBasis"
-        basis_name = "Hermite"
-    end
 
     # Get rectifier type
     rectifier_type = typeof(component.rectifier)
@@ -283,7 +376,7 @@ function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent
     if n_basis > 0
         println(io, "  Multi-indices (first $(min(5, n_basis))):")
         for i in 1:min(5, n_basis)
-            println(io, "    $(component.basisfunctions[i].multi_index)")
+            println(io, "    $(component.basisfunctions[i].multiindexset)")
         end
         if n_basis > 5
             println(io, "    ... and $(n_basis - 5) more")
