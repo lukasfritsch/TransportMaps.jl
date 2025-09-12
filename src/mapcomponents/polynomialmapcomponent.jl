@@ -8,12 +8,14 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         index::Int,
         degree::Int,
         rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis()
-        )
+        basis::AbstractPolynomialBasis = HermiteBasis(),
+        map_type::Symbol = :total
+    )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
-        multi_indices = multivariate_indices(degree, index)
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
         basisfunctions = [MultivariateBasis(multiindexset, typeof(basis)) for multiindexset in multi_indices]
         coefficients = zeros(length(basisfunctions))
         T = typeof(basis)
@@ -28,13 +30,15 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         rectifier::AbstractRectifierFunction,
         basis::AbstractPolynomialBasis,
         density::Distributions.UnivariateDistribution,
+        map_type::Symbol = :total
     )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
         T = typeof(basis)
-        multi_indices = multivariate_indices(degree, index)
-        basisfunctions = Vector{MultivariateBasis{}}(undef, length(multi_indices))
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
+        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
 
         for (i, multiindexset) in enumerate(multi_indices)
             # Build per-dimension univariate bases with the correct degree
@@ -52,8 +56,6 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
                     uni_bases[j] = GaussianWeightedHermiteBasis()
                 elseif isa(basis, CubicSplineHermiteBasis)
                     uni_bases[j] = CubicSplineHermiteBasis(density)
-                # elseif isa(basis, RadialBasis)
-                #     uni_bases[j] = RadialBasis(density, num_centers)
                 end
             end
 
@@ -71,11 +73,13 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         rectifier::AbstractRectifierFunction,
         basis::AbstractPolynomialBasis,
         samples::AbstractMatrix{<:Real},
+        map_type::Symbol = :total
     )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
-        multi_indices = multivariate_indices(degree, index)
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
         T = typeof(basis)
         basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
 
@@ -95,8 +99,6 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
                     uni_bases[j] = GaussianWeightedHermiteBasis()
                 elseif isa(basis, CubicSplineHermiteBasis)
                     uni_bases[j] = CubicSplineHermiteBasis(samples[:,j])
-                # elseif isa(basis, RadialBasis)
-                #     uni_bases[j] = RadialBasis(density, num_centers)
                 end
             end
 
@@ -319,6 +321,12 @@ end
 function setcoefficients!(map_component::PolynomialMapComponent, coefficients::Vector{<:Real})
     @assert length(coefficients) == length(map_component.coefficients) "Length of coefficients must match the number of basis functions."
     map_component.coefficients .= coefficients
+end
+
+function getmultiindexsets(map_component::PolynomialMapComponent)
+    # Stack each basis.multiindexset as a row in a matrix
+    multiindices = [basis.multiindexset for basis in map_component.basisfunctions]
+    return permutedims(hcat(multiindices...))
 end
 
 # Display method for PolynomialMapComponent

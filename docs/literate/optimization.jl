@@ -30,6 +30,10 @@
 # We have to provide the polynomial map `M`, the target density function, and a quadrature scheme.
 # Optionally, we can specify the optimizer (default is `LBFGS()`) and options.
 
+# !!! note "Set initial coefficients"
+#     As the starting point of the optimization, the map coefficients can be set using `setcoefficients!(M, coeffs)`, where `coeffs` is a vector of coefficients.
+
+# ###  Usage
 
 # First we load the packages:
 using TransportMaps

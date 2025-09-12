@@ -33,8 +33,6 @@ export AbstractMapDensity
 
 # Export functions/methods
 # Basis functions and evaluation
-export CubicSplineHermiteBasis
-export LinearizedHermiteBasis
 export Psi
 export basisfunction
 export basisfunction_derivative
@@ -48,6 +46,8 @@ export hermite_derivative
 export multivariate_indices
 
 # Map operations
+export DiagonalMap
+export NoMixedMap
 export gradient
 export gradient_coefficients
 export gradient_z
@@ -65,6 +65,7 @@ export setcoefficients!
 export getcoefficients
 export numbercoefficients
 export numberdimensions
+export getmultiindexsets
 
 # Quadrature and optimization
 export gaussquadrature
@@ -94,7 +95,6 @@ export MonteCarloWeights
 export LatinHypercubeWeights
 export MapTargetDensity
 export MapReferenceDensity
-export SmolyakWeights
 export SparseSmolyakWeights
 
 # Include files

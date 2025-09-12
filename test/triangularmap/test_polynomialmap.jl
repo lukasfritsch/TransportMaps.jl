@@ -620,37 +620,70 @@ using LinearAlgebra
         # Test points
         z_point = [0.3, 0.4]
 
-        try
-            # Map z to x
-            x_point = evaluate(pm, z_point)
+        # Map z to x
+        x_point = evaluate(pm, z_point)
 
-            # Compute pushforward at z
-            pf_val = pushforward(pm, target, z_point)
+        # Compute pushforward at z
+        pf_val = pushforward(pm, target, z_point)
 
-            # Compute pullback at x
-            pb_val = pullback(pm, x_point)
+        # Compute pullback at x
+        pb_val = pullback(pm, x_point)
 
-            # For standard normal target, these should be related by:
-            # pushforward(M, π_ref, z) * reference_density(z) = pullback(M, M(z)) * π_ref(M(z))
-            # When π_ref is standard normal, this simplifies to verification of the transform
+        # For standard normal target, these should be related by:
+        # pushforward(M, π_ref, z) * reference_density(z) = pullback(M, M(z)) * π_ref(M(z))
+        # When π_ref is standard normal, this simplifies to verification of the transform
 
-            @test isfinite(pf_val)
-            @test isfinite(pb_val)
-            @test pf_val ≥ 0
-            @test pb_val ≥ 0
+        @test isfinite(pf_val)
+        @test isfinite(pb_val)
+        @test pf_val ≥ 0
+        @test pb_val ≥ 0
 
-            # Additional consistency check:
-            # For z sampled from reference, M(z) should have density pullback(M, M(z))
-            reference_val = pdf(MvNormal(zeros(2), I(2)), z_point)
+        # Additional consistency check:
+        # For z sampled from reference, M(z) should have density pullback(M, M(z))
+        reference_val = pdf(MvNormal(zeros(2), I(2)), z_point)
 
-            # The relationship: reference_density(z) = pullback(M, M(z)) when M is the correct transport map
-            # This is an equality check for perfect transport maps
-            # For our approximate maps, we just check they're in reasonable ranges
-            ratio = pb_val / reference_val
-            @test 0.01 < ratio < 100  # Should be within reasonable bounds
+        # The relationship: reference_density(z) = pullback(M, M(z)) when M is the correct transport map
+        # This is an equality check for perfect transport maps
+        # For our approximate maps, we just check they're in reasonable ranges
+        ratio = pb_val / reference_val
+        @test 0.01 < ratio < 100  # Should be within reasonable bounds
 
-        catch
-            @test true  # Skip if numerical issues
-        end
+    end
+
+    @testset "Map Type Parameterization" begin
+        # Test total-order map
+        pm_total = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(), :total)
+        @test length(pm_total.components) == 2
+        @test length(pm_total.components[1].basisfunctions) == 3  # Total-order degree 2 in 2D
+        @test length(pm_total.components[2].basisfunctions) == 6  # Total-order degree 2 in 2D
+
+        # Test diagonal map
+        pm_diagonal = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(), :diagonal)
+        @test length(pm_diagonal.components) == 2
+        @test length(pm_diagonal.components[1].basisfunctions) == 3  # Diagonal terms only
+        @test length(pm_diagonal.components[2].basisfunctions) == 3  # Diagonal terms only
+
+        # Test no-mixed terms map
+        pm_no_mixed = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis(), :no_mixed)
+        @test length(pm_no_mixed.components) == 2
+        @test length(pm_no_mixed.components[1].basisfunctions) == 3  # No mixed terms
+        @test length(pm_no_mixed.components[2].basisfunctions) == 5  # No mixed terms
+
+        # Ensure default is total-order
+        pm_default = PolynomialMap(2, 2)
+        @test length(pm_default.components) == 2
+        @test length(pm_default.components[1].basisfunctions) == 3
+        @test length(pm_default.components[2].basisfunctions) == 6
+
+        # Test convenience constructors
+        pm_diagonal = DiagonalMap(2, 2)
+        @test length(pm_diagonal.components) == 2
+        @test length(pm_diagonal.components[1].basisfunctions) == 3
+        @test length(pm_diagonal.components[2].basisfunctions) == 3
+
+        pm_no_mixed = NoMixedMap(2, 2)
+        @test length(pm_no_mixed.components) == 2
+        @test length(pm_no_mixed.components[1].basisfunctions) == 3
+        @test length(pm_no_mixed.components[2].basisfunctions) == 5
     end
 end

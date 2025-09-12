@@ -66,6 +66,14 @@ Literate.markdown(
     credit = true
 )
 
+# Process sparse map manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "sparse_map.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
 makedocs(
     sitename = "TransportMaps.jl",
     authors="Lukas Fritsch and Jan Grashorn",
@@ -82,6 +90,7 @@ makedocs(
         "Manuals" => [
             "Getting Started" => "Manuals/getting_started.md",
             "Basis Functions" => "Manuals/hermite_basis.md",
+            "Map Parameterization" => "Manuals/sparse_map.md",
             "Quadrature Methods" => "Manuals/quadrature.md",
             "Optimization" => "Manuals/optimization.md",
         ],

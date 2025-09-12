@@ -9,7 +9,9 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         referencetype::Symbol = :normal,
         rectifier::AbstractRectifierFunction = Softplus(),
         basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+        map_type::Symbol = :total
     )
+        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
         if referencetype == :normal
             referencedensity = Normal()
@@ -17,7 +19,7 @@ mutable struct PolynomialMap <: AbstractTriangularMap
             error("Unsupported reference density type: $referencetype")
         end
 
-        return PolynomialMap(dimension, degree, referencedensity, rectifier, basis)
+        return PolynomialMap(dimension, degree, referencedensity, rectifier, basis, map_type)
     end
 
     function PolynomialMap(
@@ -26,8 +28,9 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         reference::Distributions.UnivariateDistribution,
         rectifier::AbstractRectifierFunction = Softplus(),
         basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+        map_type::Symbol = :total
     )
-        components = [PolynomialMapComponent(k, degree, rectifier, basis, reference) for k in 1:dimension]
+        components = [PolynomialMapComponent(k, degree, rectifier, basis, reference, map_type) for k in 1:dimension]
 
         return PolynomialMap(components, reference)
     end
@@ -35,6 +38,28 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     function PolynomialMap(components::Vector{PolynomialMapComponent{T}}, reference::Distributions.UnivariateDistribution=Normal()) where T <: AbstractPolynomialBasis
         return new(components, MapReferenceDensity(reference), :target)
     end
+end
+
+# Convenience constructor for DiagonalMap
+function DiagonalMap(
+    dimension::Int,
+    degree::Int,
+    referencetype::Symbol = :normal,
+    rectifier::AbstractRectifierFunction = Softplus(),
+    basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+)
+    return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :diagonal)
+end
+
+# Convenience constructor for NoMixedMap
+function NoMixedMap(
+    dimension::Int,
+    degree::Int,
+    referencetype::Symbol = :normal,
+    rectifier::AbstractRectifierFunction = Softplus(),
+    basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+)
+    return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :no_mixed)
 end
 
 # Evaluate the polynomial map at z (single vector)
