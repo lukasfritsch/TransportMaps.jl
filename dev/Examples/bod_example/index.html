@@ -61,51 +61,51 @@ println(&quot;Optimization result: &quot;, res)</code></pre><pre class="document
     |g(x)|                 = 9.94e-09 ≤ 1.0e-08
 
  * Work counters
-    Seconds run:   13  (vs limit Inf)
+    Seconds run:   12  (vs limit Inf)
     Iterations:    90
     f(x) calls:    278
     ∇f(x) calls:   278</code></pre><h3 id="Generating-Posterior-Samples"><a class="docs-heading-anchor" href="#Generating-Posterior-Samples">Generating Posterior Samples</a><a id="Generating-Posterior-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Posterior-Samples" title="Permalink"></a></h3><p>Generate samples from the standard normal distribution and map them to the posterior:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.975689   -0.428065
- -0.380371    0.269446
-  1.00474    -1.24796
-  0.726048    0.955601
- -0.677233   -0.580794
-  0.741719   -1.38242
- -0.0858348  -1.76815
-  0.706738    0.790024
- -0.997369   -0.844214
- -0.190791    1.41471
+  0.295457   -0.302962
+ -1.52653     1.92802
+ -0.0325041  -0.923011
+ -1.59504     0.417625
+ -0.874553    2.28185
+ -0.901239   -0.187737
+ -0.48873    -0.028528
+ -1.61611     1.24137
+  0.807255   -0.61456
+ -0.0349352  -0.00985345
   ⋮          
- -0.833469   -0.0964888
- -0.374548    0.571072
-  1.26579    -0.00204696
- -0.269473    0.865799
- -0.495463    0.435796
-  1.03505    -0.0589034
-  0.314861   -1.5069
-  0.98925    -1.45838
- -1.21878     0.603227</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, samples_z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.339743   0.282729
- -0.162951   1.1626
-  0.35645    0.196073
-  0.209379   0.57042
- -0.225719   1.13213
-  0.21691    0.301002
- -0.0884791  0.641806
-  0.200212   0.560846
- -0.28257    1.21998
- -0.116598   1.3247
+ -1.72791     1.60604
+ -0.58758    -1.74447
+ -0.0768438   0.771788
+  1.21447     0.277073
+  0.630369    0.837872
+ -0.819879    0.476936
+  0.722752   -0.202697
+ -0.987876   -2.43404
+  0.759901    1.3229</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, samples_z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.0313642  0.65318
+ -0.3583     2.86096
+ -0.0734553  0.737506
+ -0.366809   1.95209
+ -0.261921   2.36037
+ -0.266523   1.34827
+ -0.187142   1.15766
+ -0.369374   2.44229
+  0.249311   0.346358
+ -0.0741514  0.891339
   ⋮          
- -0.254704   1.33737
- -0.161606   1.23389
-  0.522941   0.184352
- -0.136496   1.23642
- -0.188594   1.27913
-  0.374251   0.288208
-  0.0383103  0.487561
-  0.347499   0.184538
- -0.316637   1.81193</code></pre><h3 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h3><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
-println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.013712342891140181</code></pre><h3 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h3><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">θ₁ = range(-0.5, 1.5, length=100)
+ -0.382615   2.80718
+ -0.207896   0.865236
+ -0.0859821  1.07635
+  0.487752   0.230993
+  0.16514    0.614505
+ -0.252282   1.50425
+  0.207805   0.433033
+ -0.281022   0.897082
+  0.225751   0.59753</code></pre><h3 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h3><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
+println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.016361284803590524</code></pre><h3 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h3><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">θ₁ = range(-0.5, 1.5, length=100)
 θ₂ = range(-0.5, 3, length=100)
 
 posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
@@ -120,4 +120,4 @@ contour(θ₁, θ₂, posterior_values./maximum(posterior_values);
     label=&quot;Target&quot;, xlabel=&quot;θ₁&quot;, ylabel=&quot;θ₂&quot;)
 contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
     levels = 5, colormap = :viridis, linestyle=:dash,
-    label=&quot;Pullback&quot;)</code></pre><p><img src="../pullback-bod.svg" alt="BOD Pullback Density"/></p><p>We can also visually observe a good agreement between the true posterior and the TM approximation.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../mapfromsamples_example/">« Banana: Map from Samples</a><a class="docs-footer-nextpage" href="../../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 12 September 2025 09:06">Friday 12 September 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    label=&quot;Pullback&quot;)</code></pre><p><img src="../pullback-bod.svg" alt="BOD Pullback Density"/></p><p>We can also visually observe a good agreement between the true posterior and the TM approximation.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../mapfromsamples_example/">« Banana: Map from Samples</a><a class="docs-footer-nextpage" href="../../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 15 September 2025 07:10">Monday 15 September 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
