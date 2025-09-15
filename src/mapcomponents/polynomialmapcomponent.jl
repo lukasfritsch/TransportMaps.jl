@@ -118,83 +118,83 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
 end
 
 # Compute Mᵏ according to Eq. (4.13) for a single input vector
-function evaluate(map_component::PolynomialMapComponent, x::Vector{<:Real})
+function evaluate(map_component::PolynomialMapComponent, z::Vector{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
-    @assert map_component.index <= length(x) "index must not exceed the dimension of x"
-    @assert length(x) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: x and multiindexset must have same length"
+    @assert map_component.index <= length(z) "index must not exceed the dimension of z"
+    @assert length(z) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: z and multiindexset must have same length"
 
-    # First part: f(x₁, ..., x_{k-1}, 0, a)
-    x₀ = copy(x)
-    x₀[map_component.index] = 0.0
-    f₀ = f(map_component.basisfunctions, map_component.coefficients, x₀)
+    # First part: f(z₁, ..., z_{k-1}, 0, a)
+    z₀ = copy(z)
+    z₀[map_component.index] = 0.0
+    f₀ = f(map_component.basisfunctions, map_component.coefficients, z₀)
 
-    # Integrand for the integral over x̄
-    integrand(x̄) = begin
-        x_temp = copy(x)
-        x_temp[map_component.index] = x̄
-        ∂f = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, x_temp, map_component.index)
+    # Integrand for the integral over z̄
+    integrand(z̄) = begin
+        z_temp = copy(z)
+        z_temp[map_component.index] = z̄
+        ∂f = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, z_temp, map_component.index)
         return map_component.rectifier(∂f)
     end
 
     # Second part: ∫g∂f: Numerical integration using Gauss-Legendre quadrature
-    ∫g∂f = gaussquadrature(integrand, 100, 0., x[map_component.index])
+    ∫g∂f = gaussquadrature(integrand, 100, 0., z[map_component.index])
 
     return f₀ + ∫g∂f
 end
 
 # Compute Mᵏ according to Eq. (4.13) for multiple input vectors using multithreading
-function evaluate(map_component::PolynomialMapComponent, X::Matrix{<:Real})
+function evaluate(map_component::PolynomialMapComponent, Z::Matrix{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
-    @assert size(X, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: X columns and multiindexset must have same length"
+    @assert size(Z, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: Z columns and multiindexset must have same length"
 
-    n_points = size(X, 1)
+    n_points = size(Z, 1)
 
     # Preallocate result vector
     results = Vector{Float64}(undef, n_points)
 
     # Use multithreading to evaluate each point
     Threads.@threads for i in 1:n_points
-        x_point = X[i, :]
-        @assert map_component.index <= length(x_point) "index must not exceed the dimension of x_point"
-        results[i] = evaluate(map_component, x_point)
+        z_point = Z[i, :]
+        @assert map_component.index <= length(z_point) "index must not exceed the dimension of z_point"
+        results[i] = evaluate(map_component, z_point)
     end
 
     return results
 end
 
-# Partial derivative ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ) for a single input vector
-function partial_derivative_zk(map_component::PolynomialMapComponent, x::Vector{<:Real})
-    @assert length(x) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: x and multiindexset must have same length"
+# Partial derivative ∂Mᵏ/∂zₖ = g(∂ₖ f(x₁, ..., x_{k-1}, zₖ)) = g(∂f/∂zₖ) for a single input vector
+function partial_derivative_zk(map_component::PolynomialMapComponent, z::Vector{<:Real})
+    @assert length(z) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: z and multiindexset must have same length"
 
     # Define the integrand for the partial derivative
-    integrand(xₖ) = begin
-        x_temp = copy(x)
-        x_temp[map_component.index] = xₖ
-        return evaluate(map_component, x_temp)
+    integrand(zₖ) = begin
+        z_temp = copy(z)
+        z_temp[map_component.index] = zₖ
+        return evaluate(map_component, z_temp)
     end
 
-    # ∂Mᵏ/∂xₖ = g(∂ₖ f(x₁, ..., x_{k-1}, xₖ)) = g(∂f/∂xₖ)
-    ∂fᵏ = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, x, map_component.index)
+    # ∂Mᵏ/∂zₖ = g(∂ₖ f(x₁, ..., x_{k-1}, zₖ)) = g(∂f/∂zₖ)
+    ∂fᵏ = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, z, map_component.index)
     ∂Mᵏ = map_component.rectifier(∂fᵏ)
 
     return ∂Mᵏ
 end
 
-# Partial derivative ∂Mᵏ/∂xₖ for multiple input vectors using multithreading
-function partial_derivative_zk(map_component::PolynomialMapComponent, X::Matrix{<:Real})
-    @assert size(X, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: X columns and multiindexset must have same length"
+# Partial derivative ∂Mᵏ/∂zₖ for multiple input vectors using multithreading
+function partial_derivative_zk(map_component::PolynomialMapComponent, Z::Matrix{<:Real})
+    @assert size(Z, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: Z columns and multiindexset must have same length"
 
-    n_points = size(X, 1)
+    n_points = size(Z, 1)
 
     # Preallocate result vector
     results = Vector{Float64}(undef, n_points)
 
     # Use multithreading to compute partial derivative for each point
     Threads.@threads for i in 1:n_points
-        x_point = X[i, :]
-        results[i] = partial_derivative_zk(map_component, x_point)
+        z_point = Z[i, :]
+        results[i] = partial_derivative_zk(map_component, z_point)
     end
 
     return results
