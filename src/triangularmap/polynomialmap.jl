@@ -234,33 +234,32 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{Float64})
     return gradient
 end
 
-# Compute the inverse of the polynomial map at x (single vector)
-function inverse(M::PolynomialMap, x::AbstractVector{<:Real})
-    @assert length(M.components) == length(x) "Number of components must match the dimension of x"
+# Compute the inverse of the first k components of the polynomial map at z (single vector)
+function inverse(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int=numberdimensions(M))
+    @assert k <= length(x) <= numberdimensions(M) "x must have at least k dimensions and at most the map dimension"
 
     # Initialize the inverse map
-    z = Vector{Float64}(undef, length(x))
-    for (i, component) in enumerate(M.components)
+    z = Vector{Float64}(undef, k)
+    for (i, component) in enumerate(M.components[1:k])
         z[i] = inverse(component, z[1:i-1], x[i])
     end
 
     return z
 end
 
-# Compute the inverse of the polynomial map at multiple points (matrix input) using multithreading
-function inverse(M::PolynomialMap, X::AbstractMatrix{<:Real})
-    @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
+# Compute the inverse of the first k components of the polynomial map at multiple points (matrix input) using multithreading
+function inverse(M::PolynomialMap, X::AbstractMatrix{<:Real}, k::Int=numberdimensions(M))
+    @assert k <= size(X, 2) == numberdimensions(M) "X must have at least k columns and at most the map dimension"
 
     n_points = size(X, 1)
-    n_dims = length(M.components)
 
     # Preallocate result matrix
-    results = Matrix{Float64}(undef, n_points, n_dims)
+    results = Matrix{Float64}(undef, n_points, k)
 
     # Use multithreading to compute inverse for each point
     Threads.@threads for i in 1:n_points
         x_point = X[i, :]
-        results[i, :] = inverse(M, x_point)
+        results[i, :] = inverse(M, x_point, k)
     end
 
     return results

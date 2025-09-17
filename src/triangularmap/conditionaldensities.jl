@@ -1,35 +1,77 @@
-#! This is a draft implementation
+# Conditional densities for triangular maps making use of the Knothe-Rosenblatt transform
 
-# Case 1: p(xₖ | x₁, ..., xₖ₋₁)
-function conditional_density(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int)
-    @assert 1 <= k <= M.dim "k must be between 1 and the dimension of the map"
+# Conditional density: π(xₖ | x₁, ..., xₖ₋₁) for triangular maps (single value)
+function conditional_density(M::PolynomialMap, xₖ::Float64, xₖ₋₁::AbstractVector{<:Real})
+    k = length(xₖ₋₁) + 1
+    @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
-    # Compute the pullback density at x
-    pullback_density = pullback(M, x)
+    # invert the first k components to get zₖ
+    zₖ = inverse(M, [xₖ₋₁..., xₖ], k)
 
-    # Compute the marginal density for x₁, ..., xₖ₋₁
-    marginal_density = pullback(M, x[1:k-1])
+    # conditional density: π(xₖ | x₁, ..., xₖ₋₁) = ρ(zₖ) * |∂Tₖ/∂zₖ|^{-1}
+    cond_density = M.reference.density(zₖ[k]) * abs(1 / partial_derivative_zk(M.components[k], zₖ))
 
-    # Return the conditional density
-    return pullback_density / marginal_density
+    return cond_density
 end
 
-# Case 2: p(xₘ | x₁, ..., xₘ₋₁, xₘ₊₁, ..., xₖ)
-function conditional_density_general(M::PolynomialMap, x::AbstractVector{<:Real}, m::Int, k::Int)
-    @assert 1 <= m <= k <= M.dim "m and k must be within the dimension of the map"
+# For convenience when xₖ₋₁ is a single value
+function conditional_density(M::PolynomialMap, xₖ::Float64, xₖ₋₁::Float64)
+    return conditional_density(M, xₖ, [xₖ₋₁])
+end
 
-    # Joint density: p(x₁, ..., xₖ)
-    joint_density = pullback(M, x[1:k])
+# Conditional density: π(xₖ | x₁, ..., xₖ₋₁) for triangular maps (multiple values)
+function conditional_density(M::PolynomialMap, xₖ::AbstractVector{<:Real}, xₖ₋₁::AbstractVector{<:Real})
+    k = length(xₖ₋₁) + 1
+    @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
-    # Marginal density: ∫ p(x₁, ..., xₘ₋₁, xₘ₊₁, ..., xₖ) dxₘ
-    function marginal_integrand(xₘ)
-        x_copy = copy(x)
-        x_copy[m] = xₘ
-        return pullback(M, x_copy)
+    n_points = length(xₖ)
+    cond_densities = Vector{Float64}(undef, n_points)
+
+    # Use multithreading to compute conditional densities for each point
+    Threads.@threads for i in 1:n_points
+        cond_densities[i] = conditional_density(M, xₖ[i], xₖ₋₁)
     end
 
-    marginal_density = gaussquadrature(marginal_integrand, 100, -100., 100.)
+    return cond_densities
+end
 
-    # Return the conditional density
-    return joint_density / marginal_density
+# For convenience when xₖ₋₁ is a single value
+function conditional_density(M::PolynomialMap, xₖ::AbstractVector{<:Real}, xₖ₋₁::Float64)
+    return conditional_density(M, xₖ, [xₖ₋₁])
+end
+
+# Generate samples from the conditional distribution π(xₖ | x₁, ..., xₖ₋₁) by pushing forward zₖ ~ ρ(zₖ)
+function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractVector{<:Real}, zₖ::Float64)
+
+    k = length(xₖ₋₁) + 1
+    @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
+
+    # invert the first k components to get zₖ
+    zₖ₋₁ = inverse(M, xₖ₋₁, k-1)
+    # Push through the k-th component of the map
+    return evaluate(M.components[k], [zₖ₋₁..., zₖ])
+end
+
+# For convenience when xₖ₋₁ is a single value
+function conditional_sample(M::PolynomialMap, xₖ₋₁::Float64, zₖ::Float64)
+    return conditional_sample(M, [xₖ₋₁], zₖ)
+end
+
+# Generate samples from the conditional distribution π(xₖ | x₁, ..., xₖ₋₁) by pushing forward zₖ ~ ρ(zₖ) (multiple values)
+function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractVector{<:Real}, zₖ::AbstractVector{<:Real})
+    k = length(xₖ₋₁) + 1
+    @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
+
+    n_points = length(zₖ)
+    samples = Vector{Float64}(undef, n_points)
+    # Use multithreading to compute samples for each point
+    Threads.@threads for i in 1:n_points
+        samples[i] = conditional_sample(M, xₖ₋₁, zₖ[i])
+    end
+    return samples
+end
+
+# For convenience when xₖ₋₁ is a single value
+function conditional_sample(M::PolynomialMap, xₖ₋₁::Float64, zₖ::AbstractVector{<:Real})
+    return conditional_sample(M, [xₖ₋₁], zₖ)
 end
