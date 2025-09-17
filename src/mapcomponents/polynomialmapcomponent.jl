@@ -300,22 +300,22 @@ end
 # Inverse map for the polynomial map component using one-dimensional root finding
 function inverse(
     map_component::PolynomialMapComponent,
-    xₖ₋₁::Vector{<:Real},
-    zₖ::Real,
+    zₖ₋₁::Vector{<:Real},
+    xₖ::Real,
 )
-    @assert length(xₖ₋₁) == map_component.index - 1 "Length of xₖ₋₁ must be equal to index - 1"
+    @assert length(zₖ₋₁) == map_component.index - 1 "Length of zₖ₋₁ must be equal to index - 1"
 
     # Define the residual
-    fun(xₖ) = evaluate(map_component, [xₖ₋₁..., xₖ]) - zₖ
-    ∂fun(xₖ) = partial_derivative_zk(map_component, [xₖ₋₁..., xₖ])
+    fun(zₖ) = evaluate(map_component, [zₖ₋₁..., zₖ]) - xₖ
+    ∂fun(zₖ) = partial_derivative_zk(map_component, [zₖ₋₁..., zₖ])
 
     # Define bounds for the root-finding
     lower, upper = _inverse_bound(fun)
 
     # Use a root-finding method to find the inverse
-    x⁺, _ = hybridrootfinder(fun, ∂fun, lower, upper)
+    z⁺, _ = hybridrootfinder(fun, ∂fun, lower, upper)
 
-    return x⁺
+    return z⁺
 end
 
 function setcoefficients!(map_component::PolynomialMapComponent, coefficients::Vector{<:Real})
