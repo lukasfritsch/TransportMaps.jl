@@ -416,6 +416,13 @@ function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:R
     setcoefficients!(M, map_coefficients)
 end
 
+# Get a specific component of the polynomial map by calling M[i] instead of M.components[i]
+Base.@propagate_inbounds Base.getindex(M::PolynomialMap, i::Int) = getindex(M.components, i)
+
+# Make PolynomialMap callable: M(z) instead of evaluate(M, z)
+Base.@propagate_inbounds (M::PolynomialMap)(z::AbstractVector{<:Real}) = evaluate(M, z)
+Base.@propagate_inbounds (M::PolynomialMap)(Z::AbstractMatrix{<:Real}) = evaluate(M, Z)
+
 # Display method for PolynomialMap
 function Base.show(io::IO, M::PolynomialMap)
     n_dims = length(M.components)
