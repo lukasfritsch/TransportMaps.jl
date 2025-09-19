@@ -146,3 +146,47 @@ contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
 # ![BOD Pullback Density](pullback-bod.svg)
 
 # We can also visually observe a good agreement between the true posterior and the TM approximation.
+
+# ### Conditional Density and Samples
+
+# We can compute conditional densities and generate conditional samples using the transport map.
+# Therefore, we make use of the factorization of the structure of triangular maps given by the
+# Knothe-Rosenblatt rearrangement [marzouk2016](@cite), [ramgraber2025](@cite):
+# ```math
+# \pi(\mathrm{x})=\underbrace{\pi\left(x_1\right)}_{T_1^{-1}\left(z_1\right)} \underbrace{\pi\left(x_2 \mid x_1\right)}_{T_2^{-1}\left(z_2 ; x_1\right)} \underbrace{\pi\left(x_3 \mid x_1, x_2\right)}_{T_3^{-1}\left(z_3 ; x_1, x_2\right)} \cdots \underbrace{\pi\left(x_K \mid x_1, \ldots, x_{K-1}\right)}_{T_K^{-1}\left(z_K ; x_1, \ldots, x_{K-1}\right)},
+# ```
+
+# This allows us to compute the conditional density $\pi(\theta_2 | \theta_1)$ and generate samples from this
+# conditional distribution efficiently. We only need to invert the second component of the map to obtain
+# $\theta_2$ given a fixed value of $\theta_1$ and then push forward samples from the reference distribution.
+
+# We can use the `conditional_sample` function to generate samples from the conditional distribution.
+# Therefore, we samples from the standard normal distribution for $z_2$ and push them through the conditional map.
+# We use the previously generated samples for $z_2$ and fix $\theta_1$.
+θ₁ = 0.
+conditional_samples = conditional_sample(M, θ₁, samples_z[:,2])
+nothing # hide
+
+# Then, we compute the conditional density of $\theta_2$ given $\theta_1$ first analytically
+# by integrating out $\theta_1$ from the joint posterior.
+# We use numerical integration for this purpose and evaluate the conditional density on a grid.
+θ_range = range(0, 2, length=1000)
+int_analytical = gaussquadrature(ξ -> posterior([θ₁, ξ]), 1000, -10., 10.)
+posterior_conditional(θ₂) = posterior([θ₁, θ₂]) / int_analytical
+conditional_analytical = posterior_conditional.(θ_range)
+nothing # hide
+
+# Then we compute the conditional density using the transport map, which is given as:
+# ```math
+# \pi(\theta_2 | \theta_1) = \rho_2\left(T^2(\theta_1, \theta_2)^{-1}\right) \left|\frac{\partial T^2(\theta_1, \theta_2)^{-1}}{\partial \theta_2}\right|
+# ```
+conditional_mapped = conditional_density(M, θ_range, θ₁)
+nothing # hide
+
+# Finally, we plot the results:
+histogram(conditional_samples, bins=20, normalize=:pdf, α = 0.5,
+    label="Conditional Samples", xlabel="θ₂", ylabel="π(θ₂ | θ₁=$θ₁)")
+plot!(θ_range, conditional_analytical, lw=2, label="Analytical Conditional PDF")
+plot!(θ_range, conditional_mapped, lw=2, label="TM Conditional PDF")
+#md savefig("conditional-bod.svg"); nothing # hide
+# ![BOD Conditional Density](conditional-bod.svg)
