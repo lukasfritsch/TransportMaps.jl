@@ -686,4 +686,114 @@ using LinearAlgebra
         @test length(pm_no_mixed.components[1].basisfunctions) == 3
         @test length(pm_no_mixed.components[2].basisfunctions) == 5
     end
+
+    @testset "Callable Interface" begin
+        # Test that M(z) works the same as evaluate(M, z)
+        pm = PolynomialMap(2, 2)
+        setcoefficients!(pm, randn(numbercoefficients(pm)))
+
+        # Test single vector input
+        z = [0.5, 1.2]
+        result_evaluate = evaluate(pm, z)
+        result_callable = pm(z)
+        @test result_callable ≈ result_evaluate
+        @test typeof(result_callable) == typeof(result_evaluate)
+
+        # Test matrix input
+        Z = randn(10, 2)
+        result_evaluate_matrix = evaluate(pm, Z)
+        result_callable_matrix = pm(Z)
+        @test result_callable_matrix ≈ result_evaluate_matrix
+        @test size(result_callable_matrix) == size(result_evaluate_matrix)
+
+        # Test different map types
+        pm_diagonal = DiagonalMap(3, 2)
+        setcoefficients!(pm_diagonal, randn(numbercoefficients(pm_diagonal)))
+        z3 = [0.1, -0.5, 0.8]
+        @test pm_diagonal(z3) ≈ evaluate(pm_diagonal, z3)
+    end
+
+    @testset "Indexing Interface" begin
+        # Test that M[i] works the same as M.components[i]
+        pm = PolynomialMap(3, 2)
+        setcoefficients!(pm, randn(numbercoefficients(pm)))
+
+        # Test basic indexing
+        @test pm[1] === pm.components[1]
+        @test pm[2] === pm.components[2]
+        @test pm[3] === pm.components[3]
+
+        # Test indexing returns correct type
+        @test pm[1] isa PolynomialMapComponent
+        @test pm[2] isa PolynomialMapComponent
+        @test pm[3] isa PolynomialMapComponent
+
+        # Test that indexed components have correct properties
+        @test pm[1].index == 1
+        @test pm[2].index == 2
+        @test pm[3].index == 3
+
+        # Test indexing with different map dimensions
+        pm_1d = PolynomialMap(1, 3)
+        setcoefficients!(pm_1d, randn(numbercoefficients(pm_1d)))
+        @test pm_1d[1] === pm_1d.components[1]
+
+        pm_5d = PolynomialMap(5, 1)
+        setcoefficients!(pm_5d, randn(numbercoefficients(pm_5d)))
+        for i in 1:5
+            @test pm_5d[i] === pm_5d.components[i]
+            @test pm_5d[i].index == i
+        end
+
+        # Test that indexing preserves component functionality
+        z = [0.5]
+        component_direct = pm_1d.components[1]
+        component_indexed = pm_1d[1]
+        @test evaluate(component_direct, z) ≈ evaluate(component_indexed, z)
+
+        # Test bounds checking (should work with normal Julia bounds checking)
+        # Note: Julia's built-in bounds checking will handle out-of-bounds access
+        # These tests verify the behavior is consistent with normal array access
+        pm_2d = PolynomialMap(2, 1)
+        @test pm_2d[1] isa PolynomialMapComponent
+        @test pm_2d[2] isa PolynomialMapComponent
+        # Out of bounds access will throw BoundsError (Julia's default behavior)
+    end
+
+    @testset "Input Type Conversion" begin
+        pm = PolynomialMap(2, 2)
+        # Set coefficients for each component as in other tests
+        setcoefficients!(pm.components[1], [1.0, 0.5, 0.2])  # 3 coefficients for 1D degree 2
+        setcoefficients!(pm.components[2], [1.0, 0.3, 0.1, 0.05, 0.02, 0.01])  # 6 coefficients for 2D degree 2
+
+        # Vector{Int}
+        z_int = [1, 2]
+        result_int = pm(z_int)
+        @test result_int ≈ pm(Float64.(z_int))
+        @test typeof(result_int) == Vector{Float64}
+        @test length(result_int) == length(pm)
+
+        # Vector{Float32}
+        z_f32 = Float32[0.5, 1.2]
+        result_f32 = pm(z_f32)
+        @test result_f32 ≈ pm(Float64.(z_f32))
+        @test typeof(result_f32) == Vector{Float64}
+        @test length(result_f32) == length(pm)
+
+        # Matrix{Int}
+        Z_int = [1 2; 3 4; 5 6]
+        result_matrix_int = pm(Z_int)
+        @test result_matrix_int ≈ pm(Float64.(Z_int))
+        @test typeof(result_matrix_int) == Matrix{Float64}
+        @test size(result_matrix_int, 2) == length(pm)
+        @test size(result_matrix_int, 1) == size(Z_int, 1)
+
+        # Matrix{Float32}
+        Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
+        result_matrix_f32 = pm(Z_f32)
+        @test result_matrix_f32 ≈ pm(Float64.(Z_f32))
+        @test typeof(result_matrix_f32) == Matrix{Float64}
+        @test size(result_matrix_f32, 2) == length(pm)
+        @test size(result_matrix_f32, 1) == size(Z_f32, 1)
+    end
 end
