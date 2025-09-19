@@ -93,6 +93,7 @@ makedocs(
             "Map Parameterization" => "Manuals/sparse_map.md",
             "Quadrature Methods" => "Manuals/quadrature.md",
             "Optimization" => "Manuals/optimization.md",
+            "Conditional Densities and Samples" => "Manuals/conditional_densities.md",
         ],
         "Examples" => [
             "Banana: Map from Density" => "Examples/banana_example.md",
