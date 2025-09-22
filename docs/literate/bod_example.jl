@@ -164,13 +164,13 @@ contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
 # Therefore, we samples from the standard normal distribution for $z_2$ and push them through the conditional map.
 # We use the previously generated samples for $z_2$ and fix $\theta_1$.
 θ₁ = 0.
-conditional_samples = conditional_sample(M, θ₁, samples_z[:,2])
+conditional_samples = conditional_sample(M, θ₁, randn(10_000))
 nothing # hide
 
 # Then, we compute the conditional density of $\theta_2$ given $\theta_1$ first analytically
 # by integrating out $\theta_1$ from the joint posterior.
 # We use numerical integration for this purpose and evaluate the conditional density on a grid.
-θ_range = range(0, 2, length=1000)
+θ_range = 0:0.01:2
 int_analytical = gaussquadrature(ξ -> posterior([θ₁, ξ]), 1000, -10., 10.)
 posterior_conditional(θ₂) = posterior([θ₁, θ₂]) / int_analytical
 conditional_analytical = posterior_conditional.(θ_range)
@@ -184,7 +184,7 @@ conditional_mapped = conditional_density(M, θ_range, θ₁)
 nothing # hide
 
 # Finally, we plot the results:
-histogram(conditional_samples, bins=20, normalize=:pdf, α = 0.5,
+histogram(conditional_samples, bins=50, normalize=:pdf, α = 0.5,
     label="Conditional Samples", xlabel="θ₂", ylabel="π(θ₂ | θ₁=$θ₁)")
 plot!(θ_range, conditional_analytical, lw=2, label="Analytical Conditional PDF")
 plot!(θ_range, conditional_mapped, lw=2, label="TM Conditional PDF")

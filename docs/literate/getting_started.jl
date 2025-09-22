@@ -6,26 +6,29 @@
 #
 # ### What is a Transport Map?
 #
-# A transport map $T$ is a function that transforms samples from a reference distribution (typically standard Gaussian) to a target distribution [marzouk2016](@cite). The key property is that if $X \sim \rho_0$ (reference) and $Y = T(X)$, then $Y \sim \rho_1$ (target).
+# A transport map $T: \boldsymbol{Z} \mapsto \boldsymbol{X}$ is a mapping from reference space $\boldsymbol{Z} \sim \rho(\boldsymbol{z})$ to the target space $\boldsymbol{X} \sim \pi(\boldsymbol{x})$ [marzouk2016](@cite).
+# Hence, the inverse map $T^{-1}: \boldsymbol{X} \mapsto \boldsymbol{Z}$ maps from the target to the reference space.
 
 # ### Triangular Maps
-
-# TransportMaps.jl focuses on **triangular transport maps** [baptista2023](@cite), where:
+#
+# TransportMaps.jl focuses on **triangular transport maps** [baptista2023](@cite),
+# following the Knothe-Rosenblatt rearrangement [knothe1957](@cite).
+# This structure ensures that the map is invertible and the Jacobian determinant is easy to compute.
+# A triangular map in $n$ dimensions has the form:
 
 # ```math
-# T(\boldsymbol{x}) =
+# T(\boldsymbol{z}) =
 # \left(\begin{array}{c}
-# T_1(x_1) \\
-# T_2(x_1, x_2) \\
-# T_3(x_1, x_2, x_3) \\
+# T_1(z_1) \\
+# T_2(z_1, z_2) \\
+# T_3(z_1, z_2, z_3) \\
 # \vdots \\
-# T_n(x_1, x_2 \dots, x_n)
+# T_n(z_1, z_2, \dots, z_n)
 # \end{array}
 # \right)
 # ```
-#
-# This structure ensures that the map is invertible and the Jacobian determinant is easy to compute.
-# The construction follows the Knothe-Rosenblatt rearrangement [knothe1957](@cite).
+
+# The inverse map $T^{-1}$ can be computed sequentially by inverting each component.
 
 # ## First Example: A Simple 2D Transport Map
 

@@ -74,6 +74,14 @@ Literate.markdown(
     credit = true
 )
 
+# Process conditional densities manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "conditional_densities.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
 makedocs(
     sitename = "TransportMaps.jl",
     authors="Lukas Fritsch and Jan Grashorn",
