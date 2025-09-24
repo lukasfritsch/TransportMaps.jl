@@ -1,7 +1,7 @@
 # Conditional densities for triangular maps making use of the Knothe-Rosenblatt transform
 
 # Conditional density: π(xₖ | x₁, ..., xₖ₋₁) for triangular maps (single value)
-function conditional_density(M::PolynomialMap, xₖ::Float64, xₖ₋₁::AbstractVector{<:Real})
+function conditional_density(M::PolynomialMap, xₖ::Float64, xₖ₋₁::Vector{Float64})
     k = length(xₖ₋₁) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
@@ -19,8 +19,12 @@ function conditional_density(M::PolynomialMap, xₖ::Float64, xₖ₋₁::Float6
     return conditional_density(M, xₖ, [xₖ₋₁])
 end
 
+function conditional_density(M::PolynomialMap, xₖ::Float64, xₖ₋₁::AbstractArray{<:Real})
+    return conditional_density(M, xₖ, Vector{Float64}(xₖ₋₁))
+end
+
 # Conditional density: π(xₖ | x₁, ..., xₖ₋₁) for triangular maps (multiple values)
-function conditional_density(M::PolynomialMap, xₖ::AbstractVector{<:Real}, xₖ₋₁::AbstractVector{<:Real})
+function conditional_density(M::PolynomialMap, xₖ::Vector{Float64}, xₖ₋₁::Vector{Float64})
     k = length(xₖ₋₁) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
@@ -35,13 +39,16 @@ function conditional_density(M::PolynomialMap, xₖ::AbstractVector{<:Real}, x�
     return cond_densities
 end
 
-# For convenience when xₖ₋₁ is a single value
-function conditional_density(M::PolynomialMap, xₖ::AbstractVector{<:Real}, xₖ₋₁::Float64)
-    return conditional_density(M, xₖ, [xₖ₋₁])
+function conditional_density(M::PolynomialMap, xₖ::AbstractArray{<:Real}, xₖ₋₁::AbstractArray{<:Real})
+    return conditional_density(M, Vector{Float64}(xₖ), Vector{Float64}(xₖ₋₁))
+end
+
+function conditional_density(M::PolynomialMap, xₖ::AbstractArray{<:Real}, xₖ₋₁::Float64)
+    return conditional_density(M, Vector{Float64}(xₖ), [xₖ₋₁])
 end
 
 # Generate samples from the conditional distribution π(xₖ | x₁, ..., xₖ₋₁) by pushing forward zₖ ~ ρ(zₖ)
-function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractVector{<:Real}, zₖ::Float64)
+function conditional_sample(M::PolynomialMap, xₖ₋₁::Vector{Float64}, zₖ::Float64)
 
     k = length(xₖ₋₁) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
@@ -57,8 +64,12 @@ function conditional_sample(M::PolynomialMap, xₖ₋₁::Float64, zₖ::Float64
     return conditional_sample(M, [xₖ₋₁], zₖ)
 end
 
+function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractArray{<:Real}, zₖ::Float64)
+    return conditional_sample(M, Vector{Float64}(xₖ₋₁), zₖ)
+end
+
 # Generate samples from the conditional distribution π(xₖ | x₁, ..., xₖ₋₁) by pushing forward zₖ ~ ρ(zₖ) (multiple values)
-function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractVector{<:Real}, zₖ::AbstractVector{<:Real})
+function conditional_sample(M::PolynomialMap, xₖ₋₁::Vector{Float64}, zₖ::Vector{Float64})
     k = length(xₖ₋₁) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
@@ -72,6 +83,10 @@ function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractVector{<:Real}
 end
 
 # For convenience when xₖ₋₁ is a single value
-function conditional_sample(M::PolynomialMap, xₖ₋₁::Float64, zₖ::AbstractVector{<:Real})
-    return conditional_sample(M, [xₖ₋₁], zₖ)
+function conditional_sample(M::PolynomialMap, xₖ₋₁::Float64, zₖ::AbstractArray{<:Real})
+    return conditional_sample(M, [xₖ₋₁], Vector{Float64}(zₖ))
+end
+
+function conditional_sample(M::PolynomialMap, xₖ₋₁::AbstractArray{<:Real}, zₖ::AbstractArray{<:Real})
+    return conditional_sample(M, Vector{Float64}(xₖ₋₁), Vector{Float64}(zₖ))
 end
