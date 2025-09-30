@@ -74,6 +74,14 @@ Literate.markdown(
     credit = true
 )
 
+# Process conditional densities manual
+Literate.markdown(
+    joinpath(LITERATE_DIR, "conditional_densities.jl"),
+    joinpath(OUTPUT_DIR, "Manuals");
+    documenter = true,
+    credit = true
+)
+
 makedocs(
     sitename = "TransportMaps.jl",
     authors="Lukas Fritsch and Jan Grashorn",
@@ -93,6 +101,7 @@ makedocs(
             "Map Parameterization" => "Manuals/sparse_map.md",
             "Quadrature Methods" => "Manuals/quadrature.md",
             "Optimization" => "Manuals/optimization.md",
+            "Conditional Densities and Samples" => "Manuals/conditional_densities.md",
         ],
         "Examples" => [
             "Banana: Map from Density" => "Examples/banana_example.md",

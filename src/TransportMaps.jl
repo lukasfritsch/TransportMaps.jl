@@ -74,6 +74,12 @@ export kldivergence_gradient
 export optimize!
 export variance_diagnostic
 
+# Conditional densities and samples
+export conditional_density
+export conditional_sample
+export multivariate_conditional_density
+export multivariate_conditional_sample
+
 # Utilities
 export hybridrootfinder
 
@@ -111,6 +117,7 @@ include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
 include("triangularmap/polynomialmap.jl")
 include("triangularmap/optimization.jl")
+include("triangularmap/conditionaldensities.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")

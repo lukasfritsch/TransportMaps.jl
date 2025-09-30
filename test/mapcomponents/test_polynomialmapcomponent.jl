@@ -221,4 +221,87 @@ using Test
         @test_throws AssertionError gradient_coefficients(pmc, [0.5])  # Wrong dimension
         @test_throws AssertionError gradient_coefficients(pmc, [0.5, 1.0, 0.3])  # Wrong dimension
     end
+
+    @testset "Callable Interface" begin
+        # Test that component(z) works the same as evaluate(component, z)
+        pmc = PolynomialMapComponent(2, 2)
+        setcoefficients!(pmc, randn(length(pmc.coefficients)))
+
+        # Test single vector input
+        z = [0.5, 1.2]
+        result_evaluate = evaluate(pmc, z)
+        result_callable = pmc(z)
+        @test result_callable ≈ result_evaluate
+        @test typeof(result_callable) == typeof(result_evaluate)
+
+        # Test matrix input
+        Z = randn(10, 2)
+        result_evaluate_matrix = evaluate(pmc, Z)
+        result_callable_matrix = pmc(Z)
+        @test result_callable_matrix ≈ result_evaluate_matrix
+        @test size(result_callable_matrix) == size(result_evaluate_matrix)
+
+        # Test different component indices
+        pmc1 = PolynomialMapComponent(1, 2)
+        setcoefficients!(pmc1, randn(length(pmc1.coefficients)))
+        z1 = [0.8]
+        @test pmc1(z1) ≈ evaluate(pmc1, z1)
+
+        pmc3 = PolynomialMapComponent(3, 2)
+        setcoefficients!(pmc3, randn(length(pmc3.coefficients)))
+        z3 = [0.1, -0.5, 0.8]
+        @test pmc3(z3) ≈ evaluate(pmc3, z3)
+
+        # Test with different rectifiers
+        pmc_identity = PolynomialMapComponent(2, 2, IdentityRectifier())
+        setcoefficients!(pmc_identity, randn(length(pmc_identity.coefficients)))
+        @test pmc_identity(z) ≈ evaluate(pmc_identity, z)
+
+        # Test consistency between different call methods
+        pmc_test = PolynomialMapComponent(2, 3)
+        setcoefficients!(pmc_test, randn(length(pmc_test.coefficients)))
+
+        z_test = [0.3, -0.7]
+        Z_test = randn(5, 2)
+
+        # All three should give the same result
+        @test pmc_test(z_test) ≈ evaluate(pmc_test, z_test)
+        @test pmc_test(Z_test) ≈ evaluate(pmc_test, Z_test)
+
+        # Test that callable interface preserves function properties
+        @test isa(pmc_test(z_test), Float64)  # Single point returns scalar
+        @test isa(pmc_test(Z_test), Vector{Float64})  # Multiple points return vector
+        @test length(pmc_test(Z_test)) == size(Z_test, 1)
+    end
+
+    @testset "Input Type Conversion" begin
+        pmc = PolynomialMapComponent(2, 2)
+        setcoefficients!(pmc, randn(length(pmc.coefficients)))
+
+        # Vector{Int}
+        z_int = [1, 2]
+        result_int = pmc(z_int)
+        @test result_int ≈ pmc(Float64.(z_int))
+        @test typeof(result_int) == Float64
+
+        # Vector{Float32}
+        z_f32 = Float32[0.5, 1.2]
+        result_f32 = pmc(z_f32)
+        @test result_f32 ≈ pmc(Float64.(z_f32))
+        @test typeof(result_f32) == Float64
+
+        # Matrix{Int}
+        Z_int = [1 2; 3 4; 5 6]
+        result_matrix_int = pmc(Z_int)
+        @test result_matrix_int ≈ pmc(Float64.(Z_int))
+        @test typeof(result_matrix_int) == Vector{Float64}
+        @test length(result_matrix_int) == size(Z_int, 1)
+
+        # Matrix{Float32}
+        Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
+        result_matrix_f32 = pmc(Z_f32)
+        @test result_matrix_f32 ≈ pmc(Float64.(Z_f32))
+        @test typeof(result_matrix_f32) == Vector{Float64}
+        @test length(result_matrix_f32) == size(Z_f32, 1)
+    end
 end

@@ -63,14 +63,16 @@ function NoMixedMap(
 end
 
 # Evaluate the polynomial map at z (single vector)
-function evaluate(M::PolynomialMap, z::AbstractVector{<:Real})
+function evaluate(M::PolynomialMap, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     return [evaluate(component, z[1:i]) for (i, component) in enumerate(M.components)]
 end
 
+evaluate(M::PolynomialMap, z::AbstractVector{<:Real}) = evaluate(M, Vector{Float64}(z))
+
 # Evaluate the polynomial map at multiple points (matrix input) using multithreading
-function evaluate(M::PolynomialMap, Z::AbstractMatrix{<:Real})
+function evaluate(M::PolynomialMap, Z::Matrix{Float64})
     @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
 
     n_points = size(Z, 1)
@@ -88,15 +90,21 @@ function evaluate(M::PolynomialMap, Z::AbstractMatrix{<:Real})
     return results
 end
 
+
+evaluate(M::PolynomialMap, Z::AbstractMatrix{<:Real}) = evaluate(M, Matrix{Float64}(Z))
+
 # Gradient of the polynomial map at z (single vector)
-function gradient_zk(M::PolynomialMap, z::AbstractVector{<:Real})
+function gradient_zk(M::PolynomialMap, z::Vector{Float64})
     @assert length(z) == length(M.components) "Dimension mismatch: z and components must have same length"
     # Compute the derivatives ∂Mᵏ/∂zₖ for each component
     return [partial_derivative_zk(component, z[1:i]) for (i, component) in enumerate(M.components)]
 end
 
+gradient_zk(M::PolynomialMap, z::AbstractVector{<:Real}) = gradient_zk(M, Vector{Float64}(z))
+
+
 # Gradient of the polynomial map at multiple points (matrix input) using multithreading
-function gradient_zk(M::PolynomialMap, Z::AbstractMatrix{<:Real})
+function gradient_zk(M::PolynomialMap, Z::Matrix{Float64})
     @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
 
     n_points = size(Z, 1)
@@ -114,9 +122,11 @@ function gradient_zk(M::PolynomialMap, Z::AbstractMatrix{<:Real})
     return results
 end
 
+gradient_zk(M::PolynomialMap, Z::AbstractMatrix{<:Real}) = gradient_zk(M, Matrix{Float64}(Z))
+
 # Gradient of the map with respect to the coefficients at z
 """
-    gradient_coefficients(M::PolynomialMap, z::AbstractArray{<:Real})
+    gradient_coefficients(M::PolynomialMap, z::Vector{Float64})
 
 Compute the gradient of the polynomial map with respect to all its coefficients at point z.
 
@@ -130,7 +140,7 @@ where cᵢⱼ is the j-th coefficient of the i-th component.
 
 # Arguments
 - `M::PolynomialMap`: The polynomial map
-- `z::AbstractArray{<:Real}`: Point at which to evaluate the gradient
+- `z::Vector{Float64}`: Point at which to evaluate the gradient
 
 # Returns
 - `Matrix{Float64}`: Gradient matrix of size (dimension × total_coefficients)
@@ -149,7 +159,7 @@ grad_matrix = gradient_coefficients(M, z)
 # grad_matrix[i, j] = ∂Mⁱ/∂cⱼ
 ```
 """
-function gradient_coefficients(M::PolynomialMap, z::AbstractArray{<:Real})
+function gradient_coefficients(M::PolynomialMap, z::Vector{Float64})
     @assert length(z) == length(M.components) "Dimension mismatch: z and components must have same length"
 
     n_dimensions = length(M.components)
@@ -180,15 +190,19 @@ function gradient_coefficients(M::PolynomialMap, z::AbstractArray{<:Real})
     return gradient_matrix
 end
 
+gradient_coefficients(M::PolynomialMap, z::AbstractVector{<:Real}) = gradient_coefficients(M, Vector{Float64}(z))
+
 # Compute the Jacobian determinant of the polynomial map at z (single vector)
-function jacobian(M::PolynomialMap, z::AbstractVector{<:Real})
+function jacobian(M::PolynomialMap, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
     # Compute the jacobian determinant as ∏ₖ ∂Mᵏ/∂zₖ
     return prod(gradient_zk(M, z))
 end
 
+jacobian(M::PolynomialMap, z::AbstractVector{<:Real}) = jacobian(M, Vector{Float64}(z))
+
 # Compute the Jacobian determinant of the polynomial map at multiple points (matrix input) using multithreading
-function jacobian(M::PolynomialMap, Z::AbstractMatrix{<:Real})
+function jacobian(M::PolynomialMap, Z::Matrix{Float64})
     @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
 
     n_points = size(Z, 1)
@@ -205,8 +219,12 @@ function jacobian(M::PolynomialMap, Z::AbstractMatrix{<:Real})
     return results
 end
 
+
+jacobian(M::PolynomialMap, Z::AbstractMatrix{<:Real}) = jacobian(M, Matrix{Float64}(Z))
+
+
 # Compute the gradient of log|det J_M| with respect to coefficients
-function jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{Float64})
+function jacobian_logdet_gradient(M::PolynomialMap, z::Vector{Float64})
     n_coeffs = numbercoefficients(M)
     gradient = zeros(Float64, n_coeffs)
 
@@ -234,40 +252,45 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{Float64})
     return gradient
 end
 
-# Compute the inverse of the polynomial map at x (single vector)
-function inverse(M::PolynomialMap, x::AbstractVector{<:Real})
-    @assert length(M.components) == length(x) "Number of components must match the dimension of x"
+jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{<:Real}) = jacobian_logdet_gradient(M, Vector{Float64}(z))
+
+# Compute the inverse of the first k components of the polynomial map at z (single vector)
+function inverse(M::PolynomialMap, x::Vector{Float64}, k::Int=numberdimensions(M))
+    @assert k <= length(x) <= numberdimensions(M) "x must have at least k dimensions and at most the map dimension"
 
     # Initialize the inverse map
-    z = Vector{Float64}(undef, length(x))
-    for (i, component) in enumerate(M.components)
+    z = Vector{Float64}(undef, k)
+    for (i, component) in enumerate(M.components[1:k])
         z[i] = inverse(component, z[1:i-1], x[i])
     end
 
     return z
 end
 
-# Compute the inverse of the polynomial map at multiple points (matrix input) using multithreading
-function inverse(M::PolynomialMap, X::AbstractMatrix{<:Real})
-    @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
+inverse(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int=numberdimensions(M)) = inverse(M, Vector{Float64}(x), k)
+
+# Compute the inverse of the first k components of the polynomial map at multiple points (matrix input) using multithreading
+function inverse(M::PolynomialMap, X::Matrix{Float64}, k::Int=numberdimensions(M))
+    @assert k <= size(X, 2) == numberdimensions(M) "X must have at least k columns and at most the map dimension"
 
     n_points = size(X, 1)
-    n_dims = length(M.components)
 
     # Preallocate result matrix
-    results = Matrix{Float64}(undef, n_points, n_dims)
+    results = Matrix{Float64}(undef, n_points, k)
 
     # Use multithreading to compute inverse for each point
     Threads.@threads for i in 1:n_points
         x_point = X[i, :]
-        results[i, :] = inverse(M, x_point)
+        results[i, :] = inverse(M, x_point, k)
     end
 
     return results
 end
 
+inverse(M::PolynomialMap, X::AbstractMatrix{<:Real}, k::Int=numberdimensions(M)) = inverse(M, Matrix{Float64}(X), k)
+
 # Compute the Jacobian determinant of the inverse polynomial map at x (single vector)
-function inverse_jacobian(M::PolynomialMap, x::AbstractVector{<:Real})
+function inverse_jacobian(M::PolynomialMap, x::Vector{Float64})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     # For triangular maps, det(J_{M⁻¹}(x)) = 1/det(J_M(M⁻¹(x)))
@@ -275,8 +298,10 @@ function inverse_jacobian(M::PolynomialMap, x::AbstractVector{<:Real})
     return 1.0 / jacobian(M, inverse(M, x))
 end
 
+inverse_jacobian(M::PolynomialMap, x::AbstractVector{<:Real}) = inverse_jacobian(M, Vector{Float64}(x))
+
 # Compute the Jacobian determinant of the inverse polynomial map at multiple points (matrix input) using multithreading
-function inverse_jacobian(M::PolynomialMap, X::AbstractMatrix{<:Real})
+function inverse_jacobian(M::PolynomialMap, X::Matrix{Float64})
     @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
 
     n_points = size(X, 1)
@@ -293,8 +318,10 @@ function inverse_jacobian(M::PolynomialMap, X::AbstractMatrix{<:Real})
     return results
 end
 
+inverse_jacobian(M::PolynomialMap, X::AbstractMatrix{<:Real}) = inverse_jacobian(M, Matrix{Float64}(X))
+
 # Pullback density: Map from reference to target space (single vector)
-function pullback(M::PolynomialMap, x::AbstractVector{<:Real})
+function pullback(M::PolynomialMap, x::Vector{Float64})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     value = M.forwarddirection == :target ? M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x)) :
@@ -304,8 +331,10 @@ function pullback(M::PolynomialMap, x::AbstractVector{<:Real})
     return value
 end
 
+pullback(M::PolynomialMap, x::AbstractVector{<:Real}) = pullback(M, Vector{Float64}(x))
+
 # Pullback density: Map from reference to target space (matrix input) using multithreading
-function pullback(M::PolynomialMap, X::AbstractMatrix{<:Real})
+function pullback(M::PolynomialMap, X::Matrix{Float64})
     @assert size(X, 2) == length(M.components) "Number of columns must match the dimension of the map"
 
     n_points = size(X, 1)
@@ -322,9 +351,11 @@ function pullback(M::PolynomialMap, X::AbstractMatrix{<:Real})
     return results
 end
 
+pullback(M::PolynomialMap, X::AbstractMatrix{<:Real}) = pullback(M, Matrix{Float64}(X))
+
 
 # Pushforward density: Map from target to reference space (single vector)
-function pushforward(M::PolynomialMap, target::MapTargetDensity, z::AbstractVector{<:Real})
+function pushforward(M::PolynomialMap, target::MapTargetDensity, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     value = M.forwarddirection == :target ? target.density(evaluate(M, z)) * abs(jacobian(M, z)) :
@@ -334,8 +365,10 @@ function pushforward(M::PolynomialMap, target::MapTargetDensity, z::AbstractVect
     return value
 end
 
+pushforward(M::PolynomialMap, target::MapTargetDensity, z::AbstractVector{<:Real}) = pushforward(M, target, Vector{Float64}(z))
+
 # Pushforward density: Map from target to reference space (matrix input) using multithreading
-function pushforward(M::PolynomialMap, target::MapTargetDensity, Z::AbstractMatrix{<:Real})
+function pushforward(M::PolynomialMap, target::MapTargetDensity, Z::Matrix{Float64})
     @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
 
     n_points = size(Z, 1)
@@ -352,14 +385,18 @@ function pushforward(M::PolynomialMap, target::MapTargetDensity, Z::AbstractMatr
     return results
 end
 
+pushforward(M::PolynomialMap, target::MapTargetDensity, Z::AbstractMatrix{<:Real}) = pushforward(M, target, Matrix{Float64}(Z))
+
 # Set the coefficients in all map components.
-function setcoefficients!(M::PolynomialMap, coefficients::Vector{<:Real})
+function setcoefficients!(M::PolynomialMap, coefficients::Vector{Float64})
     counter = 1
     for component in M.components
         setcoefficients!(component, coefficients[counter:counter+length(component.basisfunctions)-1])
         counter += length(component.basisfunctions)
     end
 end
+
+setcoefficients!(M::PolynomialMap, coefficients::AbstractVector{<:Real}) = setcoefficients!(M, Vector{Float64}(coefficients))
 
 # Get the coefficients from all map components.
 function getcoefficients(M::PolynomialMap)
@@ -392,7 +429,7 @@ function numberdimensions(M::PolynomialMap)
     return length(M.components)
 end
 
-function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:Real})
+function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
     setforwarddirection!(M, :reference)
 
     new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
@@ -416,6 +453,16 @@ function initializemapfromsamples!(M::PolynomialMap, samples::AbstractMatrix{<:R
     # re-set coefficients
     setcoefficients!(M, map_coefficients)
 end
+
+# Return the number of components (dimension) of the map
+Base.length(M::PolynomialMap) = length(M.components)
+
+# Get a specific component of the polynomial map by calling M[i] instead of M.components[i]
+Base.@propagate_inbounds Base.getindex(M::PolynomialMap, i::Int) = getindex(M.components, i)
+
+# Make PolynomialMap callable: M(z) instead of evaluate(M, z)
+Base.@propagate_inbounds (M::PolynomialMap)(z::AbstractArray{<:Real}) = evaluate(M, z)
+Base.@propagate_inbounds (M::PolynomialMap)(Z::AbstractMatrix{<:Real}) = evaluate(M, Z)
 
 # Display method for PolynomialMap
 function Base.show(io::IO, M::PolynomialMap)

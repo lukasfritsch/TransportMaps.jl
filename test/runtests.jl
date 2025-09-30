@@ -16,6 +16,7 @@ using Test
         include("triangularmap/test_optimization.jl")
         include("triangularmap/test_gradients.jl")
         include("triangularmap/test_multithreading.jl")
+        include("triangularmap/test_conditionaldensities.jl")
     end
 
     # Test Utilities
