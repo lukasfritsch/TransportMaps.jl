@@ -77,6 +77,8 @@ export variance_diagnostic
 # Conditional densities and samples
 export conditional_density
 export conditional_sample
+export multivariate_conditional_density
+export multivariate_conditional_sample
 
 # Utilities
 export hybridrootfinder
