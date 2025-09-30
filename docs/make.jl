@@ -10,77 +10,23 @@ bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"))
 const LITERATE_DIR = joinpath(@__DIR__, "literate")
 const OUTPUT_DIR = joinpath(@__DIR__, "src")
 
-# Process getting started guide
-Literate.markdown(
-    joinpath(LITERATE_DIR, "getting_started.jl"),
-    joinpath(OUTPUT_DIR, "Manuals");
-    documenter = true,
-    credit = true
-)
+# Automatically process all literate files in subdirectories of LITERATE_DIR
+if isdir(LITERATE_DIR)
+    for subdir in sort(filter(name -> isdir(joinpath(LITERATE_DIR, name)) && !startswith(name, "."), readdir(LITERATE_DIR)))
+        srcdir = joinpath(LITERATE_DIR, subdir)
+        dest = joinpath(OUTPUT_DIR, subdir)
+        mkpath(dest)
 
-# Process banana example
-Literate.markdown(
-    joinpath(LITERATE_DIR, "banana_example.jl"),
-    joinpath(OUTPUT_DIR, "Examples");
-    documenter = true,
-    credit = true
-)
+        files = sort(filter(name ->
+                !startswith(name, ".") && endswith(name, ".jl"),
+            readdir(srcdir)))
 
-# Process BOD example
-Literate.markdown(
-    joinpath(LITERATE_DIR, "bod_example.jl"),
-    joinpath(OUTPUT_DIR, "Examples");
-    documenter = true,
-    credit = true
-)
-
-# Process map from samples example
-Literate.markdown(
-    joinpath(LITERATE_DIR, "mapfromsamples_example.jl"),
-    joinpath(OUTPUT_DIR, "Examples");
-    documenter = true,
-    credit = true
-)
-
-# Process basis functions manual
-Literate.markdown(
-    joinpath(LITERATE_DIR, "hermite_basis.jl"),
-    joinpath(OUTPUT_DIR, "Manuals");
-    documenter = true,
-    credit = true
-)
-
-# Process quadrature manual
-Literate.markdown(
-    joinpath(LITERATE_DIR, "quadrature.jl"),
-    joinpath(OUTPUT_DIR, "Manuals");
-    documenter = true,
-    credit = true
-)
-
-# Process optimization manual
-Literate.markdown(
-    joinpath(LITERATE_DIR, "optimization.jl"),
-    joinpath(OUTPUT_DIR, "Manuals");
-    documenter = true,
-    credit = true
-)
-
-# Process sparse map manual
-Literate.markdown(
-    joinpath(LITERATE_DIR, "sparse_map.jl"),
-    joinpath(OUTPUT_DIR, "Manuals");
-    documenter = true,
-    credit = true
-)
-
-# Process conditional densities manual
-Literate.markdown(
-    joinpath(LITERATE_DIR, "conditional_densities.jl"),
-    joinpath(OUTPUT_DIR, "Manuals");
-    documenter = true,
-    credit = true
-)
+        for fname in files
+            src = joinpath(srcdir, fname)
+            Literate.markdown(src, dest; documenter = true, credit = true)
+        end
+    end
+end
 
 makedocs(
     sitename = "TransportMaps.jl",
@@ -97,16 +43,16 @@ makedocs(
         "Home" => "index.md",
         "Manuals" => [
             "Getting Started" => "Manuals/getting_started.md",
-            "Basis Functions" => "Manuals/hermite_basis.md",
-            "Map Parameterization" => "Manuals/sparse_map.md",
-            "Quadrature Methods" => "Manuals/quadrature.md",
+            "Basis Functions" => "Manuals/basis_functions.md",
+            "Map Parameterization" => "Manuals/map_parameterization.md",
+            "Quadrature Methods" => "Manuals/quadrature_methods.md",
             "Optimization" => "Manuals/optimization.md",
             "Conditional Densities and Samples" => "Manuals/conditional_densities.md",
         ],
         "Examples" => [
-            "Banana: Map from Density" => "Examples/banana_example.md",
-            "Banana: Map from Samples" => "Examples/mapfromsamples_example.md",
-            "BOD Parameter Estimation" => "Examples/bod_example.md",
+            "Banana: Map from Density" => "Examples/banana_mapfromdensity.md",
+            "Banana: Map from Samples" => "Examples/banana_mapfromsamples.md",
+            "Bayesian Inference: BOD" => "Examples/bod_bayesianinference.md",
         ],
         "API" => "api.md",
         "References" => "references.md"

@@ -42,7 +42,7 @@ using LinearAlgebra
 
 # Set random seed for reproducibility
 Random.seed!(1234)
-nothing # hide
+#md nothing #hide
 
 # Create a 2D polynomial map with degree 2
 M = PolynomialMap(2, 2, Normal(), Softplus())
@@ -60,7 +60,7 @@ function correlated_gaussian(x; ρ=0.8)
     Σ = [1.0 ρ; ρ 1.0]
     return pdf(MvNormal(zeros(2), Σ), x)
 end
-nothing # hide
+#md nothing #hide
 
 # Create a MapTargetDensity object for optimization
 target_density = MapTargetDensity(correlated_gaussian, :auto_diff)

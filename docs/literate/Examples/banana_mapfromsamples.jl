@@ -27,7 +27,7 @@ banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 
 # Set up the log-target function for sampling:
 num_samples = 500
-nothing # hide
+#md nothing #hide
 
 # Generate samples using rejection sampling (no external dependencies)
 function generate_banana_samples(n_samples::Int)
