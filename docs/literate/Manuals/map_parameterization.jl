@@ -79,7 +79,7 @@ M_d = DiagonalMap(2, 3, :normal, Softplus(), HermiteBasis())
 ind_to = getmultiindexsets(M_to.components[2])
 ind_nm = getmultiindexsets(M_nm.components[2])
 ind_d  = getmultiindexsets(M_d.components[2])
-nothing # hide
+#md nothing #hide
 
 # Finally, we plot the multi-index sets for each map type. This allows us to reproduce the
 # comparison of multi-index sets as shown in Figure 1 in [marzouk2016](@cite):
@@ -113,11 +113,11 @@ contour(x₁, x₂, true_density;
 # We create the `MapTargetDensity` and quadrature weights for optimization:
 target = MapTargetDensity(cubic_density, :auto_diff)
 quadrature = SparseSmolyakWeights(3, 2)
-nothing # hide
+#md nothing #hide
 
 # Generate samples in the standard normal space $\boldsymbol{Z}$ for the variance diagnostic:
 samples_z = randn(1000, 2)
-nothing # hide
+#md nothing #hide
 
 # Now, we optimize each map type, compute the variance diagnostic and visualize the mapped samples.
 

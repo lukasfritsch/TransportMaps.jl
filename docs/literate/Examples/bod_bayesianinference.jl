@@ -44,7 +44,7 @@ function forward_model(t, θ)
     B = 0.01 + (0.31 - 0.01) * cdf(Normal(), θ[2])
     return A * (1 - exp(-B * t))
 end
-nothing # hide
+#md nothing #hide
 
 # ### Experimental Data
 #
@@ -53,7 +53,7 @@ nothing # hide
 t = [1, 2, 3, 4, 5]
 D = [0.18, 0.32, 0.42, 0.49, 0.54]
 σ = sqrt(1e-3)
-nothing # hide
+#md nothing #hide
 
 # Let's visualize the data along with model predictions for different parameter values:
 
@@ -165,7 +165,7 @@ contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
 # We use the previously generated samples for $z_2$ and fix $\theta_1$.
 θ₁ = 0.
 conditional_samples = conditional_sample(M, θ₁, randn(10_000))
-nothing # hide
+#md nothing #hide
 
 # Then, we compute the conditional density of $\theta_2$ given $\theta_1$ first analytically
 # by integrating out $\theta_1$ from the joint posterior.
@@ -174,14 +174,14 @@ nothing # hide
 int_analytical = gaussquadrature(ξ -> posterior([θ₁, ξ]), 1000, -10., 10.)
 posterior_conditional(θ₂) = posterior([θ₁, θ₂]) / int_analytical
 conditional_analytical = posterior_conditional.(θ_range)
-nothing # hide
+#md nothing #hide
 
 # Then we compute the conditional density using the transport map, which is given as:
 # ```math
 # \pi(\theta_2 | \theta_1) = \rho_2\left(T^2(\theta_1, \theta_2)^{-1}\right) \left|\frac{\partial T^2(\theta_1, \theta_2)^{-1}}{\partial \theta_2}\right|
 # ```
 conditional_mapped = conditional_density(M, θ_range, θ₁)
-nothing # hide
+#md nothing #hide
 
 # Finally, we plot the results:
 histogram(conditional_samples, bins=50, normalize=:pdf, α = 0.5,

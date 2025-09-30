@@ -37,7 +37,7 @@ quadrature = SparseSmolyakWeights(2, 2)
 # where $\phi$ is the standard normal PDF.
 
 target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-nothing # hide
+#md nothing #hide
 
 # Create a MapTargetDensity object for optimization
 target = MapTargetDensity(target_density, :auto_diff)

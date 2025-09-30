@@ -45,7 +45,7 @@ using Plots
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 target = MapTargetDensity(banana_density, :auto_diff)
 quadrature = GaussHermiteWeights(10, 2)
-nothing #hide
+#md nothing #hide
 
 # Set optimization options to print the trace every 20 iterations:
 opts_trace = Optim.Options(iterations = 200, show_trace = true, show_every = 20, store_trace = true)

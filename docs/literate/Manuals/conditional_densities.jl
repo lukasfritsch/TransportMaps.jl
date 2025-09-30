@@ -39,7 +39,7 @@ using Distributions
 
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 target = MapTargetDensity(banana_density, :auto_diff)
-nothing # hide
+#md nothing #hide
 
 # Define the map and quadrature; and optimize the map:
 M = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis())
@@ -47,7 +47,7 @@ quadrature = GaussHermiteWeights(10, 2)
 
 ## Optimize the map:
 optimize!(M, target, quadrature)
-nothing # hide
+#md nothing #hide
 
 # ## Conditional Density Evaluation
 #
@@ -63,7 +63,7 @@ println("Conditional density π(x₂=$x₂ | x₁=$x₁) = $density")
 # Evaluate conditional density for multiple values:
 x₂_values = range(-3, 3, length=100)
 densities = conditional_density(M, x₂_values, x₁)
-nothing # hide
+#md nothing #hide
 
 # Plot the conditional density:
 plot(x₂_values, densities,
@@ -86,7 +86,7 @@ println("Conditional sample for z₂=$z₂: x₂=$cond_sample")
 # Multiple samples:
 z₂_values = randn(10_000)
 cond_samples = conditional_sample(M, x₁, z₂_values)
-nothing # hide
+#md nothing #hide
 
 # Create a histogram of the conditional samples and overlay the analytical density:
 histogram(cond_samples, bins=50, normalize=:pdf, alpha=0.7,
@@ -110,11 +110,11 @@ function true_banana_conditional_density(x₂, x₁)
     σ_cond = 1.0
     return pdf(Normal(μ_cond, σ_cond), x₂)
 end
-nothing # hide
+#md nothing #hide
 
 # Compute true conditional densities:
 true_densities = [true_banana_conditional_density(x₂, x₁) for x₂ in x₂_values]
-nothing # hide
+#md nothing #hide
 
 # Plot comparison:
 plot(x₂_values, densities, linewidth=2, label="TM Conditional",
