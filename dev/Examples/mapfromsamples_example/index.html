@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Banana: Map from Samples · TransportMaps.jl</title><meta name="title" content="Banana: Map from Samples · TransportMaps.jl"/><meta property="og:title" content="Banana: Map from Samples · TransportMaps.jl"/><meta property="twitter:title" content="Banana: Map from Samples · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/mapfromsamples_example/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/mapfromsamples_example/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Examples/mapfromsamples_example/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../../Manuals/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../Manuals/hermite_basis/">Basis Functions</a></li><li><a class="tocitem" href="../../Manuals/sparse_map/">Map Parameterization</a></li><li><a class="tocitem" href="../../Manuals/quadrature/">Quadrature Methods</a></li><li><a class="tocitem" href="../../Manuals/optimization/">Optimization</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../banana_example/">Banana: Map from Density</a></li><li class="is-active"><a class="tocitem" href>Banana: Map from Samples</a></li><li><a class="tocitem" href="../bod_example/">BOD Parameter Estimation</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Banana: Map from Samples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Banana: Map from Samples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/mapfromsamples_example.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Banana:-Map-from-Samples"><a class="docs-heading-anchor" href="#Banana:-Map-from-Samples">Banana: Map from Samples</a><a id="Banana:-Map-from-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Banana:-Map-from-Samples" title="Permalink"></a></h1><p>This example demonstrates how to use TransportMaps.jl to approximate a &quot;banana&quot; distribution using polynomial transport maps when only samples from the target distribution are available.</p><p>Unlike the density-based approach, this method learns the transport map directly from sample data using optimization techniques. This is particularly useful when the target density is unknown or difficult to evaluate [<a href="../../references/#marzouk2016">1</a>].</p><p>We start with the necessary packages:</p><pre><code class="language-julia hljs">using TransportMaps
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Banana: Map from Samples · TransportMaps.jl</title><meta name="title" content="Banana: Map from Samples · TransportMaps.jl"/><meta property="og:title" content="Banana: Map from Samples · TransportMaps.jl"/><meta property="twitter:title" content="Banana: Map from Samples · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/mapfromsamples_example/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/mapfromsamples_example/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Examples/mapfromsamples_example/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../../Manuals/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../Manuals/hermite_basis/">Basis Functions</a></li><li><a class="tocitem" href="../../Manuals/sparse_map/">Map Parameterization</a></li><li><a class="tocitem" href="../../Manuals/quadrature/">Quadrature Methods</a></li><li><a class="tocitem" href="../../Manuals/optimization/">Optimization</a></li><li><a class="tocitem" href="../../Manuals/conditional_densities/">Conditional Densities and Samples</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../banana_example/">Banana: Map from Density</a></li><li class="is-active"><a class="tocitem" href>Banana: Map from Samples</a></li><li><a class="tocitem" href="../bod_example/">BOD Parameter Estimation</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Banana: Map from Samples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Banana: Map from Samples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/mapfromsamples_example.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Banana:-Map-from-Samples"><a class="docs-heading-anchor" href="#Banana:-Map-from-Samples">Banana: Map from Samples</a><a id="Banana:-Map-from-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Banana:-Map-from-Samples" title="Permalink"></a></h1><p>This example demonstrates how to use TransportMaps.jl to approximate a &quot;banana&quot; distribution using polynomial transport maps when only samples from the target distribution are available.</p><p>Unlike the density-based approach, this method learns the transport map directly from sample data using optimization techniques. This is particularly useful when the target density is unknown or difficult to evaluate [<a href="../../references/#marzouk2016">1</a>].</p><p>We start with the necessary packages:</p><pre><code class="language-julia hljs">using TransportMaps
 using Distributions
 using LinearAlgebra
 using Plots</code></pre><h3 id="Generating-Target-Samples"><a class="docs-heading-anchor" href="#Generating-Target-Samples">Generating Target Samples</a><a id="Generating-Target-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Target-Samples" title="Permalink"></a></h3><p>The banana distribution has the density:</p><p class="math-container">\[p(x) = \phi(x_1) \cdot \phi(x_2 - x_1^2)\]</p><p>where <span>$\phi$</span> is the standard normal PDF.</p><pre><code class="language-julia hljs">banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">banana_density (generic function with 1 method)</code></pre><p>Set up the log-target function for sampling:</p><pre><code class="language-julia hljs">num_samples = 500</code></pre><p>Generate samples using rejection sampling (no external dependencies)</p><pre><code class="language-julia hljs">function generate_banana_samples(n_samples::Int)
@@ -37,84 +37,84 @@ Generated 500 samples</code></pre><h3 id="Creating-the-Transport-Map"><a class="
 println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Optimization result:  * Status: success
 
  * Candidate solution
-    Final objective value:     2.672067e+00
+    Final objective value:     2.624727e+00
 
  * Found with
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 2.01e-08 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 7.72e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 6.22e-15 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 2.33e-15 ≰ 0.0e+00
-    |g(x)|                 = 3.85e-11 ≤ 1.0e-08
+    |x - x&#39;|               = 1.66e-08 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 6.31e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 4.44e-16 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 1.69e-16 ≰ 0.0e+00
+    |g(x)|                 = 4.24e-11 ≤ 1.0e-08
 
  * Work counters
     Seconds run:   6  (vs limit Inf)
     Iterations:    18
-    f(x) calls:    50
-    ∇f(x) calls:   50</code></pre><h3 id="Testing-the-Map"><a class="docs-heading-anchor" href="#Testing-the-Map">Testing the Map</a><a id="Testing-the-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Testing-the-Map" title="Permalink"></a></h3><p>Let&#39;s generate new samples from the banana density and standard normal samples and map them through our optimized transport map to verify the learned distribution:</p><pre><code class="language-julia hljs">new_samples = generate_banana_samples(1000)
+    f(x) calls:    48
+    ∇f(x) calls:   48</code></pre><h3 id="Testing-the-Map"><a class="docs-heading-anchor" href="#Testing-the-Map">Testing the Map</a><a id="Testing-the-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Testing-the-Map" title="Permalink"></a></h3><p>Let&#39;s generate new samples from the banana density and standard normal samples and map them through our optimized transport map to verify the learned distribution:</p><pre><code class="language-julia hljs">new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.936263   -0.0451487
-  1.35448    -0.574245
- -0.457469   -0.389707
- -0.851574    1.02301
-  0.351138    0.963611
-  1.67557    -1.04001
- -1.12398    -0.134622
- -1.29668     0.338251
- -1.04707    -0.181614
-  1.09133     0.475763
+  0.372209  -0.34194
+  1.45691   -0.302936
+  0.788866   2.29844
+  1.35662    0.728004
+  0.382488   0.132478
+  0.682723  -1.51593
+  1.08295   -0.535876
+ -1.0272    -1.42693
+ -1.19547   -0.99733
+  1.53022    0.35252
+  ⋮         
+  1.60094   -1.40515
+ -1.75617   -1.84294
+ -0.50955   -0.0566098
+  0.880802  -0.776033
+ -0.400751   0.181649
+  1.25405   -0.319054
+  0.981826   0.691603
+  0.707735  -1.94879
+  1.20361    0.503534</code></pre><p>Map the samples through our transport map. Note that <code>evaluate</code> now transports from reference to target, i.e. <code>mapped_samples</code> should be standard normal samples:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, new_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.668357   -0.580453
+ -0.805829   -0.559499
+ -0.276307    0.114439
+  0.91933     0.404622
+  1.48714     0.60276
+ -0.178052    1.15946
+  3.13169     1.15302
+  1.69019     0.906523
+  0.948668   -0.771261
+  1.61679    -0.00549128
   ⋮          
-  0.475203    1.0903
-  0.975951   -1.14136
-  0.858353    0.852677
-  0.27701    -1.07845
-  0.259885    0.956152
-  1.08827     1.36607
-  0.0727297   1.13177
-  0.170445   -1.37779
- -1.16636     1.29813</code></pre><p>Map the samples through our transport map. Note that <code>evaluate</code> now transports from reference to target, i.e. <code>mapped_samples</code> should be standard normal samples:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, new_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
- -0.629563   -0.347135
- -0.508414    0.368262
-  1.19951     0.860639
-  1.08692     1.71876
- -0.1528     -2.11524
-  1.36645     0.951838
-  1.26434     0.275584
- -1.00161    -1.72331
- -0.266663   -0.474858
- -1.27312    -1.62715
-  ⋮          
-  0.0801929   1.15129
- -0.59932     0.174765
-  0.215024    0.626755
- -0.28708     2.34153
- -0.0881947  -0.14347
-  0.250317   -0.257759
-  0.464779   -1.374
- -0.611193   -0.124464
-  0.376746   -0.127085</code></pre><p>while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:</p><pre><code class="language-julia hljs">mapped_banana_samples = inverse(M, norm_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.885509    0.73714
-  1.27101     1.03038
- -0.393353   -0.14265
- -0.753358    1.62035
-  0.347518    1.04776
-  1.56755     1.38775
- -1.00178     0.986426
- -1.1591      1.78357
- -0.931681    0.801075
-  1.02835     1.45526
-  ⋮          
-  0.461456    1.24414
-  0.922058   -0.201503
-  0.813784    1.43364
-  0.279473   -0.892734
-  0.263758    0.996774
-  1.02553     2.23612
-  0.0920917   1.10977
-  0.1817     -1.2229
- -1.0404      2.40713</code></pre><h3 id="Visualizing-Results"><a class="docs-heading-anchor" href="#Visualizing-Results">Visualizing Results</a><a id="Visualizing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-Results" title="Permalink"></a></h3><p>Let&#39;s create a scatter plot comparing the original samples with the mapped samples to see how well our transport map learned the distribution:</p><pre><code class="language-julia hljs">p11 = scatter(new_samples[:, 1], new_samples[:, 2],
+  1.19043    -0.540688
+  0.0985681  -1.19326
+ -1.1985      0.668155
+  0.715562    0.121295
+  0.306902   -0.115131
+  1.1804      0.279249
+  1.10075    -0.629645
+  0.687782   -0.34843
+ -1.98428     0.645499</code></pre><p>while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:</p><pre><code class="language-julia hljs">mapped_banana_samples = inverse(M, norm_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.301867  -0.230274
+  1.28872    1.29566
+  0.678297   2.5554
+  1.19653    2.0337
+  0.311115   0.185618
+  0.582094  -0.991973
+  0.945954   0.348837
+ -0.939309  -0.431244
+ -1.08623    0.220177
+  1.35623    2.091
+  ⋮         
+  1.42146    0.646912
+ -1.57231    0.709323
+ -0.484255   0.152151
+  0.761796  -0.152317
+ -0.388013   0.282157
+  1.10245    0.847032
+  0.853734   1.29422
+  0.604744  -1.32164
+  1.05626    1.5029</code></pre><h3 id="Visualizing-Results"><a class="docs-heading-anchor" href="#Visualizing-Results">Visualizing Results</a><a id="Visualizing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-Results" title="Permalink"></a></h3><p>Let&#39;s create a scatter plot comparing the original samples with the mapped samples to see how well our transport map learned the distribution:</p><pre><code class="language-julia hljs">p11 = scatter(new_samples[:, 1], new_samples[:, 2],
             label=&quot;Original Samples&quot;, alpha=0.5, color=1,
             title=&quot;Original Banana Distribution Samples&quot;,
             xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;)
@@ -156,26 +156,26 @@ x₂ = range(-2.5, 4.0, length=100)</code></pre><pre class="documenter-example-o
  3.38787e-9   2.41065e-8   1.4534e-7       2.41065e-8   3.38787e-9
  4.73485e-9   3.2904e-8    1.93842e-7      3.2904e-8    4.73485e-9
  6.58892e-9   4.47191e-8   2.57416e-7      4.47191e-8   6.58892e-9</code></pre><p>Learned density via pullback through the transport map. Note that &quot;pullback&quot; computes the density of the mapped samples in the standard normal space:</p><pre><code class="language-julia hljs">learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100×100 Matrix{Float64}:
- 1.71845e-33  6.84548e-32  2.48015e-30  …  1.31077e-31  3.92842e-33
- 3.52025e-33  1.37822e-31  4.90733e-30     2.97728e-31  9.12288e-33
- 7.18395e-33  2.76428e-31  9.67284e-30     6.7272e-31   2.10746e-32
- 1.4605e-32   5.52318e-31  1.89933e-29     1.51204e-30  4.84278e-32
- 2.95798e-32  1.09937e-30  3.71527e-29     3.38076e-30  1.10699e-31
- 5.96815e-32  2.17994e-30  7.2397e-29   …  7.51941e-30  2.51712e-31
- 1.19959e-31  4.30615e-30  1.40536e-28     1.66368e-29  5.69341e-31
- 2.40584e-31  8.48716e-30  2.72192e-28     3.6672e-29   1.28297e-30
- 4.81195e-31  1.66817e-29  5.25715e-28     8.05019e-29  2.87922e-30
- 9.59679e-31  3.26929e-29  1.01238e-27     1.75961e-28  6.4339e-30
+ 2.71866e-33  7.16637e-32  1.75342e-30  …  1.09651e-31  4.52726e-33
+ 6.89959e-33  1.78121e-31  4.2682e-30      2.81508e-31  1.18804e-32
+ 1.73973e-32  4.39867e-31  1.03226e-29     7.17711e-31  3.09606e-32
+ 4.35828e-32  1.07919e-30  2.48031e-29     1.81708e-30  8.01215e-32
+ 1.08474e-31  2.63058e-30  5.921e-29       4.56841e-30  2.05899e-31
+ 2.68274e-31  6.37157e-30  1.40451e-28  …  1.14076e-29  5.25524e-31
+ 6.59168e-31  1.53321e-29  3.30988e-28     2.82862e-29  1.33194e-30
+ 1.60918e-30  3.66562e-29  7.74973e-28     6.96529e-29  3.35238e-30
+ 3.90324e-30  8.7077e-29   1.80289e-27     1.70336e-28  8.37966e-30
+ 9.40705e-30  2.05525e-28  4.16731e-27     4.13689e-28  2.08015e-29
  ⋮                                      ⋱               
- 4.66487e-11  3.31533e-10  2.13018e-9      8.26162e-8   1.90719e-8
- 6.93248e-11  4.82539e-10  3.03633e-9      1.17727e-7   2.78046e-8
- 1.02586e-10  6.99311e-10  4.30919e-9      1.66743e-7   4.02905e-8
- 1.51157e-10  1.00909e-9   6.08901e-9      2.34729e-7   5.80285e-8
- 2.2177e-10   1.4498e-9    8.56631e-9   …  3.28419e-7   8.30661e-8
- 3.23969e-10  2.07391e-9   1.19986e-8      4.56688e-7   1.18179e-7
- 4.71217e-10  2.95375e-9   1.67319e-8      6.31146e-7   1.671e-7
- 6.82417e-10  4.18839e-9   2.32292e-8      8.66861e-7   2.34816e-7
- 9.83967e-10  5.91295e-9   3.2106e-8       1.18323e-6   3.27929e-7</code></pre><p>Create contour plots for comparison:</p><pre><code class="language-julia hljs">p3 = contour(x₁, x₂, true_density,
+ 1.37974e-9   6.5113e-9    2.84836e-8      3.09503e-8   7.58096e-9
+ 1.87285e-9   8.69595e-9   3.74267e-8      4.11524e-8   1.0248e-8
+ 2.52978e-9   1.15575e-8   4.8943e-8       5.44378e-8   1.37818e-8
+ 3.40059e-9   1.52872e-8   6.37003e-8      7.16476e-8   1.84391e-8
+ 4.54922e-9   2.01246e-8   8.25186e-8   …  9.38251e-8   2.4545e-8
+ 6.05688e-9   2.63682e-8   1.064e-7        1.22256e-7   3.25082e-8
+ 8.02621e-9   3.43881e-8   1.36561e-7      1.58518e-7   4.28403e-8
+ 1.05862e-8   4.46401e-8   1.74473e-7      2.04532e-7   5.61772e-8
+ 1.3898e-8    5.76837e-8   2.21904e-7      2.62626e-7   7.33052e-8</code></pre><p>Create contour plots for comparison:</p><pre><code class="language-julia hljs">p3 = contour(x₁, x₂, true_density,
             title=&quot;True Banana Density&quot;,
             xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;,
             colormap=:viridis, levels=10)
@@ -200,7 +200,7 @@ println(&quot;Original samples - Mean: &quot;, Distributions.mean(target_samples
 println(&quot;Original samples - Std:  &quot;, Distributions.std(target_samples, dims=1))
 println(&quot;Mapped samples - Mean:   &quot;, Distributions.mean(mapped_banana_samples, dims=1))
 println(&quot;Mapped samples - Std:    &quot;, Distributions.std(mapped_banana_samples, dims=1))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Sample Statistics Comparison:
-Original samples - Mean: [0.027722312690302117 0.8623443812962457]
-Original samples - Std:  [0.9174217011868491 1.5013465001195685]
-Mapped samples - Mean:   [0.052757639633425134 0.9336426543655462]
-Mapped samples - Std:    [0.9157267426101027 1.383429874834738]</code></pre><h3 id="Interpretation"><a class="docs-heading-anchor" href="#Interpretation">Interpretation</a><a id="Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpretation" title="Permalink"></a></h3><p>The sample-based approach learns the transport map by fitting to the empirical distribution of the samples. This method is particularly useful when:</p><ul><li>The target density is unknown or expensive to evaluate</li><li>Only sample data is available from experiments or simulations</li><li>The distribution is complex and difficult to express analytically</li></ul><p>The quality of the approximation depends on:</p><ul><li>The number and quality of the original samples</li><li>The polynomial degree of the transport map</li><li>The optimization algorithm and convergence criteria</li></ul><h3 id="Further-Experiments"><a class="docs-heading-anchor" href="#Further-Experiments">Further Experiments</a><a id="Further-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Experiments" title="Permalink"></a></h3><p>You can experiment with:</p><ul><li>Different polynomial degrees for more complex distributions</li><li>Different rectifier functions (<code>Softplus()</code>, <code>ShiftedELU()</code>)</li><li>More sophisticated MCMC sampling strategies</li><li>Cross-validation techniques to assess generalization</li><li>Different sample sizes to study convergence behavior</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_example/">« Banana: Map from Density</a><a class="docs-footer-nextpage" href="../bod_example/">BOD Parameter Estimation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 15 September 2025 07:10">Monday 15 September 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Original samples - Mean: [-0.022654492033863213 0.7884941866240516]
+Original samples - Std:  [0.8940908314911551 1.469935673750589]
+Mapped samples - Mean:   [-0.016205971371731194 0.8313648757144764]
+Mapped samples - Std:    [0.9224145110018004 1.5598105118532626]</code></pre><h3 id="Interpretation"><a class="docs-heading-anchor" href="#Interpretation">Interpretation</a><a id="Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpretation" title="Permalink"></a></h3><p>The sample-based approach learns the transport map by fitting to the empirical distribution of the samples. This method is particularly useful when:</p><ul><li>The target density is unknown or expensive to evaluate</li><li>Only sample data is available from experiments or simulations</li><li>The distribution is complex and difficult to express analytically</li></ul><p>The quality of the approximation depends on:</p><ul><li>The number and quality of the original samples</li><li>The polynomial degree of the transport map</li><li>The optimization algorithm and convergence criteria</li></ul><h3 id="Further-Experiments"><a class="docs-heading-anchor" href="#Further-Experiments">Further Experiments</a><a id="Further-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Experiments" title="Permalink"></a></h3><p>You can experiment with:</p><ul><li>Different polynomial degrees for more complex distributions</li><li>Different rectifier functions (<code>Softplus()</code>, <code>ShiftedELU()</code>)</li><li>More sophisticated MCMC sampling strategies</li><li>Cross-validation techniques to assess generalization</li><li>Different sample sizes to study convergence behavior</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_example/">« Banana: Map from Density</a><a class="docs-footer-nextpage" href="../bod_example/">BOD Parameter Estimation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 30 September 2025 14:00">Tuesday 30 September 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
