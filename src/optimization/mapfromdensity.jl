@@ -26,22 +26,7 @@ function kldivergence(
     return total
 end
 
-"""
-    kldivergence_gradient(M::PolynomialMap, target::MapTargetDensity, quadrature::AbstractQuadratureWeights)
-
-Compute the gradient of the KL divergence with respect to polynomial map coefficients.
-
-For KL divergence KL = ∫ w(z) [-log π(M(z)) - log |det J_M(z)|] dz,
-the gradient is: ∂KL/∂c = ∫ w(z) [-∇π(M(z))/π(M(z)) · ∂M/∂c - ∂log|det J_M|/∂c] dz
-
-# Arguments
-- `M::PolynomialMap`: The polynomial map
-- `target::MapTargetDensity`: Target density object
-- `quadrature::AbstractQuadratureWeights`: Quadrature points and weights
-
-# Returns
-- `Vector{Float64}`: Gradient vector with respect to all coefficients
-"""
+# Gradient of KL divergence with respect to map coefficients
 function kldivergence_gradient(
         M::PolynomialMap,
         target::AbstractMapDensity,
@@ -83,18 +68,23 @@ function kldivergence_gradient(
 end
 
 """
-    optimize!(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights; use_gradient=true)
+    optimize!(M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
+              optimizer::Optim.AbstractOptimizer = LBFGS(),
+              options::Optim.Options = Optim.Options())
 
-Optimize polynomial map coefficients to minimize KL divergence to target density.
+Optimize polynomial map coefficients to minimize KL divergence to a target density.
 
 # Arguments
-- `M::PolynomialMap`: The polynomial map to optimize
-- `target_density::Function`: Target density function π(x)
-- `quadrature::AbstractQuadratureWeights`: Quadrature points and weights
-- `use_gradient::Bool=true`: Whether to use analytical gradient (much faster)
+- `M::PolynomialMap`: The polynomial map to optimize.
+- `target::AbstractMapDensity`: Target map density object (provides the target density π(x) and any needed operations).
+- `quadrature::AbstractQuadratureWeights`: Quadrature points and weights used for numerical integration.
+
+# Optional keyword arguments:
+- `optimizer::Optim.AbstractOptimizer = LBFGS()`: Optimizer from Optim.jl to use (default: `LBFGS()`).
+- `options::Optim.Options = Optim.Options()`: Options passed to the optimizer (default: `Optim.Options()`).
 
 # Returns
-- Optimization result from Optim.jl
+- Optimization result from Optim.jl. The optimized coefficients are written back into `M`.
 """
 function optimize!(
     M::PolynomialMap,
@@ -105,7 +95,7 @@ function optimize!(
     )
 
     # Define objective function and gradient
-    function objective_with_gradient(a)
+    function objective_function(a)
         setcoefficients!(M, a)
         return kldivergence(M, target, quadrature)
     end
@@ -117,30 +107,11 @@ function optimize!(
 
     # Optimize with analytical gradient
     initial_coefficients = getcoefficients(M)
-    result = optimize(objective_with_gradient, gradient_function!, initial_coefficients, optimizer, options)
+    result = optimize(objective_function, gradient_function!, initial_coefficients, optimizer, options)
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients
 
     return result
-end
-
-
-function optimize!(
-    M::PolynomialMap,
-    samples::AbstractArray{<:Real};
-    optimizer::Optim.AbstractOptimizer = LBFGS(),
-    options::Optim.Options = Optim.Options()
-)
-
-    # Initialize map from samples: set map direction and bounds
-    initializemapfromsamples!(M, samples)
-
-    # Create quadrature weights based on the number of dimensions
-    quadrature = MonteCarloWeights(samples)
-    target = M.reference
-
-    # Optimize the polynomial map
-    return optimize!(M, target, quadrature, optimizer=optimizer, options=options)
 end
 
 # Compute the variance diagnostic for the polynomial map

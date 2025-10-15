@@ -65,7 +65,12 @@ M = PolynomialMap(2, 2, :normal, Softplus())
 # directly from the sample data without requiring the density function. Inside the optimization the map is arranged s.t. the "forward" direction is from the (unknown) target distribution to the standard normal distribution:
 
 res = optimize!(M, target_samples)
-println("Optimization result: ", res)
+
+# We can check the optimization results of the first component:
+#md res[1]
+
+# We can also check the optimization results of the second component:
+#md res[2]
 
 # ### Testing the Map
 #

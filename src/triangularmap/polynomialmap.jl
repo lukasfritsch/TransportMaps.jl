@@ -403,7 +403,7 @@ function getcoefficients(M::PolynomialMap)
     coefficients = Vector{Float64}(undef, numbercoefficients(M))
     counter = 1
     for component in M.components
-        coefficients[counter:counter+length(component.basisfunctions)-1] .= component.coefficients
+        coefficients[counter:counter+length(component.basisfunctions)-1] .= getcoefficients(component)
         counter += length(component.basisfunctions)
     end
     return coefficients
@@ -430,8 +430,9 @@ function numberdimensions(M::PolynomialMap)
 end
 
 function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
+    # Check dimensions
+    @assert size(samples, 2) == numberdimensions(M) "Samples must have the same number of columns as number of map components in M"
     setforwarddirection!(M, :reference)
-
     new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
 
     # save coefficients

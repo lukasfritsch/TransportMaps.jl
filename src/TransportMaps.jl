@@ -116,8 +116,10 @@ include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
 include("triangularmap/polynomialmap.jl")
-include("triangularmap/optimization.jl")
 include("triangularmap/conditionaldensities.jl")
+
+include("optimization/mapfromdensity.jl")
+include("optimization/mapfromsamples.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")

@@ -327,6 +327,15 @@ function setcoefficients!(map_component::PolynomialMapComponent, coefficients::V
     map_component.coefficients .= coefficients
 end
 
+# Allow setting coefficients with any real-valued vector (converts to Float64)
+setcoefficients!(map_component::PolynomialMapComponent, coefficients::AbstractVector{<:Real}) =
+    setcoefficients!(map_component, Vector{Float64}(coefficients))
+
+# Get coefficients from a single PolynomialMapComponent
+function getcoefficients(map_component::PolynomialMapComponent)
+    return copy(map_component.coefficients)
+end
+
 function getmultiindexsets(map_component::PolynomialMapComponent)
     # Stack each basis.multiindexset as a row in a matrix
     multiindices = [basis.multiindexset for basis in map_component.basisfunctions]

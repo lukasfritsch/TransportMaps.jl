@@ -31,7 +31,6 @@ println("Generated $(size(target_samples, 1)) samples")
 M = PolynomialMap(2, 2, :normal, Softplus())
 
 res = optimize!(M, target_samples)
-println("Optimization result: ", res)
 
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
