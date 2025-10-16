@@ -70,23 +70,36 @@ function optimize!(
     samples::Matrix{Float64},
     lm::LinearMap = LinearMap();
     optimizer::Optim.AbstractOptimizer = LBFGS(),
-    options::Optim.Options = Optim.Options()
+    options::Optim.Options = Optim.Options(),
+    test_fraction::Float64 = 0.0,
 )
     @assert size(samples, 2) == numberdimensions(M) "Samples must have the same number of columns as number of map components in M"
     # Standardize samples using linear map
     samples = evaluate(lm, samples)
 
-    # Initialize map from samples: set map direction and bounds
+    # Initialize map from samples: set map direction and bounds (use full samples)
     initializemapfromsamples!(M, samples)
+
+    # Prepare train/test split
+    train_samples, test_samples = _test_train_split(samples, test_fraction)
 
     # Store optimization results
     results = Vector{Any}(undef, numberdimensions(M))
 
-    # Optimize each component sequentially
+    # Optimize each component sequentially using the training split
     for k in 1:numberdimensions(M)
         component = M[k]
         println("Optimizing component $(k) / $(numberdimensions(M))")
-        results[k] = optimize!(component, samples[:, 1:k], optimizer, options)
+        results[k] = optimize!(component, train_samples[:, 1:k], optimizer, options)
+
+        # Compute validation objective
+        if !isempty(test_samples)
+            mean_train = results[k].minimum / size(train_samples, 1)
+            mean_test = objective(component, test_samples[:, 1:k]) / size(test_samples, 1)
+
+            println("  Train for $k: ", mean_train)
+            println("  Test  for $k: ", mean_test)
+        end
     end
 
     return results
@@ -120,4 +133,23 @@ function optimize!(
     return result
 end
 
-# Todo (maybe): cross-validation and standardization of samples to N(0,1)
+# Helper function to create train/test split
+function _test_train_split(samples::Matrix{Float64}, test_fraction::Float64)
+    @assert 0.0 <= test_fraction < 1.0 "test_fraction must be in [0, 1)"
+    n_points = size(samples, 1)
+
+    n_test = test_fraction == 0.0 ? 0 : max(1, round(Int, test_fraction * n_points))
+
+    train_idx = collect(1:n_points)
+    test_idx = Int[]
+    if n_test > 0
+        idx = randperm(n_points)
+        test_idx = idx[1:n_test]
+        train_idx = idx[n_test+1:end]
+    end
+
+    train_samples = samples[train_idx, :]
+    test_samples = n_test > 0 ? samples[test_idx, :] : Array{Float64}(undef, 0, size(samples, 2))
+
+    return train_samples, test_samples
+end
