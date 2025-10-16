@@ -56,6 +56,7 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 # Arguments
 - `M::PolynomialMap`: The polynomial map to optimize.
 - `samples::Matrix{Float64}`: A matrix of sample data used to initialize and fit the map. Columns are interpreted as components/dimensions and rows as individual sample points.
+- `lm::LinearMap`: A linear map used to standardize the samples before optimization (default: identity map).
 
 # Optional keyword arguments:
 - `optimizer::Optim.AbstractOptimizer = LBFGS()`: Optimizer from Optim.jl to use (default: `LBFGS()`).
@@ -66,11 +67,15 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 """
 function optimize!(
     M::PolynomialMap,
-    samples::Matrix{Float64};
+    samples::Matrix{Float64},
+    lm::LinearMap = LinearMap();
     optimizer::Optim.AbstractOptimizer = LBFGS(),
     options::Optim.Options = Optim.Options()
 )
     @assert size(samples, 2) == numberdimensions(M) "Samples must have the same number of columns as number of map components in M"
+    # Standardize samples using linear map
+    samples = evaluate(lm, samples)
+
     # Initialize map from samples: set map direction and bounds
     initializemapfromsamples!(M, samples)
 
@@ -114,3 +119,5 @@ function optimize!(
 
     return result
 end
+
+# Todo (maybe): cross-validation and standardization of samples to N(0,1)

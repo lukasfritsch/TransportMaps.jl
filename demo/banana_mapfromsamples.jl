@@ -28,16 +28,20 @@ println("Generating samples from banana distribution...")
 target_samples = generate_banana_samples(num_samples)
 println("Generated $(size(target_samples, 1)) samples")
 
+L = LinearMap(target_samples)
+
 M = PolynomialMap(2, 2, :normal, Softplus())
 
-res = optimize!(M, target_samples)
+res = optimize!(M, target_samples, L)
+
+C = ComposedMap(L, M)
 
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
 
-mapped_samples = evaluate(M, new_samples)
+mapped_samples = evaluate(C, new_samples)
 
-mapped_banana_samples = inverse(M, norm_samples)
+mapped_banana_samples = inverse(C, norm_samples)
 
 p11 = scatter(new_samples[:, 1], new_samples[:, 2],
             label="Original Samples", alpha=0.5, color=1,
@@ -49,7 +53,7 @@ scatter!(p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
             title="Transport Map Generated Samples",
             xlabel="x₁", ylabel="x₂")
 
-plot(p11, size=(800, 400))
+plot(p11, size=(600, 400))
 
 p12 = scatter(norm_samples[:, 1], norm_samples[:, 2],
             label="Original Samples", alpha=0.5, color=1,
@@ -61,14 +65,14 @@ scatter!(p12, mapped_samples[:, 1], mapped_samples[:, 2],
             title="Transport Map Generated Samples",
             xlabel="x₁", ylabel="x₂")
 
-plot(p12, size=(800, 400))
+plot(p12, size=(600, 400), aspect_ratio=1)
 
 x₁ = range(-3, 3, length=100)
 x₂ = range(-2.5, 4.0, length=100)
 
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
 
-learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]
+learned_density = [pullback(C, [x1, x2]) for x2 in x₂, x1 in x₁]
 
 p3 = contour(x₁, x₂, true_density,
             title="True Banana Density",
