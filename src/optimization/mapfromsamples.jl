@@ -49,7 +49,8 @@ end
 """
     optimize!(M::PolynomialMap, samples::Matrix{Float64};
               optimizer::Optim.AbstractOptimizer = LBFGS(),
-              options::Optim.Options = Optim.Options())
+              options::Optim.Options = Optim.Options(),
+              test_fraction::Float64 = 0.0)
 
 Optimize polynomial map coefficients to minimize KL divergence to a target density.
 
@@ -61,6 +62,7 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 # Optional keyword arguments:
 - `optimizer::Optim.AbstractOptimizer = LBFGS()`: Optimizer from Optim.jl to use (default: `LBFGS()`).
 - `options::Optim.Options = Optim.Options()`: Options passed to the optimizer (default: `Optim.Options()`).
+- `test_fraction::Float64 = 0.0`: Fraction of samples to hold out for testing/validation (default: 0.0, i.e. no test split).
 
 # Returns
 - Optimization result from Optim.jl. The optimized coefficients are written back into `M`.
