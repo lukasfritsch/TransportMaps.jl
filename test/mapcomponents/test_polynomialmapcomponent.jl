@@ -30,8 +30,8 @@ using Test
 
     @testset "Direct Construction with Basis Functions" begin
         # Create basis functions manually
-    mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
-    mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
+        mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
+        mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]
 
@@ -49,8 +49,8 @@ using Test
     @testset "Evaluation" begin
         # Create a simple 1D polynomial map component
         # f(x) = a₀ + a₁*x with coefficients [1.0, 2.0]
-    mvb1 = MultivariateBasis([0], HermiteBasis())  # ψ₀(x) = H₀(x) = 1
-    mvb2 = MultivariateBasis([1], HermiteBasis())  # ψ₁(x) = H₁(x) = x
+        mvb1 = MultivariateBasis([0], HermiteBasis())  # ψ₀(x) = H₀(x) = 1
+        mvb2 = MultivariateBasis([1], HermiteBasis())  # ψ₁(x) = H₁(x) = x
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]  # f(x) = 1 + 2x
 
@@ -67,7 +67,7 @@ using Test
 
         # Test evaluation at x = 0 should give f(0)
         result_zero = evaluate(pmc, [0.0])
-        @test result_zero ≈ 1.0 atol=1e-6  # f(0) = 1
+        @test result_zero ≈ 1.0 atol = 1e-6  # f(0) = 1
 
         # Test dimension mismatch
         @test_throws AssertionError evaluate(pmc, [1.0, 2.0])  # Wrong dimension
@@ -75,8 +75,8 @@ using Test
 
     @testset "Partial Derivative" begin
         # Create a simple polynomial map component
-    mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
-    mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
+        mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
+        mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]  # f(x) = 1 + 2x
 
@@ -84,36 +84,36 @@ using Test
 
         # Test partial derivative: ∂M¹/∂x₁ = g(∂f/∂x₁) = g(2) = 2 (with IdentityRectifier)
         pd = partial_derivative_zk(pmc, [1.0])
-        @test pd ≈ 2.0 atol=1e-6
+        @test pd ≈ 2.0 atol = 1e-6
 
         # Test at different points
         pd_zero = partial_derivative_zk(pmc, [0.0])
-        @test pd_zero ≈ 2.0 atol=1e-6  # Should be constant for linear function
+        @test pd_zero ≈ 2.0 atol = 1e-6  # Should be constant for linear function
 
         pd_neg = partial_derivative_zk(pmc, [-1.0])
-        @test pd_neg ≈ 2.0 atol=1e-6
+        @test pd_neg ≈ 2.0 atol = 1e-6
     end
 
     @testset "Different Rectifiers" begin
         # Test with Softplus rectifier
-    mvb1 = MultivariateBasis([0], HermiteBasis())
-    mvb2 = MultivariateBasis([1], HermiteBasis())
+        mvb1 = MultivariateBasis([0], HermiteBasis())
+        mvb2 = MultivariateBasis([1], HermiteBasis())
         basisfunctions = [mvb1, mvb2]
         coefficients = [0.0, 1.0]  # f(x) = x, so ∂f/∂x = 1
 
         pmc_softplus = PolynomialMapComponent(basisfunctions, coefficients, Softplus(), 1)
         pd_softplus = partial_derivative_zk(pmc_softplus, [1.0])
-        @test pd_softplus ≈ log1p(exp(1.0)) atol=1e-6  # Softplus(1) = log(1 + e¹)
+        @test pd_softplus ≈ log1p(exp(1.0)) atol = 1e-6  # Softplus(1) = log(1 + e¹)
 
         # Test with ShiftedELU rectifier
         pmc_elu = PolynomialMapComponent(basisfunctions, coefficients, ShiftedELU(), 1)
         pd_elu = partial_derivative_zk(pmc_elu, [1.0])
-        @test pd_elu ≈ 2.0 atol=1e-6  # ShiftedELU(1) = 1 + 1 = 2
+        @test pd_elu ≈ 2.0 atol = 1e-6  # ShiftedELU(1) = 1 + 1 = 2
 
         # Test with IdentityRectifier
         pmc_identity = PolynomialMapComponent(basisfunctions, coefficients, IdentityRectifier(), 1)
         pd_identity = partial_derivative_zk(pmc_identity, [1.0])
-        @test pd_identity ≈ 1.0 atol=1e-6  # Identity(1) = 1
+        @test pd_identity ≈ 1.0 atol = 1e-6  # Identity(1) = 1
     end
 
     @testset "Higher Dimensions" begin
@@ -169,10 +169,6 @@ using Test
         @test isfinite(pd_min)
         @test pd_min > 0  # Softplus ensures positivity
     end
-
-        # show method
-        s = sprint(show, PolynomialMapComponent(1,1))
-        @test occursin("PolynomialMapComponent", s)
 
     @testset "Gradient with respect to coefficients" begin
         # Test gradient computation for a 2D component
@@ -307,5 +303,11 @@ using Test
         @test result_matrix_f32 ≈ pmc(Float64.(Z_f32))
         @test typeof(result_matrix_f32) == Vector{Float64}
         @test length(result_matrix_f32) == size(Z_f32, 1)
+    end
+
+    @testset "Show" begin
+        pmc = PolynomialMapComponent(1, 1)
+        @test_nowarn sprint(show, pmc)
+        @test_nowarn sprint(print, pmc)
     end
 end

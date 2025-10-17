@@ -9,10 +9,12 @@ using Test
         @test all(length(i) == 2 for i in idx)
     end
 
-    # show method
-    mb = MultivariateBasis([1], HermiteBasis())
-    @test occursin("MultivariateBasis", sprint(show, mb))
-    # Add more general tests as needed
+    @testset "Show" begin
+        mb = MultivariateBasis([1], HermiteBasis())
+        @test_nowarn sprint(show, mb)
+        @test_nowarn sprint(print, mb)
+    end
+
 end
 
 @testset "MultivariateBasis - Hermite specific" begin

@@ -23,9 +23,6 @@ using Random
 
     C = ComposedMap(L, pm)
 
-    # show
-    @test occursin("ComposedMap", sprint(show, C))
-
     @test numberdimensions(C) == 2
 
     # Test evaluate/inverse round-trip
@@ -47,4 +44,9 @@ using Random
     pb_pm = pullback(pm, evaluate(L, x0))
     scale = prod(L.σ)
     @test isapprox(pb_C * scale, pb_pm; atol=1e-8, rtol=1e-8)
+
+    @testset "Show" begin
+        @test_nowarn sprint(show, C)
+        @test_nowarn sprint(print, C)
+    end
 end

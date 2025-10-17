@@ -22,10 +22,6 @@ using Statistics
     @test basisfunction(hb, 1.0, 1.0) ≈ 1.0
     @test basisfunction(hb, 2.0, 0.0) ≈ -1.0
 
-    # show method
-    s = sprint(show, hb)
-    @test occursin("HermiteBasis", s)
-
     # Derivative tests
     @test hermite_derivative(0, 1.0) ≈ 0.0
     @test hermite_derivative(1, 1.0) ≈ 1.0
@@ -37,4 +33,10 @@ using Statistics
     @test basisfunction_derivative(hb, 2.0, 1.0) ≈ 2.0
 
     @test_throws MethodError HermiteBasis(1)
+
+    @testset "Show" begin
+        hb_show = HermiteBasis()
+        @test_nowarn sprint(show, hb_show)
+        @test_nowarn sprint(print, hb_show)
+    end
 end

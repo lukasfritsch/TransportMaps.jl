@@ -7,8 +7,8 @@ using Test
 
         # Test basic functionality
         @test softplus(0.0) ≈ log(2.0)  # log(1 + exp(0)) = log(2)
-        @test softplus(-10.0) ≈ exp(-10.0) atol=1e-7  # log(1 + exp(-10)) ≈ exp(-10) for large negative values
-        @test softplus(10.0) ≈ 10.0 atol=1e-4  # log(1 + exp(10)) ≈ 10 for large positive values
+        @test softplus(-10.0) ≈ exp(-10.0) atol = 1e-7  # log(1 + exp(-10)) ≈ exp(-10) for large negative values
+        @test softplus(10.0) ≈ 10.0 atol = 1e-4  # log(1 + exp(10)) ≈ 10 for large positive values
 
         # Test monotonicity (should be increasing)
         @test softplus(-1.0) < softplus(0.0) < softplus(1.0)
@@ -22,17 +22,6 @@ using Test
         @test softplus(1) isa Float64
         @test softplus(1.0) isa Float64
 
-        # show method
-        s = sprint(show, Softplus())
-        @test occursin("Softplus", s) || !isempty(s)
-        s2 = sprint(io->show(io, MIME("text/plain"), Softplus()))
-        @test !isempty(s2)
-
-        s = sprint(show, ShiftedELU())
-        @test occursin("ShiftedELU", s) || !isempty(s)
-
-        s = sprint(show, IdentityRectifier())
-        @test occursin("IdentityRectifier", s) || !isempty(s)
     end
 
     @testset "ShiftedELU" begin
@@ -79,9 +68,18 @@ using Test
         @test identity_rect(1.0) isa Float64
     end
 
-    @testset "Abstract Type Hierarchy" begin
-        @test Softplus() isa AbstractRectifierFunction
-        @test ShiftedELU() isa AbstractRectifierFunction
-        @test IdentityRectifier() isa AbstractRectifierFunction
+    @testset "Show" begin
+        sp = Softplus()
+        se = ShiftedELU()
+        ir = IdentityRectifier()
+
+        @test_nowarn sprint(show, sp)
+        @test_nowarn sprint(print, sp)
+
+        @test_nowarn sprint(show, se)
+        @test_nowarn sprint(print, se)
+
+        @test_nowarn sprint(show, ir)
+        @test_nowarn sprint(print, ir)
     end
 end

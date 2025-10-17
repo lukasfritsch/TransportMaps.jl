@@ -5,7 +5,7 @@ using Plots
 
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 
-num_samples = 500
+num_samples = 1000
 
 function generate_banana_samples(n_samples::Int)
     samples = Matrix{Float64}(undef, n_samples, 2)

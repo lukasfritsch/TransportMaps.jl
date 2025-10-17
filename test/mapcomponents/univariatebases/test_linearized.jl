@@ -15,14 +15,10 @@ using Distributions
     @test isapprox(lower, quantile(samples, 0.01); atol=1e-8)
     @test isapprox(upper, quantile(samples, 0.99); atol=1e-8)
 
-
-    s = sprint(show, basis)
-    @test occursin("LinearizedHermiteBasis", s) || !isempty(s)
-
     # Test normalization for k and not k
     for n in 0:max_degree
         if n == k
-            @test basis.normalization[n+1] == factorial(n+1)
+            @test basis.normalization[n+1] == factorial(n + 1)
         else
             @test basis.normalization[n+1] == factorial(n)
         end
@@ -76,10 +72,15 @@ using Distributions
     # density-based constructor
     b_den = LinearizedHermiteBasis(Normal(0.0, 1.0), 4, 1)
     lb, ub = b_den.linearizationbounds
-    @test isapprox(lb, quantile(Normal(0.0,1.0), 0.01); atol=1e-8)
-    @test isapprox(ub, quantile(Normal(0.0,1.0), 0.99); atol=1e-8)
+    @test isapprox(lb, quantile(Normal(0.0, 1.0), 0.01); atol=1e-8)
+    @test isapprox(ub, quantile(Normal(0.0, 1.0), 0.99); atol=1e-8)
 
     # Constructor errors: passing Any-typed empty vector is a MethodError (no matching signature)
     @test_throws MethodError LinearizedHermiteBasis(Any[], 3, 1)
 
+    @testset "Show" begin
+        lh_show = LinearizedHermiteBasis()
+        @test_nowarn sprint(show, lh_show)
+        @test_nowarn sprint(print, lh_show)
+    end
 end

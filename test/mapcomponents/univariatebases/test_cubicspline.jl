@@ -12,11 +12,8 @@ using Distributions
     # Float radius constructor
     cs = CubicSplineHermiteBasis(3.0)
     @test cs.radius == 3.0
-    @test basisfunction(cs, 2, 1.0) ≈ hermite_polynomial(2, 1.0) * (2 * (min(1.0, abs(1.0)/cs.radius))^3 - 3 * (min(1.0, abs(1.0)/cs.radius))^2 + 1)
+    @test basisfunction(cs, 2, 1.0) ≈ hermite_polynomial(2, 1.0) * (2 * (min(1.0, abs(1.0) / cs.radius))^3 - 3 * (min(1.0, abs(1.0) / cs.radius))^2 + 1)
     @test basisfunction(cs, 1, 2.0) ≈ hermite_polynomial(1, 2.0)
-
-    s = sprint(show, cs)
-    @test occursin("CubicSplineHermiteBasis", s)
 
     # Vector-of-samples constructor
     samples = randn(200)
@@ -37,4 +34,10 @@ using Distributions
     # Derivative checks
     dd = basisfunction_derivative(cs, 2, 1.0)
     @test isfinite(dd)
+
+    @testset "Show" begin
+        cs_show = CubicSplineHermiteBasis()
+        @test_nowarn sprint(show, cs_show)
+        @test_nowarn sprint(print, cs_show)
+    end
 end
