@@ -35,27 +35,27 @@ quadrature = GaussHermiteWeights(10, 2)</code></pre><p>Set optimization options 
 res_gd = optimize!(M_gd, target, quadrature; optimizer = GradientDescent(), options = opts_trace)
 println(res_gd)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
      0     3.397270e+00     4.787106e-01
- * time: 5.698204040527344e-5
+ * time: 0.00011610984802246094
     20     2.850583e+00     4.636259e-02
- * time: 1.889563798904419
+ * time: 1.954016923904419
     40     2.843777e+00     1.929781e-02
- * time: 3.132523775100708
+ * time: 3.2509379386901855
     60     2.841951e+00     1.418934e-02
- * time: 4.399061918258667
+ * time: 4.5701189041137695
     80     2.840976e+00     1.062491e-02
- * time: 5.667395830154419
+ * time: 5.890042066574097
    100     2.840432e+00     8.037175e-03
- * time: 6.936779975891113
+ * time: 7.212553977966309
    120     2.840124e+00     6.146411e-03
- * time: 8.210355997085571
+ * time: 8.532999038696289
    140     2.839946e+00     4.739998e-03
- * time: 9.479667901992798
+ * time: 9.853743076324463
    160     2.839841e+00     3.677012e-03
- * time: 10.745664834976196
+ * time: 11.1736319065094
    180     2.839779e+00     2.864831e-03
- * time: 12.013236999511719
+ * time: 12.495481967926025
    200     2.839741e+00     2.239348e-03
- * time: 13.283267974853516
+ * time: 13.814557075500488
  * Status: failure (reached maximum number of iterations)
 
  * Candidate solution
@@ -72,18 +72,18 @@ println(res_gd)</code></pre><pre class="documenter-example-output"><code class="
     |g(x)|                 = 2.24e-03 ≰ 1.0e-08
 
  * Work counters
-    Seconds run:   13  (vs limit Inf)
+    Seconds run:   14  (vs limit Inf)
     Iterations:    200
     f(x) calls:    500
     ∇f(x) calls:   500</code></pre><h3 id="Conjugate-Gradient"><a class="docs-heading-anchor" href="#Conjugate-Gradient">Conjugate Gradient</a><a id="Conjugate-Gradient-1"></a><a class="docs-heading-anchor-permalink" href="#Conjugate-Gradient" title="Permalink"></a></h3><p>Conjugate Gradient improves upon basic gradient descent by using conjugate directions, which can accelerate convergence for large-scale or quadratic problems. It requires gradient information but not the Hessian.</p><pre><code class="language-julia hljs">M_cg = PolynomialMap(2, 2)
 res_cg = optimize!(M_cg, target, quadrature; optimizer = ConjugateGradient(), options = opts_trace)
 println(res_cg)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
      0     3.397270e+00     4.787106e-01
- * time: 0.00010013580322265625
+ * time: 0.00014209747314453125
     20     2.839683e+00     4.660320e-04
- * time: 0.8391280174255371
+ * time: 0.8529090881347656
     40     2.839682e+00     2.358450e-07
- * time: 2.3356411457061768
+ * time: 2.3745059967041016
  * Status: success
 
  * Candidate solution
@@ -108,27 +108,27 @@ res_nm = optimize!(M_nm, target, quadrature; optimizer = NelderMead(), options =
 println(res_nm)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value    √(Σ(yᵢ-ȳ)²)/n
 ------   --------------    --------------
      0     3.385576e+00     6.605357e-03
- * time: 8.797645568847656e-5
+ * time: 0.00015616416931152344
     20     3.325067e+00     1.181961e-02
- * time: 0.13968801498413086
+ * time: 0.14074110984802246
     40     3.217121e+00     1.767829e-02
- * time: 0.3017129898071289
+ * time: 0.30493712425231934
     60     3.145469e+00     4.181386e-03
- * time: 0.429811954498291
+ * time: 0.43340015411376953
     80     3.117130e+00     5.447396e-03
- * time: 0.5503149032592773
+ * time: 0.5540502071380615
    100     3.093404e+00     3.317695e-03
- * time: 0.6578788757324219
+ * time: 0.6668879985809326
    120     3.069923e+00     3.715479e-03
- * time: 0.7565288543701172
+ * time: 0.7623050212860107
    140     3.051873e+00     3.572733e-03
- * time: 0.8771288394927979
+ * time: 0.884235143661499
    160     3.038170e+00     3.071201e-03
- * time: 0.9926888942718506
+ * time: 1.0011310577392578
    180     3.021624e+00     2.623475e-03
- * time: 1.1044859886169434
+ * time: 1.1146972179412842
    200     3.003035e+00     3.663402e-03
- * time: 1.2210500240325928
+ * time: 1.2313079833984375
  * Status: failure (reached maximum number of iterations)
 
  * Candidate solution
@@ -147,7 +147,7 @@ println(res_nm)</code></pre><pre class="documenter-example-output"><code class="
 res_bfgs = optimize!(M_bfgs, target, quadrature; optimizer = BFGS(), options = opts_trace)
 println(res_bfgs)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
      0     3.397270e+00     4.787106e-01
- * time: 8.702278137207031e-5
+ * time: 0.00017189979553222656
  * Status: success
 
  * Candidate solution
@@ -171,7 +171,7 @@ println(res_bfgs)</code></pre><pre class="documenter-example-output"><code class
 res_lbfgs = optimize!(M_lbfgs, target, quadrature; optimizer = LBFGS(), options = opts_trace)
 println(res_lbfgs)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
      0     3.397270e+00     4.787106e-01
- * time: 0.0001671314239501953
+ * time: 0.00011610984802246094
  * Status: success
 
  * Candidate solution
@@ -219,4 +219,4 @@ plot!([res_lbfgs.trace[i].iteration for i in 1:length(res_lbfgs.trace)], lw=2,
 plot!(xaxis=:log, yaxis=:log, xlabel=&quot;Iteration&quot;, ylabel=&quot;Gradient norm&quot;,
     title=&quot;Convergence of different optimizers&quot;, xlims=(1, 200),
     legend=:bottomleft)</code></pre><p><img src="../optimization-conv.svg" alt="Optimization Convergence"/></p><p>It becomes clear, that LBFGS and BFGS are the most efficient optimizers in this case, while Nelder-Mead struggles to keep up.</p><h2 id="Map-from-samples"><a class="docs-heading-anchor" href="#Map-from-samples">Map-from-samples</a><a id="Map-from-samples-1"></a><a class="docs-heading-anchor-permalink" href="#Map-from-samples" title="Permalink"></a></h2><p>Another strategy of constructing a transport map is to use samples of the target density, as seen in <a href="../../Examples/banana_mapfromsamples/#Banana:-Map-from-Samples">Banana: Map from Samples</a>. The formulation of transport map estimation in this way has the benefit to transform the problem into a convex optimization problem, when reference density is log-concave [<a href="../../references/#marzouk2016">1</a>]. Since we can choose the reference density, we can leverage this property to simplify the optimization process.</p><p>When the map is constructed from samples, the optimization problem is formulated by minimizing the Kullback-Leibler divergence between the pushforward of the reference density and the empirical distribution of the samples. We denote the transport map by <span>$S$</span>, which pushes forward the target distribution to the reference distribution. This leads to the following optimization problem:</p><p class="math-container">\[\min_{\boldsymbol{a}} -\frac{1}{M} \sum_{i=1}^{M} \log \rho\left(S(\boldsymbol{a}, \boldsymbol{x}_i)\right) - \log \left|\det \nabla S(\boldsymbol{a}, \boldsymbol{x}_i)\right|\]</p><p>where <span>$\{\boldsymbol{x}_i\}_{i=1}^M$</span> are samples from the target distribution, and <span>$\rho(\cdot)$</span> is the density of the reference distribution.</p><p>To perform the optimization, we can use the same <code>optimize!</code> function as before, but now we pass samples instead of a target density and quadrature scheme. Similarly, we can specify the optimizer and options:</p><pre><code class="language-julia hljs">optimize!(M::PolynomialMap, samples::AbstractArray{&lt;:Real};
-  optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../quadrature_methods/">« Quadrature Methods</a><a class="docs-footer-nextpage" href="../conditional_densities/">Conditional Densities and Samples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 17 October 2025 08:37">Friday 17 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../quadrature_methods/">« Quadrature Methods</a><a class="docs-footer-nextpage" href="../conditional_densities/">Conditional Densities and Samples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 17 October 2025 08:46">Friday 17 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
