@@ -309,5 +309,6 @@ using Test
         pmc = PolynomialMapComponent(1, 1)
         @test_nowarn sprint(show, pmc)
         @test_nowarn sprint(print, pmc)
+        @test_nowarn display(pmc)
     end
 end

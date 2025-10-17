@@ -13,6 +13,7 @@ using Test
         mb = MultivariateBasis([1], HermiteBasis())
         @test_nowarn sprint(show, mb)
         @test_nowarn sprint(print, mb)
+        @test_nowarn display(mb)
     end
 
 end

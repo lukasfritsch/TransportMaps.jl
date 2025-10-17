@@ -421,7 +421,11 @@ end
 
 # Number of coefficients in the polynomial map
 function numbercoefficients(M::PolynomialMap)
-    return sum(length(component.coefficients) for component in M.components)
+    if numberdimensions(M) == 0
+        return 0
+    else
+        return sum(length(component.coefficients) for component in M.components)
+    end
 end
 
 # Number of dimensions in the polynomial map

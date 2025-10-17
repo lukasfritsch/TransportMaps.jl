@@ -18,5 +18,6 @@ using Test
         gb_show = GaussianWeightedHermiteBasis()
         @test_nowarn sprint(show, gb_show)
         @test_nowarn sprint(print, gb_show)
+        @test_nowarn display(gb_show)
     end
 end

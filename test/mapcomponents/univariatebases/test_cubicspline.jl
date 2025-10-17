@@ -39,5 +39,6 @@ using Distributions
         cs_show = CubicSplineHermiteBasis()
         @test_nowarn sprint(show, cs_show)
         @test_nowarn sprint(print, cs_show)
+        @test_nowarn display(cs_show)
     end
 end

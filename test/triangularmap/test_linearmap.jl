@@ -41,5 +41,6 @@ using Random
         L = LinearMap()
         @test_nowarn sprint(show, L)
         @test_nowarn sprint(print, L)
+        @test_nowarn display(L)
     end
 end

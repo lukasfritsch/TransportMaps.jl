@@ -38,5 +38,6 @@ using Statistics
         hb_show = HermiteBasis()
         @test_nowarn sprint(show, hb_show)
         @test_nowarn sprint(print, hb_show)
+        @test_nowarn display(hb_show)
     end
 end

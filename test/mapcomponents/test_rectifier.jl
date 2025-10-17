@@ -75,11 +75,14 @@ using Test
 
         @test_nowarn sprint(show, sp)
         @test_nowarn sprint(print, sp)
+        @test_nowarn display(sp)
 
         @test_nowarn sprint(show, se)
         @test_nowarn sprint(print, se)
+        @test_nowarn display(se)
 
         @test_nowarn sprint(show, ir)
         @test_nowarn sprint(print, ir)
+        @test_nowarn display(ir)
     end
 end

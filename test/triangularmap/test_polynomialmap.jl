@@ -804,5 +804,12 @@ using LinearAlgebra
         pm = PolynomialMap(2, 2)
         @test_nowarn sprint(show, pm)
         @test_nowarn sprint(print, pm)
+        @test_nowarn display(pm)
+
+        pm_empty = PolynomialMap(0, 0)
+        @test numbercoefficients(pm_empty) == 0
+        @test_nowarn sprint(show, pm_empty)
+        @test_nowarn sprint(print, pm_empty)
+        @test_nowarn display(pm_empty)
     end
 end

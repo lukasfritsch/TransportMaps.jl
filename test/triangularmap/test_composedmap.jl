@@ -45,8 +45,15 @@ using Random
     scale = prod(L.σ)
     @test isapprox(pb_C * scale, pb_pm; atol=1e-8, rtol=1e-8)
 
+    # Test pullback scaling: pullback(Composed) == pullback(Polynomial) / prod(σ) for matrix input
+    pb_C = pullback(C, X)
+    pb_pm = pullback(pm, evaluate(L, X))
+    scale = prod(L.σ)
+    @test isapprox(pb_C * scale, pb_pm; atol=1e-8, rtol=1e-8)
+
     @testset "Show" begin
         @test_nowarn sprint(show, C)
         @test_nowarn sprint(print, C)
+        @test_nowarn display(C)
     end
 end

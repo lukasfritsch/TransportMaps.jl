@@ -44,7 +44,9 @@ using Distributions
 
         @test_nowarn sprint(show, target)
         @test_nowarn sprint(print, target)
+        @test_nowarn display(target)
         @test_nowarn sprint(show, ref)
         @test_nowarn sprint(print, ref)
+        @test_nowarn display(ref)
     end
 end

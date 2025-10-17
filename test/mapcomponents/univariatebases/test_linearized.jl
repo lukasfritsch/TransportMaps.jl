@@ -82,5 +82,6 @@ using Distributions
         lh_show = LinearizedHermiteBasis()
         @test_nowarn sprint(show, lh_show)
         @test_nowarn sprint(print, lh_show)
+        @test_nowarn display(lh_show)
     end
 end

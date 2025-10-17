@@ -134,18 +134,22 @@ using Test
         ghw = GaussHermiteWeights(3, 1)
         @test_nowarn sprint(show, ghw)
         @test_nowarn sprint(print, ghw)
+        @test_nowarn display(ghw)
 
         mcw = MonteCarloWeights(10, 1)
         @test_nowarn sprint(show, mcw)
         @test_nowarn sprint(print, mcw)
+        @test_nowarn display(mcw)
 
         lhw = LatinHypercubeWeights(5, 1)
         @test_nowarn sprint(show, lhw)
         @test_nowarn sprint(print, lhw)
+        @test_nowarn display(lhw)
 
         ssw = SparseSmolyakWeights(2, 1)
         @test_nowarn sprint(show, ssw)
         @test_nowarn sprint(print, ssw)
+        @test_nowarn display(ssw)
     end
 
     @testset "SparseSmolyakWeights" begin
