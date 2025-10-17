@@ -20,6 +20,7 @@ abstract type AbstractMultivariateBasis end
 abstract type AbstractRectifierFunction end
 abstract type AbstractQuadratureWeights end
 abstract type AbstractMapDensity end
+abstract type AbstractComposedMap end
 
 # Export abstract types
 export AbstractBasisFunction
@@ -30,6 +31,7 @@ export AbstractTriangularMap
 export AbstractRectifierFunction
 export AbstractQuadratureWeights
 export AbstractMapDensity
+export AbstractComposedMap
 
 # Export functions/methods
 # Basis functions and evaluation
@@ -92,6 +94,8 @@ export GaussianWeightedHermiteBasis
 export RadialBasis
 
 export MultivariateBasis
+export LinearMap
+export ComposedMap
 export PolynomialMapComponent
 export PolynomialMap
 export Softplus
@@ -110,14 +114,18 @@ include("mapcomponents/univariatebases/hermitebasis.jl")
 include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
 include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
 include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
-include("mapcomponents/univariatebases/radialbasis.jl")
 
 include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
+
 include("triangularmap/polynomialmap.jl")
-include("triangularmap/optimization.jl")
 include("triangularmap/conditionaldensities.jl")
+include("triangularmap/linearmap.jl")
+include("triangularmap/composedmap.jl")
+
+include("optimization/mapfromdensity.jl")
+include("optimization/mapfromsamples.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")

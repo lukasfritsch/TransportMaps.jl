@@ -46,6 +46,9 @@ using LinearAlgebra
         setcoefficients!(pm_5d.components[4], [1.0, 0.15, 0.1, 0.05, 0.025])  # 5 coefficients for 4D degree 1
         setcoefficients!(pm_5d.components[5], [1.0, 0.1, 0.08, 0.04, 0.02, 0.01])  # 6 coefficients for 5D degree 1
         @test length(pm_5d.components) == 5
+
+        # Test error handling
+        @test_throws MethodError PolynomialMap(1, 1, referencetype = :uniform)
     end
 
     @testset "Direct Construction with Components" begin
@@ -795,5 +798,18 @@ using LinearAlgebra
         @test typeof(result_matrix_f32) == Matrix{Float64}
         @test size(result_matrix_f32, 2) == length(pm)
         @test size(result_matrix_f32, 1) == size(Z_f32, 1)
+    end
+
+    @testset "Show" begin
+        pm = PolynomialMap(2, 2)
+        @test_nowarn sprint(show, pm)
+        @test_nowarn sprint(print, pm)
+        @test_nowarn display(pm)
+
+        pm_empty = PolynomialMap(0, 0)
+        @test numbercoefficients(pm_empty) == 0
+        @test_nowarn sprint(show, pm_empty)
+        @test_nowarn sprint(print, pm_empty)
+        @test_nowarn display(pm_empty)
     end
 end
