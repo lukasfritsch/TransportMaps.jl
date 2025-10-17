@@ -37,17 +37,17 @@ Generated 500 samples</code></pre><h3 id="Creating-the-Transport-Map"><a class="
 println(&quot;Optimization result: &quot;, res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Optimization result:  * Status: success
 
  * Candidate solution
-    Final objective value:     2.722059e+00
+    Final objective value:     2.601890e+00
 
  * Found with
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 1.06e-08 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 4.35e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 1.78e-15 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 6.53e-16 ≰ 0.0e+00
-    |g(x)|                 = 1.43e-09 ≤ 1.0e-08
+    |x - x&#39;|               = 2.71e-08 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 9.89e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 0.00e+00 ≤ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 0.00e+00 ≤ 0.0e+00
+    |g(x)|                 = 8.82e-10 ≤ 1.0e-08
 
  * Work counters
     Seconds run:   5  (vs limit Inf)
@@ -55,66 +55,66 @@ println(&quot;Optimization result: &quot;, res)</code></pre><pre class="document
     f(x) calls:    43
     ∇f(x) calls:   43</code></pre><h3 id="Testing-the-Map"><a class="docs-heading-anchor" href="#Testing-the-Map">Testing the Map</a><a id="Testing-the-Map-1"></a><a class="docs-heading-anchor-permalink" href="#Testing-the-Map" title="Permalink"></a></h3><p>Let&#39;s generate new samples from the banana density and standard normal samples and map them through our optimized transport map to verify the learned distribution:</p><pre><code class="language-julia hljs">new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.617605   -0.970086
- -0.259575    0.790623
- -1.21928     1.22101
-  0.918296   -0.527987
-  0.389938   -0.587509
- -0.795911    0.399581
-  0.328322   -1.78955
- -1.14938    -0.922125
- -0.287419    0.721232
-  0.805279    0.673
+  1.16747    0.881595
+  0.731336   1.28497
+  0.795057  -0.206889
+ -0.240855   1.79745
+  1.64064   -0.735619
+ -0.100959  -0.034496
+ -0.516234   0.0488963
+ -0.423361  -0.555023
+  1.48823   -0.802945
+  1.12541   -1.0014
+  ⋮         
+ -0.564702  -0.331153
+  0.131013  -0.56482
+  1.64311   -1.99868
+  0.108568   1.5584
+ -0.722384   1.52445
+ -1.32091   -1.89413
+  0.393397   0.146234
+  0.156963   0.706113
+ -1.1308     1.0869</code></pre><p>Map the samples through our transport map. Note that <code>evaluate</code> now transports from reference to target, i.e. <code>mapped_samples</code> should be standard normal samples:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, new_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+ -0.803062   -0.356548
+  0.816573   -0.278414
+ -1.2243      1.53688
+  0.112205    0.215047
+  1.47001     0.545069
+ -0.459509   -1.1371
+ -1.18181    -0.436767
+  0.922809   -0.618118
+  0.289193    0.0373221
+ -0.0938019  -2.94353
   ⋮          
- -1.24471     1.62976
-  0.0407255  -1.92066
-  0.0634584  -0.3403
- -1.10546    -0.785915
-  2.04154    -1.22709
-  1.44694    -0.667221
- -0.802401    0.490424
-  1.37717     1.32457
-  0.944696   -0.826981</code></pre><p>Map the samples through our transport map. Note that <code>evaluate</code> now transports from reference to target, i.e. <code>mapped_samples</code> should be standard normal samples:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, new_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.764451    0.0203638
- -0.668257    0.54234
- -0.28456    -0.369748
- -0.598102   -0.36498
-  0.306694    0.241531
- -0.348198   -0.442222
-  0.384512    0.0999293
-  0.0748307   0.40608
-  0.622704   -1.62926
-  0.14985     0.279063
+  1.0156      1.43936
+ -0.28168    -1.26794
+ -0.312332    0.885433
+  0.407786    2.13889
+ -0.817617   -2.02421
+  0.531984   -0.318757
+  0.0114685  -0.870821
+  0.219393    1.31284
+ -0.714584    0.291612</code></pre><p>while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:</p><pre><code class="language-julia hljs">mapped_banana_samples = inverse(M, norm_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.972977    1.75451
+  0.596097    1.52202
+  0.651025    0.229864
+ -0.236264    1.69316
+  1.38436     1.27009
+ -0.11714    -0.0508245
+ -0.470125    0.233457
+ -0.391348   -0.396538
+  1.25156     0.85621
+  0.936538   -0.0241455
   ⋮          
- -0.0978668   0.0137847
-  2.97545     0.0342499
-  0.855497   -1.22541
- -1.03393     0.527513
- -0.253787   -0.492263
- -0.986293   -0.800272
-  0.0766657   0.36778
-  0.412934   -0.125889
- -0.677617    0.961909</code></pre><p>while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:</p><pre><code class="language-julia hljs">mapped_banana_samples = inverse(M, norm_samples)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.590459   -0.524912
- -0.188818    0.883876
- -1.07995     2.39888
-  0.850463    0.277396
-  0.391238   -0.342877
- -0.681585    0.905619
-  0.336962   -1.53055
- -1.01358     0.161327
- -0.214085    0.824677
-  0.753149    1.32612
-  ⋮          
- -1.10416     2.86472
-  0.0815687  -1.74849
-  0.101881   -0.242235
- -0.972009    0.213685
-  1.79214     2.13099
-  1.29929     1.11558
- -0.687628    1.00264
-  1.24065     3.04064
-  0.873125    0.0199145</code></pre><h3 id="Visualizing-Results"><a class="docs-heading-anchor" href="#Visualizing-Results">Visualizing Results</a><a id="Visualizing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-Results" title="Permalink"></a></h3><p>Let&#39;s create a scatter plot comparing the original samples with the mapped samples to see how well our transport map learned the distribution:</p><pre><code class="language-julia hljs">p11 = scatter(new_samples[:, 1], new_samples[:, 2],
+ -0.511199   -0.079585
+  0.0808681  -0.540315
+  1.38651     0.141657
+  0.0616827   1.41452
+ -0.64465     1.81944
+ -1.14875    -0.454419
+  0.30556     0.207515
+  0.103056    0.633856
+ -0.989052    2.00631</code></pre><h3 id="Visualizing-Results"><a class="docs-heading-anchor" href="#Visualizing-Results">Visualizing Results</a><a id="Visualizing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-Results" title="Permalink"></a></h3><p>Let&#39;s create a scatter plot comparing the original samples with the mapped samples to see how well our transport map learned the distribution:</p><pre><code class="language-julia hljs">p11 = scatter(new_samples[:, 1], new_samples[:, 2],
             label=&quot;Original Samples&quot;, alpha=0.5, color=1,
             title=&quot;Original Banana Distribution Samples&quot;,
             xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;)
@@ -156,26 +156,26 @@ x₂ = range(-2.5, 4.0, length=100)</code></pre><pre class="documenter-example-o
  3.38787e-9   2.41065e-8   1.4534e-7       2.41065e-8   3.38787e-9
  4.73485e-9   3.2904e-8    1.93842e-7      3.2904e-8    4.73485e-9
  6.58892e-9   4.47191e-8   2.57416e-7      4.47191e-8   6.58892e-9</code></pre><p>Learned density via pullback through the transport map. Note that &quot;pullback&quot; computes the density of the mapped samples in the standard normal space:</p><pre><code class="language-julia hljs">learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100×100 Matrix{Float64}:
- 8.22031e-30  1.57999e-28  2.83505e-27  …  1.22066e-26  8.62445e-28
- 1.85077e-29  3.48759e-28  6.13562e-27     2.40096e-26  1.72132e-27
- 4.14397e-29  7.65601e-28  1.32059e-26     4.70159e-26  3.42031e-27
- 9.22773e-29  1.67147e-27  2.82683e-26     9.16616e-26  6.76638e-27
- 2.04357e-28  3.62924e-27  6.01809e-26     1.77916e-25  1.33271e-26
- 4.50082e-28  7.83695e-27  1.2742e-25   …  3.43811e-25  2.61336e-26
- 9.85826e-28  1.68302e-26  2.68306e-25     6.61457e-25  5.10203e-26
- 2.14745e-27  3.59461e-26  5.61888e-25     1.26697e-24  9.91685e-26
- 4.6522e-27   7.63539e-26  1.17028e-24     2.41608e-24  1.91907e-25
- 1.00231e-26  1.61295e-25  2.42409e-24     4.58705e-24  3.69731e-25
+ 2.92176e-30  5.22225e-29  8.75525e-28  …  1.23147e-32  4.28572e-34
+ 6.10444e-30  1.07443e-28  1.77373e-27     2.95517e-32  1.05091e-33
+ 1.26962e-29  2.20047e-28  3.577e-27       7.05029e-32  2.56194e-33
+ 2.6286e-29   4.48615e-28  7.1807e-27      1.67223e-31  6.20912e-33
+ 5.41755e-29  9.10445e-28  1.43493e-26     3.94322e-31  1.49606e-32
+ 1.1115e-28   1.83931e-27  2.85437e-26  …  9.24426e-31  3.58369e-32
+ 2.27007e-28  3.69894e-27  5.65204e-26     2.15457e-30  8.53437e-32
+ 4.61525e-28  7.40492e-27  1.11408e-25     4.99245e-30  2.02056e-31
+ 9.34066e-28  1.47565e-26  2.18596e-25     1.15009e-29  4.75588e-31
+ 1.88117e-27  2.92625e-26  4.26803e-25     2.63307e-29  1.11248e-30
  ⋮                                      ⋱               
- 3.36067e-8   1.2169e-7    4.12859e-7      2.1262e-8    5.49726e-9
- 4.51936e-8   1.60945e-7   5.37046e-7      2.75351e-8   7.21693e-9
- 6.04852e-8   2.11854e-7   6.95301e-7      3.55217e-8   9.43792e-9
- 8.05658e-8   2.77549e-7   8.95973e-7      4.56491e-8   1.22949e-8
- 1.06805e-7   3.61908e-7   1.14918e-6   …  5.84399e-8   1.59554e-8
- 1.40922e-7   4.69699e-7   1.46709e-6      7.45304e-8   2.06268e-8
- 1.85065e-7   6.06755e-7   1.8643e-6       9.46917e-8   2.65646e-8
- 2.419e-7     7.80168e-7   2.35814e-6      1.19854e-7   3.40824e-8
- 3.14718e-7   9.98509e-7   2.96913e-6      1.51134e-7   4.35632e-8</code></pre><p>Create contour plots for comparison:</p><pre><code class="language-julia hljs">p3 = contour(x₁, x₂, true_density,
+ 2.20074e-9   9.39736e-9   3.7493e-8       1.40335e-8   3.22396e-9
+ 3.02894e-9   1.2728e-8    4.99711e-8      1.97467e-8   4.62729e-9
+ 4.15045e-9   1.71631e-8   6.63079e-8      2.76292e-8   6.60387e-9
+ 5.66218e-9   2.30415e-8   8.75972e-8      3.84402e-8   9.37148e-9
+ 7.69057e-9   3.07972e-8   1.15211e-7   …  5.31803e-8   1.32238e-8
+ 1.03997e-8   4.09822e-8   1.50863e-7      7.31588e-8   1.85544e-8
+ 1.40015e-8   5.42958e-8   1.96678e-7      1.00077e-7   2.58869e-8
+ 1.87679e-8   7.16187e-8   2.55277e-7      1.36131e-7   3.59136e-8
+ 2.50468e-8   9.40538e-8   3.29881e-7      1.84134e-7   4.95433e-8</code></pre><p>Create contour plots for comparison:</p><pre><code class="language-julia hljs">p3 = contour(x₁, x₂, true_density,
             title=&quot;True Banana Density&quot;,
             xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;,
             colormap=:viridis, levels=10)
@@ -200,7 +200,7 @@ println(&quot;Original samples - Mean: &quot;, Distributions.mean(target_samples
 println(&quot;Original samples - Std:  &quot;, Distributions.std(target_samples, dims=1))
 println(&quot;Mapped samples - Mean:   &quot;, Distributions.mean(mapped_banana_samples, dims=1))
 println(&quot;Mapped samples - Std:    &quot;, Distributions.std(mapped_banana_samples, dims=1))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Sample Statistics Comparison:
-Original samples - Mean: [0.02396190971419247 0.8904009707606102]
-Original samples - Std:  [0.8994075466408531 1.4695191806916656]
-Mapped samples - Mean:   [0.027032878978971765 0.922004586099756]
-Mapped samples - Std:    [0.9179888662084039 1.5221078153707917]</code></pre><h3 id="Interpretation"><a class="docs-heading-anchor" href="#Interpretation">Interpretation</a><a id="Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpretation" title="Permalink"></a></h3><p>The sample-based approach learns the transport map by fitting to the empirical distribution of the samples. This method is particularly useful when:</p><ul><li>The target density is unknown or expensive to evaluate</li><li>Only sample data is available from experiments or simulations</li><li>The distribution is complex and difficult to express analytically</li></ul><p>The quality of the approximation depends on:</p><ul><li>The number and quality of the original samples</li><li>The polynomial degree of the transport map</li><li>The optimization algorithm and convergence criteria</li></ul><h3 id="Further-Experiments"><a class="docs-heading-anchor" href="#Further-Experiments">Further Experiments</a><a id="Further-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Experiments" title="Permalink"></a></h3><p>You can experiment with:</p><ul><li>Different polynomial degrees for more complex distributions</li><li>Different rectifier functions (<code>Softplus()</code>, <code>ShiftedELU()</code>)</li><li>More sophisticated MCMC sampling strategies</li><li>Cross-validation techniques to assess generalization</li><li>Different sample sizes to study convergence behavior</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_mapfromdensity/">« Banana: Map from Density</a><a class="docs-footer-nextpage" href="../bod_bayesianinference/">Bayesian Inference: BOD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 30 September 2025 15:02">Tuesday 30 September 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Original samples - Mean: [-0.025486795679463742 0.7257029789161059]
+Original samples - Std:  [0.8544913224219809 1.374722349322466]
+Mapped samples - Mean:   [-0.045973393592011 0.7708205333136829]
+Mapped samples - Std:    [0.8784382406308131 1.4003688867988244]</code></pre><h3 id="Interpretation"><a class="docs-heading-anchor" href="#Interpretation">Interpretation</a><a id="Interpretation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpretation" title="Permalink"></a></h3><p>The sample-based approach learns the transport map by fitting to the empirical distribution of the samples. This method is particularly useful when:</p><ul><li>The target density is unknown or expensive to evaluate</li><li>Only sample data is available from experiments or simulations</li><li>The distribution is complex and difficult to express analytically</li></ul><p>The quality of the approximation depends on:</p><ul><li>The number and quality of the original samples</li><li>The polynomial degree of the transport map</li><li>The optimization algorithm and convergence criteria</li></ul><h3 id="Further-Experiments"><a class="docs-heading-anchor" href="#Further-Experiments">Further Experiments</a><a id="Further-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Experiments" title="Permalink"></a></h3><p>You can experiment with:</p><ul><li>Different polynomial degrees for more complex distributions</li><li>Different rectifier functions (<code>Softplus()</code>, <code>ShiftedELU()</code>)</li><li>More sophisticated MCMC sampling strategies</li><li>Cross-validation techniques to assess generalization</li><li>Different sample sizes to study convergence behavior</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_mapfromdensity/">« Banana: Map from Density</a><a class="docs-footer-nextpage" href="../bod_bayesianinference/">Bayesian Inference: BOD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 17 October 2025 08:37">Friday 17 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
