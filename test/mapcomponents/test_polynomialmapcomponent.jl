@@ -170,6 +170,10 @@ using Test
         @test pd_min > 0  # Softplus ensures positivity
     end
 
+        # show method
+        s = sprint(show, PolynomialMapComponent(1,1))
+        @test occursin("PolynomialMapComponent", s)
+
     @testset "Gradient with respect to coefficients" begin
         # Test gradient computation for a 2D component
         pmc = PolynomialMapComponent(2, 2, IdentityRectifier())

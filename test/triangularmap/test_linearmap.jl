@@ -35,5 +35,9 @@ using Random
         X = Array{Float64}(undef, 2, 0)
         @test size(evaluate(L0, X)) == size(X)
         @test size(inverse(L0, X)) == size(X)
+
+        # show
+        s = sprint(show, L)
+        @test occursin("LinearMap", s)
     end
 end

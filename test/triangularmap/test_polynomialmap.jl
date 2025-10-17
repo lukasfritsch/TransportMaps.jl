@@ -12,6 +12,8 @@ using LinearAlgebra
         setcoefficients!(pm.components[2], [1.0, 0.3, 0.1, 0.05, 0.02, 0.01])  # 6 coefficients for 2D degree 2
         @test length(pm.components) == 2
         @test all(comp.rectifier isa Softplus for comp in pm.components)
+            # show
+            @test occursin("PolynomialMap", sprint(show, pm))
         @test pm.components[1].index == 1
         @test pm.components[2].index == 2
 

@@ -1,7 +1,7 @@
 name = "TransportMaps"
 uuid = "6fd49bf0-03ac-4dd1-b9b3-42e511274d6e"
-authors = ["Lukas Fritsch <fritsch@irz.uni-hannover.de>", "Jan Grashorn <grashorn@hsu-hh.de>"]
 version = "1.0.0-DEV"
+authors = ["Lukas Fritsch <fritsch@irz.uni-hannover.de>", "Jan Grashorn <grashorn@hsu-hh.de>"]
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"

@@ -114,7 +114,6 @@ include("mapcomponents/univariatebases/hermitebasis.jl")
 include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
 include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
 include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
-include("mapcomponents/univariatebases/radialbasis.jl")
 
 include("mapcomponents/multivariatebasis.jl")
 include("mapcomponents/polynomialmapcomponent.jl")

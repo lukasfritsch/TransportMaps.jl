@@ -23,6 +23,9 @@ using Random
 
     C = ComposedMap(L, pm)
 
+    # show
+    @test occursin("ComposedMap", sprint(show, C))
+
     @test numberdimensions(C) == 2
 
     # Test evaluate/inverse round-trip

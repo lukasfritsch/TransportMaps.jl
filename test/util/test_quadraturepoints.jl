@@ -117,6 +117,19 @@ using Test
         @test all(weights_lh .≈ 1/30)
     end
 
+    # show method
+    ghw = GaussHermiteWeights(3, 1)
+    @test occursin("GaussHermiteWeights", sprint(show, ghw))
+
+    mcw = MonteCarloWeights(10, 1)
+    @test occursin("MonteCarloWeights", sprint(show, mcw))
+
+    lhw = LatinHypercubeWeights(5, 1)
+    @test occursin("LatinHypercubeWeights", sprint(show, lhw))
+
+    ssw = SparseSmolyakWeights(2, 1)
+    @test occursin("SparseSmolyakWeights", sprint(show, ssw))
+
     @testset "SparseSmolyakWeights" begin
         # Basic construction
         ssw = SparseSmolyakWeights(2, 2)
