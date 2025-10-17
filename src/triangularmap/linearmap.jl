@@ -13,7 +13,7 @@ struct LinearMap <: AbstractTriangularMap
     # Identity map
     function LinearMap()
         return new(zeros(Float64, 0), ones(Float64, 0))
-   end
+    end
 end
 
 function evaluate(L::LinearMap, x::Vector{Float64})
@@ -40,7 +40,7 @@ function inverse(L::LinearMap, y::Vector{Float64})
         return y # Identity map if no dimensions are defined
     else
         @assert length(y) == length(L.μ) "Input vector must have the same length as dimensions in the map"
-        return (y.* L.σ) .+ L.μ
+        return (y .* L.σ) .+ L.μ
     end
 end
 

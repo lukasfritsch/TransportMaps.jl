@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/lukasfritsch/TransportMaps.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/lukasfritsch/TransportMaps.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/github/lukasfritsch/TransportMaps.jl/graph/badge.svg?token=PQTR0PG87A)](https://codecov.io/github/lukasfritsch/TransportMaps.jl)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lukasfritsch.github.io/TransportMaps.jl/dev/)
+[![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://lukasfritsch.github.io/TransportMaps.jl/dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Julia implementation of triangular transport maps for variational inference.

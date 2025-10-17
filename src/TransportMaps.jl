@@ -75,6 +75,7 @@ export kldivergence
 export kldivergence_gradient
 export optimize!
 export variance_diagnostic
+export reduced_margin
 
 # Conditional densities and samples
 export conditional_density
@@ -126,6 +127,7 @@ include("triangularmap/composedmap.jl")
 
 include("optimization/mapfromdensity.jl")
 include("optimization/mapfromsamples.jl")
+include("optimization/adaptivetransportmap.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")

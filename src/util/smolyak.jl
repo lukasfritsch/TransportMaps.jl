@@ -1,5 +1,5 @@
 function nested_hermite_levels_quads()
-    levels = Dict{Int, Tuple{Vector{Float64}, Vector{Float64}}}()
+    levels = Dict{Int,Tuple{Vector{Float64},Vector{Float64}}}()
     levels[0] = ([0.0], [1.0])
     nodes1, weights1 = gausshermite(3; normalize=true)
     levels[1] = (nodes1, weights1)

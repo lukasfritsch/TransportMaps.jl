@@ -48,7 +48,7 @@ using LinearAlgebra
         @test length(pm_5d.components) == 5
 
         # Test error handling
-        @test_throws MethodError PolynomialMap(1, 1, referencetype = :uniform)
+        @test_throws MethodError PolynomialMap(1, 1, referencetype=:uniform)
     end
 
     @testset "Direct Construction with Components" begin
@@ -152,7 +152,7 @@ using LinearAlgebra
         try
             x_inv_1d = inverse(pm_1d, z_1d)
             if all(isfinite.(x_inv_1d))
-                @test x_inv_1d ≈ x_1d atol=1e-2
+                @test x_inv_1d ≈ x_1d atol = 1e-2
             end
         catch
             # Skip test if inverse fails due to numerical issues
@@ -165,7 +165,7 @@ using LinearAlgebra
         try
             x_inv_origin_1d = inverse(pm_1d, z_origin_1d)
             if all(isfinite.(x_inv_origin_1d))
-                @test x_inv_origin_1d ≈ x_origin_1d atol=1e-3
+                @test x_inv_origin_1d ≈ x_origin_1d atol = 1e-3
             end
         catch
             @test true  # Mark as passing
@@ -433,7 +433,7 @@ using LinearAlgebra
 
         x_1d = [0.5]
         inv_jac_1d = inverse_jacobian(pm_1d, x_1d)
-        @test inv_jac_1d ≈ 1.0 atol=1e-10  # For identity map, inverse jacobian should be 1
+        @test inv_jac_1d ≈ 1.0 atol = 1e-10  # For identity map, inverse jacobian should be 1
 
         # Test 2D case with simple map
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -442,7 +442,7 @@ using LinearAlgebra
 
         x_2d = [0.3, 0.7]
         inv_jac_2d = inverse_jacobian(pm_2d, x_2d)
-        @test inv_jac_2d ≈ 1.0 atol=1e-10  # For identity-like map, inverse jacobian should be 1
+        @test inv_jac_2d ≈ 1.0 atol = 1e-10  # For identity-like map, inverse jacobian should be 1
 
         # Test with Softplus rectifier (should be positive)
         pm_softplus = PolynomialMap(2, 2, :normal, Softplus())
@@ -487,7 +487,7 @@ using LinearAlgebra
         pb_1d = pullback(pm_1d, x_1d)
         # For identity map, pullback should equal reference density at x
         ref_1d = pdf(MvNormal([0.0], I(1)), x_1d)
-        @test pb_1d ≈ ref_1d atol=1e-10
+        @test pb_1d ≈ ref_1d atol = 1e-10
 
         # Test 2D case with identity-like map
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -497,7 +497,7 @@ using LinearAlgebra
         x_2d = [0.3, 0.7]
         pb_2d = pullback(pm_2d, x_2d)
         ref_2d = pdf(MvNormal(zeros(2), I(2)), x_2d)
-        @test pb_2d ≈ ref_2d atol=1e-10
+        @test pb_2d ≈ ref_2d atol = 1e-10
 
         # Test mathematical consistency: pullback(M, x) = reference_density(inverse(M, x)) * |inverse_jacobian(M, x)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())
@@ -552,7 +552,7 @@ using LinearAlgebra
         z_1d = [0.5]
         pf_1d = pushforward(pm_1d, target, z_1d)
         # For identity map with standard normal target, pushforward should equal target at z
-        @test pf_1d ≈ target_density(z_1d) atol=1e-10
+        @test pf_1d ≈ target_density(z_1d) atol = 1e-10
 
         # Test 2D case
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -561,7 +561,7 @@ using LinearAlgebra
 
         z_2d = [0.3, 0.7]
         pf_2d = pushforward(pm_2d, target, z_2d)
-        @test pf_2d ≈ target.density(z_2d) atol=1e-10
+        @test pf_2d ≈ target.density(z_2d) atol = 1e-10
 
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())

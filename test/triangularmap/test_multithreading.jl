@@ -93,7 +93,7 @@ using LinearAlgebra
         setcoefficients!(M, abs.(randn(numbercoefficients(M))) .+ 0.1)
 
         # Define a simple target density
-        target_density(x) = exp(-0.5 * sum(x.^2))
+        target_density(x) = exp(-0.5 * sum(x .^ 2))
         target = MapTargetDensity(target_density, :auto_diff)
 
         n_points = 5

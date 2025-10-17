@@ -7,9 +7,9 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
     function PolynomialMapComponent(
         index::Int,
         degree::Int,
-        rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = HermiteBasis(),
-        map_type::Symbol = :total
+        rectifier::AbstractRectifierFunction=Softplus(),
+        basis::AbstractPolynomialBasis=HermiteBasis(),
+        map_type::Symbol=:total
     )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
@@ -30,7 +30,7 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         rectifier::AbstractRectifierFunction,
         basis::AbstractPolynomialBasis,
         density::Distributions.UnivariateDistribution,
-        map_type::Symbol = :total
+        map_type::Symbol=:total
     )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
@@ -66,14 +66,14 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
-        # Constructor that builds basis functions using an analytical reference density
+    # Constructor that builds basis functions using an analytical reference density
     function PolynomialMapComponent(
         index::Int,
         degree::Int,
         rectifier::AbstractRectifierFunction,
         basis::AbstractPolynomialBasis,
         samples::AbstractMatrix{Float64},
-        map_type::Symbol = :total
+        map_type::Symbol=:total
     )
         @assert index > 0 "Index must be a positive integer"
         @assert degree > 0 "Degree must be a positive integer"
@@ -94,11 +94,11 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
                 if isa(basis, HermiteBasis)
                     uni_bases[j] = HermiteBasis()
                 elseif isa(basis, LinearizedHermiteBasis)
-                    uni_bases[j] = LinearizedHermiteBasis(samples[:,j], deg_j, index)
+                    uni_bases[j] = LinearizedHermiteBasis(samples[:, j], deg_j, index)
                 elseif isa(basis, GaussianWeightedHermiteBasis)
                     uni_bases[j] = GaussianWeightedHermiteBasis()
                 elseif isa(basis, CubicSplineHermiteBasis)
-                    uni_bases[j] = CubicSplineHermiteBasis(samples[:,j])
+                    uni_bases[j] = CubicSplineHermiteBasis(samples[:, j])
                 end
             end
 

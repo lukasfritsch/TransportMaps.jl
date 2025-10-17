@@ -44,26 +44,26 @@ mapped_samples = evaluate(C, new_samples)
 mapped_banana_samples = inverse(C, norm_samples)
 
 p11 = scatter(new_samples[:, 1], new_samples[:, 2],
-            label="Original Samples", alpha=0.5, color=1,
-            title="Original Banana Distribution Samples",
-            xlabel="x₁", ylabel="x₂")
+    label="Original Samples", alpha=0.5, color=1,
+    title="Original Banana Distribution Samples",
+    xlabel="x₁", ylabel="x₂")
 
 scatter!(p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
-            label="Mapped Samples", alpha=0.5, color=2,
-            title="Transport Map Generated Samples",
-            xlabel="x₁", ylabel="x₂")
+    label="Mapped Samples", alpha=0.5, color=2,
+    title="Transport Map Generated Samples",
+    xlabel="x₁", ylabel="x₂")
 
 plot(p11, size=(600, 400))
 
 p12 = scatter(norm_samples[:, 1], norm_samples[:, 2],
-            label="Original Samples", alpha=0.5, color=1,
-            title="Original Banana Distribution Samples",
-            xlabel="x₁", ylabel="x₂")
+    label="Original Samples", alpha=0.5, color=1,
+    title="Original Banana Distribution Samples",
+    xlabel="x₁", ylabel="x₂")
 
 scatter!(p12, mapped_samples[:, 1], mapped_samples[:, 2],
-            label="Mapped Samples", alpha=0.5, color=2,
-            title="Transport Map Generated Samples",
-            xlabel="x₁", ylabel="x₂")
+    label="Mapped Samples", alpha=0.5, color=2,
+    title="Transport Map Generated Samples",
+    xlabel="x₁", ylabel="x₂")
 
 plot(p12, size=(600, 400), aspect_ratio=1)
 
@@ -75,25 +75,25 @@ true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
 learned_density = [pullback(C, [x1, x2]) for x2 in x₂, x1 in x₁]
 
 p3 = contour(x₁, x₂, true_density,
-            title="True Banana Density",
-            xlabel="x₁", ylabel="x₂",
-            colormap=:viridis, levels=10)
+    title="True Banana Density",
+    xlabel="x₁", ylabel="x₂",
+    colormap=:viridis, levels=10)
 
 p4 = contour(x₁, x₂, learned_density,
-            title="Learned Density (Pullback)",
-            xlabel="x₁", ylabel="x₂",
-            colormap=:viridis, levels=10)
+    title="Learned Density (Pullback)",
+    xlabel="x₁", ylabel="x₂",
+    colormap=:viridis, levels=10)
 
 plot(p3, p4, layout=(1, 2), size=(800, 400))
 
 scatter(target_samples[:, 1], target_samples[:, 2],
-        label="Original Samples", alpha=0.3, color=1,
-        xlabel="x₁", ylabel="x₂",
-        title="Banana Distribution: Samples and Learned Density")
+    label="Original Samples", alpha=0.3, color=1,
+    xlabel="x₁", ylabel="x₂",
+    title="Banana Distribution: Samples and Learned Density")
 
-contour!(x₁, x₂, learned_density./maximum(learned_density),
-        levels=5, colormap=:viridis, alpha=0.8,
-        label="Learned Density Contours")
+contour!(x₁, x₂, learned_density ./ maximum(learned_density),
+    levels=5, colormap=:viridis, alpha=0.8,
+    label="Learned Density Contours")
 
 xlims!(-3, 3)
 ylims!(-2.5, 4.0)

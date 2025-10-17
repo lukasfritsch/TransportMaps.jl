@@ -64,7 +64,7 @@ t_values = range(0, 5, length=100)
 for θ₁ in [-0.5, 0, 0.5]
     for θ₂ in [-0.5, 0, 0.5]
         plot!(t_values, [forward_model(ti, [θ₁, θ₂]) for ti in t_values],
-              label="(θ₁ = $θ₁, θ₂ = $θ₂)", linestyle=:dash)
+            label="(θ₁ = $θ₁, θ₂ = $θ₂)", linestyle=:dash)
     end
 end
 #md savefig("realizations-bod.svg"); nothing # hide
@@ -127,8 +127,8 @@ println("Variance Diagnostic: ", var_diag)
 posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
-        label="Mapped Samples", alpha=0.5, color=1,
-        xlabel="θ₁", ylabel="θ₂", title="Posterior Density and Mapped Samples")
+    label="Mapped Samples", alpha=0.5, color=1,
+    xlabel="θ₁", ylabel="θ₂", title="Posterior Density and Mapped Samples")
 contour!(θ₁, θ₂, posterior_values, colormap=:viridis, label="Posterior Density")
 #md savefig("samples-bod.svg"); nothing # hide
 # ![BOD Samples](samples-bod.svg)
@@ -136,11 +136,11 @@ contour!(θ₁, θ₂, posterior_values, colormap=:viridis, label="Posterior Den
 # Finally, we can compute the pullback density to visualize how well our transport map approximates the posterior:
 posterior_pullback = [pullback(M, [θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
-contour(θ₁, θ₂, posterior_values./maximum(posterior_values);
-    levels = 5, colormap = :viridis, colorbar = false,
+contour(θ₁, θ₂, posterior_values ./ maximum(posterior_values);
+    levels=5, colormap=:viridis, colorbar=false,
     label="Target", xlabel="θ₁", ylabel="θ₂")
-contour!(θ₁, θ₂, posterior_pullback./maximum(posterior_pullback);
-    levels = 5, colormap = :viridis, linestyle=:dash,
+contour!(θ₁, θ₂, posterior_pullback ./ maximum(posterior_pullback);
+    levels=5, colormap=:viridis, linestyle=:dash,
     label="Pullback")
 #md savefig("pullback-bod.svg"); nothing # hide
 # ![BOD Pullback Density](pullback-bod.svg)
@@ -184,7 +184,7 @@ conditional_mapped = conditional_density(M, θ_range, θ₁)
 #md nothing #hide
 
 # Finally, we plot the results:
-histogram(conditional_samples, bins=50, normalize=:pdf, α = 0.5,
+histogram(conditional_samples, bins=50, normalize=:pdf, α=0.5,
     label="Conditional Samples", xlabel="θ₂", ylabel="π(θ₂ | θ₁=$θ₁)")
 plot!(θ_range, conditional_analytical, lw=2, label="Analytical Conditional PDF")
 plot!(θ_range, conditional_mapped, lw=2, label="TM Conditional PDF")

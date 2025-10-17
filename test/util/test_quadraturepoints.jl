@@ -66,7 +66,7 @@ using Test
         mcw_tm = MonteCarloWeights(50, PolynomialMap(2, 2))
         @test all(mcw_tm.weights .> 0)
 
-        mcw_samp = MonteCarloWeights(randn(10,2))
+        mcw_samp = MonteCarloWeights(randn(10, 2))
         @test all(mcw_samp.weights .> 0)
     end
 

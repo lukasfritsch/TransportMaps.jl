@@ -18,9 +18,9 @@ samples_z = randn(1000, 2)
 mapped_samples = evaluate(M, samples_z)
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
-           label="Mapped Samples", alpha=0.5, color=2,
-           title="Transport Map Approximation of Banana Distribution",
-           xlabel="x₁", ylabel="x₂")
+    label="Mapped Samples", alpha=0.5, color=2,
+    title="Transport Map Approximation of Banana Distribution",
+    xlabel="x₁", ylabel="x₂")
 
 var_diag = variance_diagnostic(M, target, samples_z)
 println("Variance Diagnostic: ", var_diag)

@@ -67,9 +67,9 @@ densities = conditional_density(M, x₂_values, x₁)
 
 # Plot the conditional density:
 plot(x₂_values, densities,
-     xlabel="x₂", ylabel="π(x₂ | x₁=$x₁)",
-     title="Conditional Density π(x₂ | x₁=$x₁)",
-     linewidth=2, label="Conditional Density")
+    xlabel="x₂", ylabel="π(x₂ | x₁=$x₁)",
+    title="Conditional Density π(x₂ | x₁=$x₁)",
+    linewidth=2, label="Conditional Density")
 #md savefig("conditional-density.svg"); nothing # hide
 # ![Conditional Density](conditional-density.svg)
 
@@ -90,9 +90,9 @@ cond_samples = conditional_sample(M, x₁, z₂_values)
 
 # Create a histogram of the conditional samples and overlay the analytical density:
 histogram(cond_samples, bins=50, normalize=:pdf, alpha=0.7,
-          label="Conditional Samples", xlabel="x₂", ylabel="Density")
+    label="Conditional Samples", xlabel="x₂", ylabel="Density")
 plot!(x₂_values, densities, linewidth=2,
-      label="Conditional Density")
+    label="Conditional Density")
 #md savefig("conditional-sampling.svg"); nothing # hide
 # ![Conditional Sampling](conditional-sampling.svg)
 
@@ -118,9 +118,9 @@ true_densities = [true_banana_conditional_density(x₂, x₁) for x₂ in x₂_v
 
 # Plot comparison:
 plot(x₂_values, densities, linewidth=2, label="TM Conditional",
-     xlabel="x₂", ylabel="π(x₂ | x₁=$x₁)")
+    xlabel="x₂", ylabel="π(x₂ | x₁=$x₁)")
 plot!(x₂_values, true_densities, linewidth=2, linestyle=:dash,
-      label="True Conditional")
+    label="True Conditional")
 title!("Transport Map vs True Conditional Density")
 #md savefig("conditional-comparison.svg"); nothing # hide
 # ![Conditional Comparison](conditional-comparison.svg)
@@ -133,16 +133,16 @@ title!("Transport Map vs True Conditional Density")
 x₁_values = [-0.6, 0.0, 1.0, 2.0]
 
 p = plot(xlabel="x₂", ylabel="π(x₂ | x₁)",
-         title="Conditional Densities for Different x₁ Values")
+    title="Conditional Densities for Different x₁ Values")
 
 for (i, x₁_val) in enumerate(x₁_values)
     densities_cond = conditional_density(M, x₂_values, x₁_val)
     true_densities_cond = [true_banana_conditional_density(x₂, x₁_val) for x₂ in x₂_values]
 
     plot!(p, x₂_values, densities_cond, linewidth=2,
-          label="TM: x₁=$x₁_val", color=i)
+        label="TM: x₁=$x₁_val", color=i)
     plot!(p, x₂_values, true_densities_cond, linewidth=2, linestyle=:dash,
-          label="True: x₁=$x₁_val", color=i)
+        label="True: x₁=$x₁_val", color=i)
 end
 
 plot!(p)

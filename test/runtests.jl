@@ -4,13 +4,13 @@ using Test
 @testset "TransportMaps.jl" begin
     # Test Map Components
     @testset "Map Components" begin
-    include("mapcomponents/univariatebases/test_hermitebasis.jl")
-    include("mapcomponents/univariatebases/test_gaussianweighted.jl")
-    include("mapcomponents/univariatebases/test_cubicspline.jl")
-    include("mapcomponents/univariatebases/test_linearized.jl")
-    include("mapcomponents/test_multivariatebasis.jl")
-    include("mapcomponents/test_rectifier.jl")
-    include("mapcomponents/test_polynomialmapcomponent.jl")
+        include("mapcomponents/univariatebases/test_hermitebasis.jl")
+        include("mapcomponents/univariatebases/test_gaussianweighted.jl")
+        include("mapcomponents/univariatebases/test_cubicspline.jl")
+        include("mapcomponents/univariatebases/test_linearized.jl")
+        include("mapcomponents/test_multivariatebasis.jl")
+        include("mapcomponents/test_rectifier.jl")
+        include("mapcomponents/test_polynomialmapcomponent.jl")
     end
 
     # Test Triangular Maps

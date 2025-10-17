@@ -18,7 +18,7 @@ using Random
     setcoefficients!(pm.components[2], coeffs2)
 
     # Build LinearMap from simple samples (shift-scale)
-    samples = randn(rng, 50, 2) .* [2.0 1.0] .+ [0.5  -0.3]
+    samples = randn(rng, 50, 2) .* [2.0 1.0] .+ [0.5 - 0.3]
     L = LinearMap(samples)
 
     C = ComposedMap(L, pm)

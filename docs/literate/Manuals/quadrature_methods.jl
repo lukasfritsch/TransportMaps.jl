@@ -38,7 +38,7 @@ using Plots
 #md using Random # hide
 #md Random.seed!(42) # hide
 mc = MonteCarloWeights(500, 2)
-p_mc = scatter(mc.points[:,1], mc.points[:,2], ms=3,
+p_mc = scatter(mc.points[:, 1], mc.points[:, 2], ms=3,
     label="MC samples", title="Monte Carlo (500 pts)", aspect_ratio=1)
 #md savefig("quadrature_mc.svg"); nothing # hide
 # ![Monte Carlo samples](quadrature_mc.svg)
@@ -49,7 +49,7 @@ p_mc = scatter(mc.points[:,1], mc.points[:,2], ms=3,
 # over plain Monte Carlo; weights remain uniform. It often reduces variance
 # for low to moderate dimensions.
 lhs = LatinHypercubeWeights(500, 2)
-p_lhs = scatter(lhs.points[:,1], lhs.points[:,2], ms=3,
+p_lhs = scatter(lhs.points[:, 1], lhs.points[:, 2], ms=3,
     label="LHS samples", title="Latin Hypercube (500 pts)", aspect_ratio=1)
 #md savefig("quadrature_lhs.svg"); nothing # hide
 # ![Latin Hypercube samples](quadrature_lhs.svg)
@@ -63,7 +63,7 @@ p_lhs = scatter(lhs.points[:,1], lhs.points[:,2], ms=3,
 # dimension.
 #
 hermite = GaussHermiteWeights(5, 2)
-p_hermite = scatter(hermite.points[:,1], hermite.points[:,2],
+p_hermite = scatter(hermite.points[:, 1], hermite.points[:, 2],
     ms=4, label="Gauss–Hermite", title="Tensor Gauss–Hermite (5 × 5)", aspect_ratio=1)
 #md savefig("quadrature_hermite.svg"); nothing # hide
 # ![Gauss-Hermite tensor product sample](quadrature_hermite.svg)
@@ -78,7 +78,7 @@ p_hermite = scatter(hermite.points[:,1], hermite.points[:,2],
 # correction terms.
 #
 sparse = SparseSmolyakWeights(2, 2)
-p_sparse = scatter(sparse.points[:,1], sparse.points[:,2], ms=6,
+p_sparse = scatter(sparse.points[:, 1], sparse.points[:, 2], ms=6,
     label="Smolyak", title="Sparse Smolyak (level 2)", aspect_ratio=1)
 #md savefig("quadrature_smolyak.svg"); nothing # hide
 # ![Sparse Smolyak sample](quadrature_smolyak.svg)

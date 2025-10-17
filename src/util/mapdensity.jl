@@ -5,7 +5,7 @@ struct MapTargetDensity <: AbstractMapDensity
 
     MapTargetDensity(density::Function, grad_density::Function) = new(density, :analytical, grad_density)
 
-    function MapTargetDensity(density:: Function, gradient_type::Symbol, grad_density::Function)
+    function MapTargetDensity(density::Function, gradient_type::Symbol, grad_density::Function)
 
         if gradient_type != :analytical
             throw(ArgumentError("gradient_type must be :analytical"))
@@ -20,7 +20,7 @@ struct MapTargetDensity <: AbstractMapDensity
         # Define automatic differentiation gradient
         if gradient_type == :auto_diff
             grad_density = x -> ForwardDiff.gradient(density, x)
-        # Define finite difference gradient
+            # Define finite difference gradient
         elseif gradient_type == :finite_difference
             grad_density = x -> central_difference_gradient(density, x)
         end
@@ -36,7 +36,7 @@ struct MapReferenceDensity <: AbstractMapDensity
     densitytype::Distributions.UnivariateDistribution
 
     # base constructor for reference density, directly using automatic differentiation
-    function MapReferenceDensity(densitytype::Distributions.UnivariateDistribution = Normal())
+    function MapReferenceDensity(densitytype::Distributions.UnivariateDistribution=Normal())
         density = x -> prod(map(Base.Fix1(pdf, densitytype), x))
         return new(density, :auto_diff, x -> ForwardDiff.gradient(density, x), densitytype)
     end

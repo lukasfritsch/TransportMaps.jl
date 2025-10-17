@@ -98,14 +98,14 @@ target_samples = evaluate(M, reference_samples)
 # Let's plot both the reference and target samples:
 
 p1 = scatter(reference_samples[:, 1], reference_samples[:, 2],
-            alpha=0.6, title="Reference Samples",
-            xlabel="Z₁", ylabel="Z₂", legend=false, aspect_ratio=:equal)
+    alpha=0.6, title="Reference Samples",
+    xlabel="Z₁", ylabel="Z₂", legend=false, aspect_ratio=:equal)
 
 p2 = scatter(target_samples[:, 1], target_samples[:, 2],
-            alpha=0.6, title="Target Samples",
-            xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
+    alpha=0.6, title="Target Samples",
+    xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
 
-plot(p1, p2, layout=(1,2), size=(800, 400))
+plot(p1, p2, layout=(1, 2), size=(800, 400))
 #md savefig("samples.svg"); nothing # hide
 # ![Transport Map Samples](samples.svg)
 
@@ -157,8 +157,8 @@ x2_grid = range(-3, 6, length=100)
 posterior_values = [banana_density([x₁, x₂]) for x₂ in x2_grid, x₁ in x1_grid]
 
 scatter(banana_samples[:, 1], banana_samples[:, 2],
-        alpha=0.6, title="Banana Distribution Samples",
-        xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
+    alpha=0.6, title="Banana Distribution Samples",
+    xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
 contour!(x1_grid, x2_grid, posterior_values, colormap=:viridis, label="Posterior Density")
 #md savefig("banana_samples.svg"); nothing # hide
 # ![Banana Distribution Samples](banana_samples.svg)

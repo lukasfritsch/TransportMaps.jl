@@ -54,7 +54,7 @@ function conditional_sample(M::PolynomialMap, x_given::Vector{Float64}, z_range:
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
     # invert the first k components to get z_given
-    z_given = inverse(M, x_given, k-1)
+    z_given = inverse(M, x_given, k - 1)
     # Push through the k-th component of the map
     return evaluate(M.components[k], [z_given..., z_range])
 end

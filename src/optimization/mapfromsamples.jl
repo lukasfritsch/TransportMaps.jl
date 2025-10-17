@@ -7,7 +7,7 @@ function objective(component::PolynomialMapComponent, samples::Matrix{Float64})
     ∂M = partial_derivative_zk(component, samples)
 
     # Monte Carlo estimate of the objective
-    obj = sum(.5 * Mₖ .^ 2 - log.(abs.(∂M)))
+    obj = sum(0.5 * Mₖ .^ 2 - log.(abs.(∂M)))
     return obj
 
 end
@@ -70,10 +70,10 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 function optimize!(
     M::PolynomialMap,
     samples::Matrix{Float64},
-    lm::LinearMap = LinearMap();
-    optimizer::Optim.AbstractOptimizer = LBFGS(),
-    options::Optim.Options = Optim.Options(),
-    test_fraction::Float64 = 0.0,
+    lm::LinearMap=LinearMap();
+    optimizer::Optim.AbstractOptimizer=LBFGS(),
+    options::Optim.Options=Optim.Options(),
+    test_fraction::Float64=0.0,
 )
     @assert size(samples, 2) == numberdimensions(M) "Samples must have the same number of columns as number of map components in M"
     # Standardize samples using linear map

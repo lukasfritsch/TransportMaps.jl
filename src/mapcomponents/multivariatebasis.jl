@@ -78,7 +78,7 @@ function gradient_coefficients(Ψ::Vector{MultivariateBasis{T}}, z::Vector{<:Rea
 end
 
 # Return multi-indices for a polynomial of degree p in k dimensions.
-function multivariate_indices(p::Int, k::Int; mode::Symbol = :total)
+function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
 
@@ -92,14 +92,14 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol = :total)
 
         for kk in 2:No
             for i in 1:k
-                pᵢ[i, kk] = sum(pᵢ[i:k, kk - 1])
+                pᵢ[i, kk] = sum(pᵢ[i:k, kk-1])
             end
         end
 
         P = k + 1
         for kk in 2:p
             L = P
-            for j in 1:k, m in (L - pᵢ[j, kk] + 1):L
+            for j in 1:k, m in (L-pᵢ[j, kk]+1):L
                 P += 1
                 idx[P, :] = idx[m, :]
                 idx[P, j] = idx[P, j] + 1

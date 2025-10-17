@@ -12,7 +12,7 @@ function _gaussian_weight_hermite_derivative(n::Int, z::Float64)
     if n == 0
         return -0.5 * z * exp(-0.25 * z^2)
     else
-        return n/2 * _gaussian_weight_hermite(n-1, z) - 0.5 * _gaussian_weight_hermite(n+1, z)
+        return n / 2 * _gaussian_weight_hermite(n - 1, z) - 0.5 * _gaussian_weight_hermite(n + 1, z)
     end
 end
 

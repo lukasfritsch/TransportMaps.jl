@@ -8,15 +8,15 @@ function kldivergence(
     M::PolynomialMap,
     target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights,
-    )
+)
 
     total = 0.0
     δ = eps()  # Small value to avoid log(0)
 
     for (i, zᵢ) in enumerate(eachrow(quadrature.points))
         # Add δ for regularization
-        Mᵢ = evaluate(M, zᵢ) .+ δ*zᵢ
-        log_π = log(target.density(Mᵢ)+δ)
+        Mᵢ = evaluate(M, zᵢ) .+ δ * zᵢ
+        log_π = log(target.density(Mᵢ) + δ)
         # Log determinant
         log_detJ = log(abs(jacobian(M, zᵢ)))
 
@@ -28,10 +28,10 @@ end
 
 # Gradient of KL divergence with respect to map coefficients
 function kldivergence_gradient(
-        M::PolynomialMap,
-        target::AbstractMapDensity,
-        quadrature::AbstractQuadratureWeights,
-    )
+    M::PolynomialMap,
+    target::AbstractMapDensity,
+    quadrature::AbstractQuadratureWeights,
+)
 
     n_coeffs = numbercoefficients(M)
     gradient_total = zeros(Float64, n_coeffs)
@@ -90,9 +90,9 @@ function optimize!(
     M::PolynomialMap,
     target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights;
-    optimizer::Optim.AbstractOptimizer = LBFGS(),
-    options::Optim.Options = Optim.Options()
-    )
+    optimizer::Optim.AbstractOptimizer=LBFGS(),
+    options::Optim.Options=Optim.Options()
+)
 
     # Define objective function and gradient
     function objective_function(a)

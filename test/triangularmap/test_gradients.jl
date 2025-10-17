@@ -286,13 +286,13 @@ using Optim
         # Test 3: Quadratic density π(x) = exp(-x₁² - 2x₂² - x₁x₂)
         # This has cross terms and different scaling in each dimension
         function quadratic_density(x)
-            return exp(-x[1]^2 - 2*x[2]^2 - x[1]*x[2])
+            return exp(-x[1]^2 - 2 * x[2]^2 - x[1] * x[2])
         end
 
         function quadratic_density_gradient(x)
             density_val = quadratic_density(x)
-            grad_x1 = -density_val * (2*x[1] + x[2])
-            grad_x2 = -density_val * (4*x[2] + x[1])
+            grad_x1 = -density_val * (2 * x[1] + x[2])
+            grad_x2 = -density_val * (4 * x[2] + x[1])
             return [grad_x1, grad_x2]
         end
 
