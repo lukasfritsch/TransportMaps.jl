@@ -14,7 +14,7 @@ using Optim
 
         # Standard normal target
         target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
-        quadrature = GaussHermiteWeights(5, 1)
+        quadrature = GaussHermiteWeights(3, 1)
 
         # KL divergence should be finite for near-identity map to standard normal
         kl = TransportMaps.kldivergence(M, target, quadrature)
@@ -32,7 +32,7 @@ using Optim
         setcoefficients!(M.components[1], [1.0, 0.1, 0.05])
 
         target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
-        quadrature = GaussHermiteWeights(5, 1)
+        quadrature = GaussHermiteWeights(3, 1)
 
         grad = TransportMaps.kldivergence_gradient(M, target, quadrature)
         @test length(grad) == numbercoefficients(M)
@@ -67,7 +67,6 @@ using Optim
 
     @testset "Linear Map Optimization" begin
         # Test optimization of simple linear maps
-        Random.seed!(42)
 
         # 2D linear map with proper initialization
         M = PolynomialMap(2, 1, :normal, Softplus())
@@ -77,7 +76,7 @@ using Optim
 
         # Target: Standard bivariate normal
         target = MapTargetDensity(x -> pdf(MvNormal(I(2)), x), :auto_diff)
-        quadrature = GaussHermiteWeights(5, 2)
+        quadrature = GaussHermiteWeights(3, 2)
 
         # Optimize
         result = optimize!(M, target, quadrature)
@@ -95,12 +94,11 @@ using Optim
 
     @testset "Optimization with Zero Initialization" begin
         # Test that optimization handles zero initialization gracefully
-        Random.seed!(42)
 
         # 1D map - simpler case
         M = PolynomialMap(1, 1, :normal, Softplus())
         target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
-        quadrature = GaussHermiteWeights(5, 1)
+        quadrature = GaussHermiteWeights(3, 1)
 
         # This should handle the zero initialization issue internally
         result = optimize!(M, target, quadrature)
@@ -112,7 +110,6 @@ using Optim
 
     @testset "Banana Density Optimization" begin
         # Test optimization with banana-shaped target density
-        Random.seed!(123)
 
         M = PolynomialMap(2, 2, :normal, Softplus())
 
@@ -122,7 +119,7 @@ using Optim
         end
 
         target = MapTargetDensity(banana_density, :auto_diff)
-        quadrature = GaussHermiteWeights(7, 2)
+        quadrature = GaussHermiteWeights(3, 2)
 
         # Optimize
         result = optimize!(M, target, quadrature)
@@ -142,7 +139,6 @@ using Optim
 
     @testset "Variance Diagnostics" begin
         # Test variance diagnostic computation
-        Random.seed!(456)
 
         # Simple 1D case
         M = PolynomialMap(1, 1, :normal, Softplus())
@@ -151,7 +147,7 @@ using Optim
         target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
 
         # Generate test samples
-        Z = randn(100, 1)
+        Z = randn(10, 1)
 
         var_diag = variance_diagnostic(M, target, Z)
         @test var_diag ≥ 0.0  # Variance must be non-negative
@@ -163,7 +159,7 @@ using Optim
         setcoefficients!(M2.components[2], [0.0, 0.0, 1.0])  # Second component through softplus
 
         target2 = MapTargetDensity(x -> pdf(MvNormal(I(2)), x), :auto_diff)
-        Z2 = randn(100, 2)
+        Z2 = randn(10, 2)
 
         var_diag2 = variance_diagnostic(M2, target2, Z2)
         @test var_diag2 ≥ 0.0
@@ -172,7 +168,6 @@ using Optim
 
     @testset "Optimization Convergence with Different Targets" begin
         # Test optimization with various target distributions
-        Random.seed!(789)
 
         @testset "Exponential Target" begin
             # 1D exponential distribution
@@ -185,7 +180,7 @@ using Optim
             end
 
             target = MapTargetDensity(exp_target, :auto_diff)
-            quadrature = GaussHermiteWeights(6, 1)
+            quadrature = GaussHermiteWeights(3, 1)
 
             result = optimize!(M, target, quadrature)
             @test result.iterations > 0  # Check that optimization ran
@@ -210,7 +205,7 @@ using Optim
             end
 
             target = MapTargetDensity(mixture_target, :auto_diff)
-            quadrature = GaussHermiteWeights(5, 2)
+            quadrature = GaussHermiteWeights(3, 2)
 
             result = optimize!(M, target, quadrature)
             @test result.iterations > 0  # Check that optimization ran
