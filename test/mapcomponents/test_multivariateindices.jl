@@ -23,6 +23,11 @@ using Test
     @test any(x -> x == [2,0], nm)
     @test any(x -> x == [0,1], nm)
     @test any(x -> x == [0,2], nm)
+
+    # p=0, k=4 should return only the zero index
+    zero_idx = multivariate_indices(0, 4)
+    @test length(zero_idx) == 1
+    @test zero_idx[1] == [0,0,0,0]
 end
 
 @testset "Reduced Margin" begin

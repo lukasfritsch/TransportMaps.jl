@@ -86,22 +86,19 @@ function optimize!(
     train_samples, test_samples = _test_train_split(samples, test_fraction)
 
     # Store optimization results
-    results = Vector{Any}(undef, numberdimensions(M))
+    results = OptimizationResult(numberdimensions(M))
 
     # Optimize each component sequentially using the training split
     for k in 1:numberdimensions(M)
         component = M[k]
         println("Optimizing component $(k) / $(numberdimensions(M))")
-        results[k] = optimize!(component, train_samples[:, 1:k], optimizer, options)
+        res = optimize!(component, train_samples[:, 1:k], optimizer, options)
 
         # Compute validation objective
-        if !isempty(test_samples)
-            mean_train = results[k].minimum / size(train_samples, 1)
-            mean_test = objective(component, test_samples[:, 1:k]) / size(test_samples, 1)
+        train_obj = objective(component, train_samples[:, 1:k]) / size(train_samples, 1)
+        test_obj = !isempty(test_samples) ? objective(component, test_samples[:, 1:k]) / size(test_samples, 1) : 0.
 
-            println("  Train for $k: ", mean_train)
-            println("  Test  for $k: ", mean_test)
-        end
+        update_optimization_result!(results, k, train_obj, test_obj, res)
     end
 
     return results

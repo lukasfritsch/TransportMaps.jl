@@ -78,6 +78,8 @@ export variance_diagnostic
 export reduced_margin
 export adaptive_optimization
 export AdaptiveTransportMap
+export OptimizationHistory
+export OptimizationResult
 
 # Conditional densities and samples
 export conditional_density
@@ -130,6 +132,7 @@ include("triangularmap/composedmap.jl")
 
 include("optimization/mapfromdensity.jl")
 include("optimization/mapfromsamples.jl")
+include("optimization/optimizationhistory.jl")
 include("optimization/adaptivetransportmap.jl")
 
 include("util/finitedifference.jl")

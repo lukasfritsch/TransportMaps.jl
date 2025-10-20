@@ -21,6 +21,11 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
 
+    # Special-case p == 0: only the constant multi-index of zeros
+    if p == 0
+        return [zeros(Int, k)]
+    end
+
     if mode == :total
         # total-order multi-indices
         No = Int64(factorial(p + k) / factorial(p) / factorial(k))
@@ -104,7 +109,7 @@ function reduced_margin(Λ::Vector{<:Vector{Int}})
     present = Set(tuple(α...) for α in Λ)
 
     # Generate candidates: all multi-indices one step above elements in Λ
-    candidates = Set{NTuple{d, Int}}()
+    candidates = Set{NTuple{d,Int}}()
     for β in Λ
         for i in 1:d
             α = copy(β)
