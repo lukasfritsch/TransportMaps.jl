@@ -72,10 +72,10 @@ res = optimize!(M, target_samples, L)
 #md nothing # hide
 
 # We can check the optimization results of the first component:
-#md res[1]
+#md res.optimization_results[1]
 
 # We can also check the optimization results of the second component:
-#md res[2]
+#md res.optimization_results[2]
 
 # Finally, we construct a composed map that combines the linear and polynomial maps:
 C = ComposedMap(L, M)

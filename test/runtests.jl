@@ -28,6 +28,8 @@ using Test
     @testset "Optimization" begin
         include("optimization/test_mapfromdensity.jl")
         include("optimization/test_mapfromsamples.jl")
+        include("optimization/test_optimizationhistory.jl")
+        include("optimization/test_adaptivetransportmap.jl")
     end
 
     # Test Utilities

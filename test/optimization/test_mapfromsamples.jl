@@ -33,20 +33,20 @@ using Random
     M = PolynomialMap(2, 2)
     result = optimize!(M, samples_banana)
 
-    @test result[1].iterations > 0  # Check that optimization ran
-    @test isfinite(result[1].minimum)
+    @test result.optimization_results[1].iterations > 0  # Check that optimization ran
+    @test isfinite(result.optimization_results[1].minimum)
 
-    @test result[2].iterations > 0  # Check that optimization ran
-    @test isfinite(result[2].minimum)
+    @test result.optimization_results[2].iterations > 0  # Check that optimization ran
+    @test isfinite(result.optimization_results[2].minimum)
 
     samples_new = generate_banana_samples(100)
     M2 = PolynomialMap(2, 2)
     result2 = optimize!(M2, samples_new, test_fraction=0.3)
 
-    @test result2[1].iterations > 0  # Check that optimization ran
-    @test isfinite(result2[1].minimum)
+    @test result2.optimization_results[1].iterations > 0  # Check that optimization ran
+    @test isfinite(result2.optimization_results[1].minimum)
 
-    @test result2[2].iterations > 0  # Check that optimization ran
-    @test isfinite(result2[2].minimum)
+    @test result2.optimization_results[2].iterations > 0  # Check that optimization ran
+    @test isfinite(result2.optimization_results[2].minimum)
 
 end
