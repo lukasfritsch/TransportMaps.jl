@@ -8,6 +8,7 @@ using Test
         include("mapcomponents/univariatebases/test_gaussianweighted.jl")
         include("mapcomponents/univariatebases/test_cubicspline.jl")
         include("mapcomponents/univariatebases/test_linearized.jl")
+        include("mapcomponents/test_multivariateindices.jl")
         include("mapcomponents/test_multivariatebasis.jl")
         include("mapcomponents/test_rectifier.jl")
         include("mapcomponents/test_polynomialmapcomponent.jl")

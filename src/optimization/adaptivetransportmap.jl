@@ -1,114 +1,58 @@
-"""
-reduced_margin(Λ)
+# Adaptive transport map optimization based on greedy basis selection
+# as described in:
+#   Baptista, R., Marzouk, Y., & Zahm, O. (2023). On the Representation and Learning of
+#   Monotone Triangular Transport Maps. Foundations of Computational Mathematics.
+#   https://doi.org/10.1007/s10208-023-09630-x
 
-Return the reduced margin of a multi-index set Λ.
-
-Λ is expected to be a Vector{Vector{Int}} where each inner Vector is a multi-index
-of length d. The reduced margin Λ^RM is defined as the set of multi-indices α not
-in Λ such that for all i with α_i != 0 we have α - e_i ∈ Λ.
-"""
-function reduced_margin(Λ::Vector{<:Vector{Int}}) #! See where this goes
-    # quick conversion to a Set for membership tests using tuples
-    present = Set{NTuple{0, Int}}()
-    # handle variable dimension by using tuples of variable length
-    present = Set{Tuple{Int}}()
-    # Instead of parametrized tuple type, we'll convert to tuples and use Any tuple
-    present = Set{Any}()
-    for α in Λ
-        push!(present, tuple(α...))
-    end
-
-    # determine dimension d from first element; assume Λ not empty
-    if isempty(Λ)
-        return Vector{Vector{Int}}()
-    end
-    d = length(Λ[1])
-
-    # A helper to generate candidate neighbors (α - e_i) and to check membership
-    is_in_present = x -> (tuple(x...) in present)
-
-    reduced = Vector{Vector{Int}}()
-
-    # To build the reduced margin, we need to look at potential α not in Λ.
-    # A practical approach: find all α that are one unit above some element in Λ
-    # i.e., for each β in Λ and each coordinate i, consider α = β + e_i.
-    # Then α is in reduced margin iff α ∉ Λ and for all j with α_j != 0, α - e_j ∈ Λ.
-    candidates = Set{Any}()
-    for β in Λ
-        for i in 1:d
-            α = copy(β)
-            α[i] += 1
-            push!(candidates, tuple(α...))
-        end
-    end
-
-    for tup in candidates
-        α = collect(tup)
-        if tup in present
-            continue
-        end
-        ok = true
-        for i in 1:d
-            if α[i] != 0
-                nb = copy(α)
-                nb[i] -= 1
-                if !(tuple(nb...) in present)
-                    ok = false
-                    break
-                end
-            end
-        end
-        if ok
-            push!(reduced, α)
-        end
-    end
-
-    return reduced
-end
-
-
-# Placeholder for ATM implementation
-
-# Todo: see if Map is given as argument or just options (same as polynomialmap)
-#* add test-train split (and later, cross-validation)
-function optimize_adaptive(
-    M::PolynomialMap,
+# todo: add doc-string (when everything is done)
+# todo: add test-train split (and later, k-fold cross-validation)
+function AdaptiveTransportMap(
     samples::Matrix{Float64},
-    maxterms::Vector{Int64}
+    maxterms::Vector{Int64},
+    rectifier::AbstractRectifierFunction = Softplus(),
+    basis::AbstractPolynomialBasis = LinearizedHermiteBasis();
+    optimizer::Optim.AbstractOptimizer = LBFGS(),
+    options::Optim.Options = Optim.Options()
 )
+    @assert length(maxterms) == size(samples, 2) "Length of maxterms must equal number of dimensions in samples"
+    # Extract number of dimensions from samples
+    d = size(samples, 2)
+    T = typeof(basis)
+    map_components = Vector{PolynomialMapComponent{T}}()
 
-
-    n_components = numberdimensions(M)
-    for k in 1:n_components
-        println("Optimizing component $k / $n_components")
-        component = get_component(M, k)
-        adaptive_optimization(component, samples[:, k], maxterms[k])
+    for k in 1:d
+        println("Optimizing component $k / $d")
+        component = adaptive_optimization(samples[:, 1:k], maxterms[k], rectifier, basis, optimizer, options)
+        push!(map_components, component)
     end
+
+    # Construct final map from optimized components
+    M = PolynomialMap(map_components; forwarddirection=:reference)
 
     return M
 end
 
+# todo: add doc-string
+# todo: add test-train split (and later, k-fold cross-validation)
 function adaptive_optimization(
-    component::PolynomialMapComponent, #! or some other options
     samples::Matrix{Float64},
-    maxterms::Int;
-    optimizer::Optim.AbstractOptimizer = LBFGS(),
-    options::Optim.Options = Optim.Options()
+    maxterms::Int,
+    rectifier::AbstractRectifierFunction,
+    basis::AbstractPolynomialBasis,
+    optimizer::Optim.AbstractOptimizer,
+    options::Optim.Options
 )
 
-    d = numberdimensions(component)
+    d = size(samples, 2)
     # Initialize multi-index set to contain only zero index (constant term)
     Λ = multivariate_indices(1, d)
 
     # Initialize component with the multi-index set
-    component = PolynomialMapComponent(Λ) # todo: pass options for initialization
+    component = PolynomialMapComponent(Λ, rectifier, basis, samples)
+    optimize!(component, samples, optimizer, options)
 
     # start greedy optimization
     for t in 1:maxterms
-        println("Optimizing with term $t / $maxterms")
-
-        res = optimize!(component, samples, optimizer, options)
-
         # Candidates: terms in the reduced margin of Λₜ
         Λ_rm = reduced_margin(Λ)
 
@@ -122,13 +66,15 @@ function adaptive_optimization(
             push!(Λ_cand, α)
 
             # Update component with new multi-index set
-            component_cand = PolynomialMapComponent(Λ_cand) # copy the optimized component coefficients; set other to 0
+            component_cand = PolynomialMapComponent(Λ_cand, rectifier, basis, samples)
+            # Copy the optimized component coefficients; set other to 0
             coeff = copy(getcoefficients(component))
-            setcoefficients!(component_cand, coeff[1:length(getcoefficients(component_cand))]) # set coefficients for existing terms
+            setcoefficients!(component_cand, [coeff..., 0.0]) # set coefficients for existing terms
 
             # evaluate objective and gradient of objective function
             objectives[i] = objective(component_cand, samples)
-            gradients[i] = abs(objective_gradient!(component_cand, samples)) #! maybe like this?
+            println("Gradient for candidate $α: $(abs(objective_gradient!(component_cand, samples)[end]))")
+            gradients[i] = abs(objective_gradient!(component_cand, samples)[end]) #! maybe like this?
         end
 
         # select best candidate based on maximum gradient
@@ -136,7 +82,10 @@ function adaptive_optimization(
         push!(Λ, α⁺)
 
         # Update component with new multi-index set
-        component = PolynomialMapComponent(Λ)
+        println("Optimizing with term $t / $maxterms")
+        component = PolynomialMapComponent(Λ, rectifier, basis, samples)
+        optimize!(component, samples, optimizer, options) #! maybe keep track of optimization result?
+
     end
 
     return component

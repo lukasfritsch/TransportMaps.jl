@@ -79,7 +79,19 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         @assert degree > 0 "Degree must be a positive integer"
         @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
 
+        # Construct multi-indices for the polynomial basis
         multi_indices = multivariate_indices(degree, index, mode=map_type)
+        return PolynomialMapComponent(multi_indices, rectifier, basis, samples)
+    end
+
+    function PolynomialMapComponent(
+        multi_indices::Vector{Vector{Int}},
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        samples::AbstractMatrix{Float64}
+    )
+        # Determine index from multi_indices and type of basis
+        index = length(multi_indices[1])
         T = typeof(basis)
         basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
 
@@ -90,7 +102,6 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
 
             for j in 1:dim
                 deg_j = multiindexset[j]
-
                 if isa(basis, HermiteBasis)
                     uni_bases[j] = HermiteBasis()
                 elseif isa(basis, LinearizedHermiteBasis)

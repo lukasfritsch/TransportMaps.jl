@@ -76,6 +76,8 @@ export kldivergence_gradient
 export optimize!
 export variance_diagnostic
 export reduced_margin
+export adaptive_optimization
+export AdaptiveTransportMap
 
 # Conditional densities and samples
 export conditional_density
@@ -117,6 +119,7 @@ include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
 include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
 
 include("mapcomponents/multivariatebasis.jl")
+include("mapcomponents/multivariateindices.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
 
