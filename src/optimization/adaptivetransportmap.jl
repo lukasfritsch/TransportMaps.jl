@@ -14,6 +14,7 @@ Adaptively optimize a triangular transport map by greedily enriching the multi-i
 - `maxterms::Vector{Int64}`: Maximum number of terms for each component
 
 # Keyword Arguments
+- `lm::LinearMap=LinearMap()`: Linear map to standardize samples
 - `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
@@ -27,6 +28,7 @@ Adaptively optimize a triangular transport map by greedily enriching the multi-i
 function AdaptiveTransportMap(
     samples::Matrix{Float64},
     maxterms::Vector{Int64},
+    lm::LinearMap=LinearMap(),
     rectifier::AbstractRectifierFunction=Softplus(),
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
@@ -39,6 +41,9 @@ function AdaptiveTransportMap(
     T = typeof(basis)
     map_components = Vector{PolynomialMapComponent{T}}()
     iteration_histories = Vector{OptimizationHistory}()
+
+    # Standardize samples using linear map
+    samples = evaluate(lm, samples)
 
     # Prepare train/test split
     train_samples, test_samples = _test_train_split(samples, test_fraction)
