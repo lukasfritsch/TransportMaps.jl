@@ -62,6 +62,105 @@ function AdaptiveTransportMap(
 end
 
 """
+    AdaptiveTransportMap(samples, maxterms, k_folds; kwargs...)
+
+Adaptively optimize a triangular transport map using k-fold cross-validation to
+select the number of terms per component.
+
+# Arguments
+- `samples::Matrix{Float64}`: Sample data where rows are samples and columns are dimensions
+- `maxterms::Vector{Int64}`: Upper bound on the number of terms to consider for each component
+- `k_folds::Int`: Number of folds to use for cross-validation
+
+# Keyword Arguments
+- `lm::LinearMap=LinearMap()`: Linear map to standardize samples
+- `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
+- `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
+- `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
+- `options::Optim.Options=Optim.Options()`: Optimizer options
+
+# Returns
+- `M::PolynomialMap`: The optimized triangular transport map trained on all samples
+- `fold_histories::Vector{Vector{OptimizationHistory}}`: Optimization history for each component and fold
+- `selected_terms::Vector{Int}`: Number of terms selected for each component
+"""
+function AdaptiveTransportMap(
+    samples::Matrix{Float64},
+    maxterms::Vector{Int64},
+    k_folds::Int;
+    lm::LinearMap=LinearMap(),
+    rectifier::AbstractRectifierFunction=Softplus(),
+    basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
+    optimizer::Optim.AbstractOptimizer=LBFGS(),
+    options::Optim.Options=Optim.Options()
+)
+    @assert length(maxterms) == size(samples, 2) "Length of maxterms must equal number of dimensions in samples"
+    @assert k_folds >= 2 "k_folds must be at least 2"
+    @assert k_folds <= size(samples, 1) "k_folds cannot exceed the number of samples"
+
+    d = size(samples, 2)
+    T = typeof(basis)
+    map_components = Vector{PolynomialMapComponent{T}}(undef, d)
+    fold_histories = Vector{Vector{OptimizationHistory}}(undef, d)
+    selected_terms = Vector{Int}(undef, d)
+
+    samples = evaluate(lm, samples)
+    folds = _kfold_indices(size(samples, 1), k_folds)
+
+    for k in 1:d
+        println("Start k-fold optimization of component $k with $k_folds folds")
+        component_histories = Vector{OptimizationHistory}(undef, k_folds)
+
+        for fold_id in 1:k_folds
+            test_idx = folds[fold_id]
+            train_idx = [idx for (j, idxs) in enumerate(folds) if j != fold_id for idx in idxs]
+
+            train_samples_fold = samples[train_idx, 1:k]
+            test_samples_fold = samples[test_idx, 1:k]
+
+            println("   * Fold $fold_id / $k_folds")
+            _, history_fold = adaptive_optimization(
+                train_samples_fold,
+                test_samples_fold,
+                maxterms[k],
+                rectifier,
+                basis,
+                optimizer,
+                options,
+            )
+
+            component_histories[fold_id] = history_fold
+        end
+
+        mean_test_objectives = [Statistics.mean(history.test_objectives[t] for history in component_histories) for t in 1:maxterms[k]]
+        best_iteration = argmin(mean_test_objectives)
+        selected_terms[k] = best_iteration
+
+        fold_scores = [component_histories[i].test_objectives[best_iteration] for i in 1:k_folds]
+
+        best_fold = argmin(fold_scores)
+        Λ_best = deepcopy(component_histories[best_fold].terms[best_iteration])
+
+        println("   Best fold: $best_fold")
+        println("   Selected $(selected_terms[k]) terms (avg validation objective $(mean_test_objectives[best_iteration]))")
+
+        component = PolynomialMapComponent(Λ_best, rectifier, basis, samples[:, 1:k])
+        res = optimize!(component, samples[:, 1:k], optimizer, options)
+
+        train_obj = objective(component, samples[:, 1:k]) / size(samples, 1)
+        println("   Full-data objective: $train_obj")
+        println("   Final optimizer status: $(Optim.converged(res) ? "Converged" : "Not Converged") with $(Optim.iterations(res)) iterations")
+
+        map_components[k] = component
+        fold_histories[k] = component_histories
+    end
+
+    M = PolynomialMap(map_components; forwarddirection=:reference)
+
+    return M, fold_histories, selected_terms
+end
+
+"""
     adaptive_optimization(train_samples, test_samples, maxterms, rectifier, basis, optimizer, options)
 
 Adaptively optimize a single transport map component by greedily enriching the multi-index set.
@@ -146,4 +245,24 @@ function adaptive_optimization(
     end
 
     return component, history
+end
+
+function _kfold_indices(n_samples::Int, k_folds::Int)
+    idx = randperm(n_samples)
+    fold_sizes = fill(div(n_samples, k_folds), k_folds)
+    remainder = n_samples % k_folds
+    for i in 1:remainder
+        fold_sizes[i] += 1
+    end
+
+    folds = Vector{Vector{Int}}(undef, k_folds)
+    pointer = 1
+    for fold_id in 1:k_folds
+        fold_length = fold_sizes[fold_id]
+        stop_idx = pointer + fold_length - 1
+        folds[fold_id] = collect(idx[pointer:stop_idx])
+        pointer = stop_idx + 1
+    end
+
+    return folds
 end

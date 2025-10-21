@@ -3,6 +3,7 @@ using Test
 using Random
 using Distributions
 using Optim
+using Statistics
 
 @testset "Adaptive Transport Map" begin
     # Set random seed for reproducibility
@@ -87,6 +88,7 @@ using Optim
         M1, h1 = AdaptiveTransportMap(
             samples_1d,
             maxterms,
+            LinearMap(),
             Softplus(),
             LinearizedHermiteBasis(),
             optimizer=LBFGS(),
@@ -99,6 +101,7 @@ using Optim
         M2, h2 = AdaptiveTransportMap(
             samples_1d,
             maxterms,
+            LinearMap(),
             ShiftedELU(),
             HermiteBasis(),
             optimizer=LBFGS(),
@@ -125,6 +128,33 @@ using Optim
 
         @test isa(result, Vector)
         @test length(result) == n_dims
+    end
+
+    @testset "K-Fold Cross Validation" begin
+        maxterms = [2, 3]
+        k_folds = 3
+        opts = Optim.Options(iterations=5)
+
+        M, fold_histories, selected_terms = AdaptiveTransportMap(
+            samples,
+            maxterms,
+            k_folds;
+            optimizer=LBFGS(),
+            options=opts,
+        )
+
+        @test M isa PolynomialMap
+        @test length(fold_histories) == n_dims
+        @test selected_terms isa Vector{Int}
+        @test length(selected_terms) == n_dims
+        @test all(length(component_histories) == k_folds for component_histories in fold_histories)
+        @test all(all(history isa OptimizationHistory for history in component_histories) for component_histories in fold_histories)
+        @test all(selected_terms[i] <= maxterms[i] for i in 1:n_dims)
+        @test all(selected_terms .>= 1)
+        @test all(all(length(history.train_objectives) == maxterms[i] for history in fold_histories[i]) for i in 1:n_dims)
+
+        mean_validation = [Statistics.mean(fold_histories[i][fold].test_objectives[selected_terms[i]] for fold in 1:k_folds) for i in 1:n_dims]
+        @test all(isfinite, mean_validation)
     end
 
 end
