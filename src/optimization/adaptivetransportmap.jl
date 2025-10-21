@@ -87,10 +87,10 @@ select the number of terms per component.
 function AdaptiveTransportMap(
     samples::Matrix{Float64},
     maxterms::Vector{Int64},
-    k_folds::Int;
+    k_folds::Int,
     lm::LinearMap=LinearMap(),
     rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
+    basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
     options::Optim.Options=Optim.Options()
 )

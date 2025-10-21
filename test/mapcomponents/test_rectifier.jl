@@ -22,6 +22,12 @@ using Test
         @test softplus(1) isa Float64
         @test softplus(1.0) isa Float64
 
+        # Test softplus with different β values
+        softplus_beta_2 = Softplus(2.0)
+        @test softplus_beta_2(0.0) ≈ log(2.0) / 2.0
+        @test softplus_beta_2(-10.0) ≈ exp(-20.0) / 2.0 atol = 1e-9
+        @test softplus_beta_2(10.0) ≈ 10.0 atol = 1e-4
+
     end
 
     @testset "ShiftedELU" begin

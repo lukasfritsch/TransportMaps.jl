@@ -1,13 +1,15 @@
 struct Softplus <: AbstractRectifierFunction
+    β::Float64
+    Softplus(β::Float64=1.0) = new(β)
 end
 
 function (r::Softplus)(ξ)
-    return log1p(exp(ξ))  # log(1 + exp(ξ)) for numerical stability
+    return 1 / r.β * log1p(exp(r.β * ξ)) # log(1 + exp(βξ)) / β
 end
 
-# Derivative of Softplus: d/dξ log(1 + exp(ξ)) = exp(ξ)/(1 + exp(ξ)) = sigmoid(ξ)
+# Derivative of Softplus: d/dξ Softplus(ξ) = σ(βξ) = 1 / (1 + exp(-βξ))
 function derivative(r::Softplus, ξ)
-    return 1.0 / (1.0 + exp(-ξ))  # sigmoid function
+    return 1.0 / (1.0 + exp(-r.β * ξ))  # sigmoid function
 end
 
 struct ShiftedELU <: AbstractRectifierFunction
@@ -36,17 +38,18 @@ function derivative(r::IdentityRectifier, ξ)
 end
 
 # Display methods for Softplus
-function Base.show(io::IO, ::Softplus)
-    print(io, "Softplus()")
+function Base.show(io::IO, s::Softplus)
+    print(io, "Softplus(β=$(s.β))")
 end
 
-function Base.show(io::IO, ::MIME"text/plain", ::Softplus)
+function Base.show(io::IO, ::MIME"text/plain", s::Softplus)
     println(io, "Softplus:")
-    println(io, "  Function: log(1 + exp(ξ))")
+    println(io, "  Function: log(1 + exp(βξ)) / β")
+    println(io, "  Parameter β: $(s.β)")
     println(io, "  Domain: ℝ")
     println(io, "  Range: (0, ∞)")
     println(io, "  Properties: Smooth approximation to ReLU, always positive")
-    println(io, "  Derivative: σ(ξ) = 1/(1 + exp(-ξ)) (sigmoid)")
+    println(io, "  Derivative: σ(βξ) = 1/(1 + exp(-βξ)) (sigmoid)")
 end
 
 # Display methods for ShiftedELU
