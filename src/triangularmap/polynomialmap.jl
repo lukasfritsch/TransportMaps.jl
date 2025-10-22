@@ -12,11 +12,10 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         map_type::Symbol=:total
     )
         @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
+        @assert referencetype in [:normal] "Currently, only :normal reference density is supported"
 
         if referencetype == :normal
             referencedensity = Normal()
-        else
-            error("Unsupported reference density type: $referencetype")
         end
 
         return PolynomialMap(dimension, degree, referencedensity, rectifier, basis, map_type)
@@ -416,11 +415,6 @@ end
 function setforwarddirection!(M::PolynomialMap, forwarddirection::Symbol)
     @assert forwarddirection in [:reference, :target] "Direction must be :reference, :target"
     M.forwarddirection = forwarddirection
-end
-
-function setoptimizationdirection!(M::PolynomialMap, optimizationdirection::Symbol)
-    @assert optimizationdirection in [:forward, :backward] "Direction must be :forward, :backward"
-    M.optimizationdirection = optimizationdirection
 end
 
 # Number of coefficients in the polynomial map

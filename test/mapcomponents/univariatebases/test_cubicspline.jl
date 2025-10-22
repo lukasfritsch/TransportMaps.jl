@@ -35,6 +35,14 @@ using Distributions
     dd = basisfunction_derivative(cs, 2, 1.0)
     @test isfinite(dd)
 
+    # Case abs(z) > radius
+    @test basisfunction(cs, 3, 5.0) ≈ hermite_polynomial(3, 5.0) * 0.0
+    @test basisfunction_derivative(cs, 3, 5.0) ≈ 0.0
+
+    # Case n == 0
+    @test basisfunction(cs, 0, 0.0) ≈ 1.0
+    @test basisfunction_derivative(cs, 0, 0.0) ≈ 0.0
+
     @testset "Show" begin
         cs_show = CubicSplineHermiteBasis()
         @test_nowarn sprint(show, cs_show)

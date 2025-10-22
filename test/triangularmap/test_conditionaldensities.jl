@@ -200,4 +200,172 @@ end
         density_test = multivariate_conditional_density(M3, x_range_test, x_given)
         @test density_test > 0 && isfinite(density_test)
     end
+
+    @testset "Input Types" begin
+        # Test conditional_density with various input type combinations
+        @testset "conditional_density - Float64 x_range, AbstractArray x_given" begin
+            x_range_float = 0.8
+            x_given_array = [0.5]
+            result = conditional_density(M3, x_range_float, x_given_array)
+            @test isa(result, Real)
+            @test result > 0
+
+            # Verify it matches the standard call
+            expected = conditional_density(M3, x_range_float, x_given_array)
+            @test result ≈ expected atol = 1e-10
+        end
+
+        @testset "conditional_density - AbstractArray x_range, AbstractArray x_given" begin
+            x_range_array = [0.8, 0.9]
+            x_given_array = [0.5]
+            results = conditional_density(M3, x_range_array, x_given_array)
+            @test isa(results, AbstractArray)
+            @test length(results) == length(x_range_array)
+            @test all(r -> r > 0, results)
+
+            # Verify each result matches individual calls
+            for (i, xr) in enumerate(x_range_array)
+                expected = conditional_density(M3, xr, x_given_array)
+                @test results[i] ≈ expected atol = 1e-10
+            end
+        end
+
+        @testset "conditional_density - AbstractArray x_range, Float64 x_given" begin
+            x_range_array = [0.8, 0.9]
+            x_given_float = 0.5
+            results = conditional_density(M3, x_range_array, x_given_float)
+            @test isa(results, AbstractArray)
+            @test length(results) == length(x_range_array)
+            @test all(r -> r > 0, results)
+
+            # Verify it matches the call with x_given as array
+            expected = conditional_density(M3, x_range_array, [x_given_float])
+            @test results ≈ expected atol = 1e-10
+        end
+
+        @testset "conditional_sample - AbstractArray x_given, Float64 z_range" begin
+            x_given_array = [0.5]
+            z_float = 0.3
+            result = conditional_sample(M3, x_given_array, z_float)
+            @test isa(result, Real)
+
+            # Verify consistency - calling twice with same inputs should give same result
+            result2 = conditional_sample(M3, x_given_array, z_float)
+            @test result ≈ result2 atol = 1e-10
+        end
+
+        @testset "conditional_sample - Float64 x_given, AbstractArray z_range" begin
+            x_given_float = 0.5
+            z_array = [0.3, 0.4]
+            results = conditional_sample(M3, x_given_float, z_array)
+            @test isa(results, AbstractArray)
+            @test length(results) == length(z_array)
+
+            # Verify it matches the call with x_given as array
+            expected = conditional_sample(M3, [x_given_float], z_array)
+            @test results ≈ expected atol = 1e-10
+        end
+
+        @testset "conditional_sample - AbstractArray x_given, AbstractArray z_range" begin
+            x_given_array = [0.5]
+            z_array = [0.3, 0.4]
+            results = conditional_sample(M3, x_given_array, z_array)
+            @test isa(results, AbstractArray)
+            @test length(results) == length(z_array)
+
+            # Verify each result is consistent
+            for (i, z) in enumerate(z_array)
+                individual = conditional_sample(M3, x_given_array, z)
+                @test results[i] ≈ individual atol = 1e-10
+            end
+        end
+
+        @testset "multivariate_conditional_density - AbstractArray x_range, Float64 x_given" begin
+            x_range_array = [0.3, 0.8]
+            x_given_float = 0.5
+            result = multivariate_conditional_density(M3, x_range_array, x_given_float)
+            @test isa(result, Real)
+            @test result > 0
+
+            # Verify it matches the call with x_given as array
+            expected = multivariate_conditional_density(M3, x_range_array, [x_given_float])
+            @test result ≈ expected atol = 1e-10
+        end
+
+        @testset "multivariate_conditional_density - AbstractArray x (full vector)" begin
+            x_full_array = [0.5, 0.3, 0.8]
+            result = multivariate_conditional_density(M3, x_full_array)
+            @test isa(result, Real)
+            @test result > 0
+
+            # Verify it matches manual computation
+            manual = conditional_density(M3, x_full_array[1], Float64[])
+            manual *= conditional_density(M3, x_full_array[2], x_full_array[1:1])
+            manual *= conditional_density(M3, x_full_array[3], x_full_array[1:2])
+            @test result ≈ manual atol = 1e-10
+        end
+
+        @testset "multivariate_conditional_sample - Float64 x_given, AbstractArray z_range" begin
+            x_given_float = 0.5
+            z_array = [0.2, 0.4]
+            results = multivariate_conditional_sample(M3, x_given_float, z_array)
+            @test isa(results, AbstractArray)
+            @test length(results) == length(z_array)
+
+            # Verify it matches the call with x_given as array
+            expected = multivariate_conditional_sample(M3, [x_given_float], z_array)
+            @test results ≈ expected atol = 1e-10
+        end
+
+        @testset "Explicit Vector{Float64} inputs" begin
+            # Test with explicitly typed Vector{Float64}
+            x_range_vec = Vector{Float64}([0.8, 0.9])
+            x_given_vec = Vector{Float64}([0.5])
+            z_range_vec = Vector{Float64}([0.3, 0.4])
+
+            # conditional_density with explicit vectors
+            dens_result = conditional_density(M3, x_range_vec, x_given_vec)
+            @test isa(dens_result, AbstractArray)
+            @test length(dens_result) == 2
+
+            # conditional_sample with explicit vectors
+            samp_result = conditional_sample(M3, x_given_vec, z_range_vec)
+            @test isa(samp_result, AbstractArray)
+            @test length(samp_result) == 2
+
+            # multivariate_conditional_density with explicit vectors
+            mv_dens_result = multivariate_conditional_density(M3, x_range_vec, x_given_vec)
+            @test isa(mv_dens_result, Real)
+            @test mv_dens_result > 0
+
+            # multivariate_conditional_sample with explicit vectors
+            mv_samp_result = multivariate_conditional_sample(M3, x_given_vec, z_range_vec)
+            @test isa(mv_samp_result, AbstractArray)
+            @test length(mv_samp_result) == 2
+        end
+
+        @testset "Mixed numeric types" begin
+            # Test with Float32 arrays
+            x_range_f32 = Float32[0.8, 0.9]
+            x_given_f32 = Float32[0.5]
+            z_range_f32 = Float32[0.3, 0.4]
+
+            # Should work with Float32 inputs
+            dens_f32 = conditional_density(M3, x_range_f32, x_given_f32)
+            @test isa(dens_f32, AbstractArray)
+
+            samp_f32 = conditional_sample(M3, x_given_f32, z_range_f32)
+            @test isa(samp_f32, AbstractArray)
+
+            mv_dens_f32 = multivariate_conditional_density(M3, x_range_f32, x_given_f32)
+            @test isa(mv_dens_f32, Real)
+
+            mv_samp_f32 = multivariate_conditional_sample(M3, x_given_f32, z_range_f32)
+            @test isa(mv_samp_f32, AbstractArray)
+
+            # Results should be close to Float64 versions
+            dens_f64 = conditional_density(M3, Float64.(x_range_f32), Float64.(x_given_f32))
+            @test dens_f32 ≈ dens_f64 atol = 1e-5
+        end
+    end
 end

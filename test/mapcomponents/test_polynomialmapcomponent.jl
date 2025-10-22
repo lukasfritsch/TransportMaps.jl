@@ -16,16 +16,42 @@ using Test
         @test pmc_identity.index == 2
         @test pmc_identity.rectifier isa IdentityRectifier
 
-        # Test construction with custom basis
+        # Test construction with custom basis: HermiteBasis
         pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis())
         @test pmc_hermite.rectifier isa Softplus
         @test all(basistype(bf) == HermiteBasis for bf in pmc_hermite.basisfunctions)
+
+        # Test construction with custom basis: GaussianWeightedHermiteBasis
+        pmc_gaussian = PolynomialMapComponent(1, 2, ShiftedELU(), GaussianWeightedHermiteBasis())
+        @test pmc_gaussian.rectifier isa ShiftedELU
+        @test all(basistype(bf) == GaussianWeightedHermiteBasis for bf in pmc_gaussian.basisfunctions)
+
+        # Test construction with custom basis: CubicSplineHermiteBasis
+        pmc_spline = PolynomialMapComponent(1, 2, Softplus(), CubicSplineHermiteBasis())
+        @test all(basistype(bf) == CubicSplineHermiteBasis for bf in pmc_spline.basisfunctions)
 
         # Test invalid construction
         @test_throws AssertionError PolynomialMapComponent(0, 2)  # Invalid index
         @test_throws AssertionError PolynomialMapComponent(1, 0)  # Invalid degree
         @test_throws AssertionError PolynomialMapComponent(-1, 2)  # Negative index
         @test_throws AssertionError PolynomialMapComponent(1, -1)  # Negative degree
+    end
+
+    @testset "Construction from Samples" begin
+        multi_indices = multivariate_indices(1, 2)
+        samps = randn(10, 2)
+
+        pmc_hermite = PolynomialMapComponent(multi_indices, Softplus(), HermiteBasis(), samps)
+        @test all(basistype(bf) == HermiteBasis for bf in pmc_hermite.basisfunctions)
+
+        pmc_linear = PolynomialMapComponent(multi_indices, IdentityRectifier(), LinearizedHermiteBasis(), samps)
+        @test all(basistype(bf) == LinearizedHermiteBasis for bf in pmc_linear.basisfunctions)
+
+        pmc_gaussian = PolynomialMapComponent(multi_indices, ShiftedELU(), GaussianWeightedHermiteBasis(), samps)
+        @test all(basistype(bf) == GaussianWeightedHermiteBasis for bf in pmc_gaussian.basisfunctions)
+
+        pmc_spline = PolynomialMapComponent(multi_indices, Softplus(), CubicSplineHermiteBasis(), samps)
+        @test all(basistype(bf) == CubicSplineHermiteBasis for bf in pmc_spline.basisfunctions)
     end
 
     @testset "Direct Construction with Basis Functions" begin
@@ -303,6 +329,20 @@ using Test
         @test result_matrix_f32 ≈ pmc(Float64.(Z_f32))
         @test typeof(result_matrix_f32) == Vector{Float64}
         @test length(result_matrix_f32) == size(Z_f32, 1)
+
+        # Setting of coefficients
+        coeffs_int = [1, 2, 3, 4, 5, 6]
+        setcoefficients!(pmc, coeffs_int)
+        @test pmc.coefficients ≈ Float64.(coeffs_int)
+    end
+
+    @testset "Multiindexset" begin
+        pmc = PolynomialMapComponent(2, 2)
+        mi_pmc = getmultiindexsets(pmc)
+        mis = permutedims(hcat(multivariate_indices(2,2)...))
+
+        @test maximum(mi_pmc, dims=1) ≈ [2 2]
+        @test mi_pmc ≈ mis
     end
 
     @testset "Show" begin
@@ -310,5 +350,14 @@ using Test
         @test_nowarn sprint(show, pmc)
         @test_nowarn sprint(print, pmc)
         @test_nowarn display(pmc)
+
+        # Uninitialized coefficients
+        pmc_uninit = PolynomialMapComponent(1, 1)
+        setcoefficients!(pmc_uninit, fill(NaN, numbercoefficients(pmc_uninit)))
+        @test_nowarn sprint(show, pmc_uninit)
+
+        # More than 5 coefficients
+        pmc_large = PolynomialMapComponent(1, 5)
+        @test_nowarn display(pmc_large)
     end
 end

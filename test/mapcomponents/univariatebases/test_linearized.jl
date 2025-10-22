@@ -78,6 +78,12 @@ using Distributions
     # Constructor errors: passing Any-typed empty vector is a MethodError (no matching signature)
     @test_throws MethodError LinearizedHermiteBasis(Any[], 3, 1)
 
+    # Empty normalization should use regular Hermite basis
+    lhb = LinearizedHermiteBasis()
+    @test isempty(lhb.normalization)
+    @test basisfunction(lhb, 2, 1.0) ≈ hermite_polynomial(2, 1.0)
+    @test basisfunction_derivative(lhb, 2, 1.0) ≈ hermite_derivative(2, 1.0)
+
     @testset "Show" begin
         lh_show = LinearizedHermiteBasis()
         @test_nowarn sprint(show, lh_show)

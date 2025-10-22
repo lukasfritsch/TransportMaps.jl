@@ -20,6 +20,7 @@ Generate multi-index sets Λ for multivariate polynomial bases.
 function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
+    @assert mode in [:total, :diagonal, :no_mixed] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed"
 
     # Special-case p == 0: only the constant multi-index of zeros
     if p == 0
@@ -80,9 +81,6 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
             end
         end
         return inds
-
-    else
-        error("Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed")
     end
 end
 

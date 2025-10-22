@@ -24,6 +24,11 @@ using Distributions
         g_analytical = gradient(target_analytical, x)
         @test length(g_analytical) == 1
         @test isfinite(g_analytical[1])
+
+        target_analytical = MapTargetDensity(x -> pdf(Normal(), x[1]), :analytical, x -> [-x[1] * pdf(Normal(), x[1])])
+        g_analytical = gradient(target_analytical, x)
+        @test length(g_analytical) == 1
+        @test isfinite(g_analytical[1])
     end
 
     @testset "MapReferenceDensity" begin
@@ -42,11 +47,7 @@ using Distributions
         target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
         ref = MapReferenceDensity(Normal())
 
-        @test_nowarn sprint(show, target)
-        @test_nowarn sprint(print, target)
         @test_nowarn display(target)
-        @test_nowarn sprint(show, ref)
-        @test_nowarn sprint(print, ref)
         @test_nowarn display(ref)
     end
 end

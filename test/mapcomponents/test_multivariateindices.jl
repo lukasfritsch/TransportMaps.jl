@@ -28,6 +28,9 @@ using Test
     zero_idx = multivariate_indices(0, 4)
     @test length(zero_idx) == 1
     @test zero_idx[1] == [0,0,0,0]
+
+    # Unknown mode should throw error
+    @test_throws AssertionError multivariate_indices(2, 2, mode=:unknown)
 end
 
 @testset "Reduced Margin" begin

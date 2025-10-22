@@ -48,14 +48,10 @@ end
 
 gradient(density::AbstractMapDensity, x::AbstractArray{<:Real}) = density.grad_density(x)
 
-# Pretty printing for MapTargetDensity
-function Base.show(io::IO, target::AbstractMapDensity)
-    if typeof(target) == MapTargetDensity
-        print(io, "MapTargetDensity(density=$(target.density), gradient_type=$(target.gradient_type))")
-    elseif typeof(target) == MapReferenceDensity
-        print(io, "MapReferenceDensity(density=$(target.density), gradient_type=$(target.gradient_type))")
-    else
-        @warn "Unknown MapDensity type: $(typeof(target))"
-        print(io, "AbstractMapDensity(density=$(target.density))")
-    end
+function Base.show(io:: IO, target::MapTargetDensity)
+    print(io, "MapTargetDensity(density=$(target.density), gradient_type=$(target.gradient_type))")
+end
+
+function Base.show(io:: IO, ref::MapReferenceDensity)
+    print(io, "MapReferenceDensity(density=$(ref.densitytype)")
 end

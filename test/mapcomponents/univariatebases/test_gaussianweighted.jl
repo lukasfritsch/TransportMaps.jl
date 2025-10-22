@@ -20,4 +20,8 @@ using Test
         @test_nowarn sprint(print, gb_show)
         @test_nowarn display(gb_show)
     end
+
+    # n == 0 case
+    @test basisfunction(gb, 0, 0.0) ≈ 1.0
+    @test basisfunction_derivative(gb, 0, 0.0) ≈ 0.0
 end

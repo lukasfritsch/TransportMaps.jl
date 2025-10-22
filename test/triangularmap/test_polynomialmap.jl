@@ -48,7 +48,7 @@ using LinearAlgebra
         @test length(pm_5d.components) == 5
 
         # Test error handling
-        @test_throws MethodError PolynomialMap(1, 1, referencetype=:uniform)
+        @test_throws AssertionError PolynomialMap(1, 1, :uniform)
     end
 
     @testset "Direct Construction with Components" begin
@@ -798,6 +798,99 @@ using LinearAlgebra
         @test typeof(result_matrix_f32) == Matrix{Float64}
         @test size(result_matrix_f32, 2) == length(pm)
         @test size(result_matrix_f32, 1) == size(Z_f32, 1)
+
+        # Gradient: Vector{Int}
+        result_grad_int = gradient_zk(pm, z_int)
+        result_grad_float = gradient_zk(pm, Float64.(z_int))
+        @test result_grad_int ≈ result_grad_float
+        @test typeof(result_grad_int) == Vector{Float64}
+
+        # Gradient: Matrix{Int}
+        result_grad_matrix_int = gradient_zk(pm, Z_int)
+        result_grad_matrix_float = gradient_zk(pm, Float64.(Z_int))
+        @test result_grad_matrix_int ≈ result_grad_matrix_float
+        @test typeof(result_grad_matrix_int) == Matrix{Float64}
+
+        # Jacobian: Vector{Int}
+        result_jac_int = jacobian(pm, z_int)
+        result_jac_float = jacobian(pm, Float64.(z_int))
+        @test result_jac_int ≈ result_jac_float
+        @test typeof(result_jac_int) == Float64
+
+        # Jacobian: Matrix{Int}
+        result_jac_matrix_int = jacobian(pm, Z_int)
+        result_jac_matrix_float = jacobian(pm, Float64.(Z_int))
+        @test result_jac_matrix_int ≈ result_jac_matrix_float
+        @test typeof(result_jac_matrix_int) == Vector{Float64}
+
+        # Inverse: Vector{Int}
+        x_int = [2, 3]
+        result_inv_int = inverse(pm, x_int)
+        result_inv_float = inverse(pm, Float64.(x_int))
+        @test result_inv_int ≈ result_inv_float
+        @test typeof(result_inv_int) == Vector{Float64}
+
+        # Inverse: Matrix{Int}
+        X_int = [2 3; 4 5; 6 7]
+        result_inv_matrix_int = inverse(pm, X_int)
+        result_inv_matrix_float = inverse(pm, Float64.(X_int))
+        @test result_inv_matrix_int ≈ result_inv_matrix_float
+        @test typeof(result_inv_matrix_int) == Matrix{Float64}
+
+        # Inverse Jacobian: Vector{Int}
+        result_inv_jac_int = inverse_jacobian(pm, x_int)
+        result_inv_jac_float = inverse_jacobian(pm, Float64.(x_int))
+        @test result_inv_jac_int ≈ result_inv_jac_float
+        @test typeof(result_inv_jac_int) == Float64
+
+        # Inverse Jacobian: Matrix{Int}
+        result_inv_jac_matrix_int = inverse_jacobian(pm, X_int)
+        result_inv_jac_matrix_float = inverse_jacobian(pm, Float64.(X_int))
+        @test result_inv_jac_matrix_int ≈ result_inv_jac_matrix_float
+        @test typeof(result_inv_jac_matrix_int) == Vector{Float64}
+
+        # Pullback: Vector{Int}
+        result_pb_int = pullback(pm, x_int)
+        result_pb_float = pullback(pm, Float64.(x_int))
+        @test result_pb_int ≈ result_pb_float
+        @test typeof(result_pb_int) == Float64
+
+        # Pullback: Matrix{Int}
+        result_pb_matrix_int = pullback(pm, X_int)
+        result_pb_matrix_float = pullback(pm, Float64.(X_int))
+        @test result_pb_matrix_int ≈ result_pb_matrix_float
+        @test typeof(result_pb_matrix_int) == Vector{Float64}
+
+        # Pushforward: Vector{Int}
+        target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
+        target = MapTargetDensity(target_density, :auto_diff)
+        result_pf_int = pushforward(pm, target, z_int)
+        result_pf_float = pushforward(pm, target, Float64.(z_int))
+        @test result_pf_int ≈ result_pf_float
+        @test typeof(result_pf_int) == Float64
+
+        # Pushforward: Matrix{Int}
+        result_pf_matrix_int = pushforward(pm, target, Z_int)
+        result_pf_matrix_float = pushforward(pm, target, Float64.(Z_int))
+        @test result_pf_matrix_int ≈ result_pf_matrix_float
+        @test typeof(result_pf_matrix_int) == Vector{Float64}
+
+        # setcoefficients!: Vector{Int}
+        n_coeffs = numbercoefficients(pm)
+        coeffs_int = collect(1:n_coeffs)
+        setcoefficients!(pm, coeffs_int)
+        @test pm.components[1].coefficients ≈ Float64.(coeffs_int[1:length(pm.components[1].coefficients)])
+
+    end
+
+    @testset "Forward Direction" begin
+        pm = PolynomialMap(2, 2)
+        @test pm.forwarddirection == :target
+
+        TransportMaps.setforwarddirection!(pm, :reference)
+        @test pm.forwarddirection == :reference
+
+        @test_throws AssertionError TransportMaps.setforwarddirection!(pm, :minimize)
     end
 
     @testset "Show" begin
@@ -811,5 +904,11 @@ using LinearAlgebra
         @test_nowarn sprint(show, pm_empty)
         @test_nowarn sprint(print, pm_empty)
         @test_nowarn display(pm_empty)
+
+
+        # Uninitialized coefficients
+        pm_uninit = PolynomialMap(2, 2)
+        setcoefficients!(pm_uninit, fill(NaN, numbercoefficients(pm_uninit)))
+        @test_nowarn sprint(show, pm_uninit)
     end
 end

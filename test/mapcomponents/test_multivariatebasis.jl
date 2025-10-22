@@ -10,7 +10,7 @@ using Test
     end
 
     @testset "Show" begin
-        mb = MultivariateBasis([1], HermiteBasis())
+        mb = MultivariateBasis([1, 2], HermiteBasis())
         @test_nowarn sprint(show, mb)
         @test_nowarn sprint(print, mb)
         @test_nowarn display(mb)
@@ -108,4 +108,10 @@ end
     grad_c = gradient_coefficients(Psi_vec, x)
     expected_grad_c = [evaluate(mvb1, x), evaluate(mvb2, x)]
     @test grad_c ≈ expected_grad_c
+
+    # Test constructor for linearized hermite basis within multivariate basis
+    mvb = MultivariateBasis([1, 2], LinearizedHermiteBasis)
+    @test mvb.multiindexset == [1, 2]
+    @test mvb.univariatebases[1] isa LinearizedHermiteBasis
+    @test mvb.univariatebases[2] isa LinearizedHermiteBasis
 end

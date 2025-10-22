@@ -353,6 +353,8 @@ function getmultiindexsets(map_component::PolynomialMapComponent)
     return permutedims(hcat(multiindices...))
 end
 
+numbercoefficients(map_component::PolynomialMapComponent) = length(map_component.coefficients)
+
 # Make PolynomialMapComponent callable: component(z) instead of evaluate(component, z)
 Base.@propagate_inbounds (component::PolynomialMapComponent)(z::AbstractVector{<:Real}) = evaluate(component, z)
 Base.@propagate_inbounds (component::PolynomialMapComponent)(Z::AbstractMatrix{<:Real}) = evaluate(component, Z)
