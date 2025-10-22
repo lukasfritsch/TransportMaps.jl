@@ -139,7 +139,9 @@ function AdaptiveTransportMap(
         fold_scores = [component_histories[i].test_objectives[best_iteration] for i in 1:k_folds]
 
         best_fold = argmin(fold_scores)
-        Λ_best = deepcopy(component_histories[best_fold].terms[best_iteration])
+        Λ_best = _multivariate_indices(
+            deepcopy(component_histories[best_fold].terms[best_iteration])
+        )
 
         println("   Best fold: $best_fold")
         println("   Selected $(selected_terms[k]) terms (avg validation objective $(mean_test_objectives[best_iteration]))")

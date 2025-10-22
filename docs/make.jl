@@ -53,6 +53,7 @@ makedocs(
             "Banana: Map from Density" => "Examples/banana_mapfromdensity.md",
             "Banana: Map from Samples" => "Examples/banana_mapfromsamples.md",
             "Bayesian Inference: BOD" => "Examples/bod_bayesianinference.md",
+            "Adaptive Transport Map" => "Examples/banana_adaptive.md",
         ],
         "API" => "api.md",
         "References" => "references.md"

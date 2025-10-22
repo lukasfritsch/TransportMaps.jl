@@ -23,7 +23,7 @@ using Optim
 
     TransportMaps.update_optimization_history!(history, term, train_obj, test_obj, gradient, result, 1)
 
-    @test history.terms[1] == term
+    @test history.terms[1] == permutedims(hcat(term...))
     @test history.train_objectives[1] == train_obj
     @test history.test_objectives[1] == test_obj
     @test history.gradients[1] == gradient

@@ -4,20 +4,20 @@
 A data structure to store the iteration history of adaptive transport map optimization.
 
 # Fields
-- `terms::Vector{Vector{Vector{Int64}}}`: Multi-index sets at each iteration
+- `terms::Vector{Matrix{Int64}}`: Multi-index sets at each iteration
 - `train_objectives::Vector{Float64}`: Normalized training objectives at each iteration
 - `test_objectives::Vector{Float64}`: Normalized test objectives at each iteration (empty if no test split)
 - `gradients::Vector{Vector{Float64}}`: Gradient values for candidate terms at each iteration
 """
 struct OptimizationHistory
-    terms::Vector{Vector{Vector{Int64}}}
+    terms::Vector{Matrix{Int64}}
     train_objectives::Vector{Float64}
     test_objectives::Vector{Float64}
     gradients::Vector{Vector{Float64}}
     optimization_results::Vector{Optim.MultivariateOptimizationResults}
 
     function OptimizationHistory(maxiterations::Int)
-        terms = [Vector{Vector{Int64}}(undef, 0) for _ in 1:maxiterations]
+        terms = [Matrix{Int64}(undef, 0, 0) for _ in 1:maxiterations]
         train_objectives = Vector{Float64}(undef, maxiterations)
         test_objectives = Vector{Float64}(undef, maxiterations)
         gradients = [Float64[] for _ in 1:maxiterations]
@@ -35,7 +35,7 @@ function update_optimization_history!(
     optimization_result::Optim.MultivariateOptimizationResults,
     iteration::Int
 )
-    history.terms[iteration] = term
+    history.terms[iteration] = permutedims(hcat(term...))
     history.train_objectives[iteration] = train_objective
     history.test_objectives[iteration] = test_objective
     history.gradients[iteration] = gradient

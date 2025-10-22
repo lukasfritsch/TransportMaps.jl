@@ -144,3 +144,6 @@ function reduced_margin(Λ::Vector{<:Vector{Int}})
 
     return reduced
 end
+
+# Helper function to convert a matrix of indices to a vector of index vectors
+ _multivariate_indices(indices::Matrix{Int64}) = collect.(eachrow(indices))
