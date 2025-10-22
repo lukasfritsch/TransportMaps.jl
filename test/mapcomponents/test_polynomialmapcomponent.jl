@@ -17,17 +17,18 @@ using Test
         @test pmc_identity.rectifier isa IdentityRectifier
 
         # Test construction with custom basis: HermiteBasis
-        pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis())
+        pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis(), Normal())
         @test pmc_hermite.rectifier isa Softplus
         @test all(basistype(bf) == HermiteBasis for bf in pmc_hermite.basisfunctions)
 
+
         # Test construction with custom basis: GaussianWeightedHermiteBasis
-        pmc_gaussian = PolynomialMapComponent(1, 2, ShiftedELU(), GaussianWeightedHermiteBasis())
+        pmc_gaussian = PolynomialMapComponent(1, 2, ShiftedELU(), GaussianWeightedHermiteBasis(), Normal())
         @test pmc_gaussian.rectifier isa ShiftedELU
         @test all(basistype(bf) == GaussianWeightedHermiteBasis for bf in pmc_gaussian.basisfunctions)
 
         # Test construction with custom basis: CubicSplineHermiteBasis
-        pmc_spline = PolynomialMapComponent(1, 2, Softplus(), CubicSplineHermiteBasis())
+        pmc_spline = PolynomialMapComponent(1, 2, Softplus(), CubicSplineHermiteBasis(), Normal())
         @test all(basistype(bf) == CubicSplineHermiteBasis for bf in pmc_spline.basisfunctions)
 
         # Test invalid construction
@@ -354,7 +355,7 @@ using Test
         # Uninitialized coefficients
         pmc_uninit = PolynomialMapComponent(1, 1)
         setcoefficients!(pmc_uninit, fill(NaN, numbercoefficients(pmc_uninit)))
-        @test_nowarn sprint(show, pmc_uninit)
+        @test_nowarn display(pmc_uninit)
 
         # More than 5 coefficients
         pmc_large = PolynomialMapComponent(1, 5)

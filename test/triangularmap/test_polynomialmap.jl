@@ -909,6 +909,6 @@ using LinearAlgebra
         # Uninitialized coefficients
         pm_uninit = PolynomialMap(2, 2)
         setcoefficients!(pm_uninit, fill(NaN, numbercoefficients(pm_uninit)))
-        @test_nowarn sprint(show, pm_uninit)
+        @test_nowarn display(pm_uninit)
     end
 end
