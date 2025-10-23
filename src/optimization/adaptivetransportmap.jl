@@ -33,7 +33,7 @@ function AdaptiveTransportMap(
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
     options::Optim.Options=Optim.Options(),
-    test_fraction::Float64=0.0
+    test_fraction::Float64=0.2
 )
     @assert length(maxterms) == size(samples, 2) "Length of maxterms must equal number of dimensions in samples"
     # Extract number of dimensions from samples
@@ -102,6 +102,7 @@ function AdaptiveTransportMap(
     T = typeof(basis)
     map_components = Vector{PolynomialMapComponent{T}}(undef, d)
     fold_histories = Vector{Vector{OptimizationHistory}}(undef, d)
+    selected_fold = Vector{Int}(undef, d)
     selected_terms = Vector{Int}(undef, d)
 
     samples = evaluate(lm, samples)
@@ -139,6 +140,7 @@ function AdaptiveTransportMap(
         fold_scores = [component_histories[i].test_objectives[best_iteration] for i in 1:k_folds]
 
         best_fold = argmin(fold_scores)
+        selected_fold[k] = best_fold
         Λ_best = _multivariate_indices(
             deepcopy(component_histories[best_fold].terms[best_iteration])
         )
@@ -159,7 +161,7 @@ function AdaptiveTransportMap(
 
     M = PolynomialMap(map_components; forwarddirection=:reference)
 
-    return M, fold_histories, selected_terms
+    return M, fold_histories, selected_terms, selected_fold
 end
 
 """

@@ -165,3 +165,10 @@ scatter(mapped_samples_diagonal[:, 1], mapped_samples_diagonal[:, 2],
 
 # We observe that the total order and no-mixed-terms maps achieve similar variance diagnostics,
 # while the diagonal map performs significantly worse due to its inability to capture dependencies between variables.
+
+# !!! note "Adaptive Map Construction"
+#     The choice of map parameterization can significantly impact the performance of transport maps.
+#     In practice, one might start with a simpler map structure, such as the diagonal or no-mixed-terms map,
+#     and then adaptively enrich the map based on the observed performance, as discussed in [baptista2023](@cite).
+#     This adaptive approach allows for a balance between computational efficiency and approximation accuracy.
+#     For more information see the [Adaptive Transport Maps](@ref) manual and [baptista2023](@cite).

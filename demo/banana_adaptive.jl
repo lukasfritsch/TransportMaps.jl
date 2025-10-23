@@ -24,13 +24,14 @@ function generate_banana_samples(n_samples::Int)
     return samples
 end
 
+println("Generating samples from banana distribution...")
 target_samples = generate_banana_samples(num_samples)
+println("Generated $(size(target_samples, 1)) samples")
 
 L = LinearMap(target_samples)
 
-ATM, results = AdaptiveTransportMap(target_samples, [3, 6], 5, L, Softplus(2.))
-
-C = ComposedMap(L, ATM)
+ATM, results, selected_terms, selected_folds = AdaptiveTransportMap(
+    target_samples, [3, 6], 5, L, Softplus(2.), LinearizedHermiteBasis())
 
 ind_atm = getmultiindexsets(ATM[2])
 
@@ -39,6 +40,8 @@ plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, maximum(ind_atm[:
     aspect_ratio=1, xlabel="Multi-index α₁", ylabel="Multi-index α₂")
 xticks!(0:maximum(ind_atm[:, 1]))
 yticks!(0:maximum(ind_atm[:, 2]))
+
+C = ComposedMap(L, ATM)
 
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
@@ -61,7 +64,6 @@ x₁ = range(-3, 3, length=100)
 x₂ = range(-2.5, 4.0, length=100)
 
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
-
 learned_density = [pullback(C, [x1, x2]) for x2 in x₂, x1 in x₁]
 
 p3 = contour(x₁, x₂, true_density,
@@ -76,8 +78,9 @@ p4 = contour(x₁, x₂, learned_density,
 
 plot(p3, p4, layout=(1, 2), size=(800, 400))
 
-best_fold = argmin([res.test_objectives[end] for res in results[2]])
-res_best = results[2][best_fold]
+map_index = 2  # Choose 2nd component
+best_fold = selected_folds[map_index]
+res_best = results[map_index][best_fold]
 
 max_1 = maximum(res_best.terms[end][:, 1])
 max_2 = maximum(res_best.terms[end][:, 2])
@@ -93,9 +96,10 @@ xticks!(0:max_1)
 yticks!(0:max_2)
 plot!(p, size=(800, 600))
 
-plot(res_best.train_objectives, label="Train Objective", lw=2, xlabel="Iteration",
-    ylabel="Objective Value", title="Training and Test Objectives over Iterations")
-plot!(res_best.test_objectives, label="Test Objective", lw=2)
+plot(res_best.train_objectives, label="Train Objective", lw=2, ls=:dash, marker=:o)
+plot!(res_best.test_objectives, label="Test Objective", lw=2, ls=:dash, marker=:o)
+plot!(xlabel="Iteration", ylabel="Objective Value",
+    title="Training and Test Objectives over Iterations")
 plot!(size=(600, 400))
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl

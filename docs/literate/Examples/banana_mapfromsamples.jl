@@ -86,10 +86,15 @@ C = ComposedMap(L, M)
 
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
+#md nothing #hide
+
 # Map the samples through our transport map. Note that `evaluate` now transports from reference to target, i.e. `mapped_samples` should be standard normal samples:
 mapped_samples = evaluate(C, new_samples)
+#md nothing #hide
+
 # while pushing from the standard normal samples to the target distribution generates new samples from the banana distribution:
 mapped_banana_samples = inverse(C, norm_samples)
+#md nothing #hide
 
 # ### Visualizing Results
 #
