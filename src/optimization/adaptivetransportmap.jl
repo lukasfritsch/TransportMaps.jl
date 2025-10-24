@@ -5,7 +5,7 @@
 #   https://doi.org/10.1007/s10208-023-09630-x
 
 """
-    AdaptiveTransportMap(samples, maxterms; kwargs...)
+    optimize_adaptive_transportmap(samples, maxterms; kwargs...)
 
 Adaptively optimize a triangular transport map by greedily enriching the multi-index set.
 
@@ -14,7 +14,7 @@ Adaptively optimize a triangular transport map by greedily enriching the multi-i
 - `maxterms::Vector{Int64}`: Maximum number of terms for each component
 
 # Keyword Arguments
-- `lm::LinearMap=LinearMap()`: Linear map to standardize samples
+- `lm::AbstractLinearMap=LinearMap(samples)`: Linear map to standardize samples
 - `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
@@ -22,13 +22,13 @@ Adaptively optimize a triangular transport map by greedily enriching the multi-i
 - `test_fraction::Float64=0.0`: Fraction of samples to use for testing (validation)
 
 # Returns
-- `M::PolynomialMap`: The optimized triangular transport map
+- `C::ComposedMap{LinearMap, PolynomialMap}`: The optimized triangular transport map
 - `iteration_histories::Vector{OptimizationHistory}`: History of optimization for each component
 """
-function AdaptiveTransportMap(
+function optimize_adaptive_transportmap(
     samples::Matrix{Float64},
     maxterms::Vector{Int64},
-    lm::LinearMap=LinearMap(),
+    lm::AbstractLinearMap=LinearMap(samples),
     rectifier::AbstractRectifierFunction=Softplus(),
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
@@ -50,7 +50,7 @@ function AdaptiveTransportMap(
 
     for k in 1:d
         println("Start optimizing component $k:")
-        component, history = adaptive_optimization(train_samples[:, 1:k], test_samples[:, 1:k], maxterms[k], rectifier, basis, optimizer, options)
+        component, history = optimize_adaptive_transportmapcomponent(train_samples[:, 1:k], test_samples[:, 1:k], maxterms[k], rectifier, basis, optimizer, options)
         push!(map_components, component)
         push!(iteration_histories, history)
     end
@@ -58,11 +58,12 @@ function AdaptiveTransportMap(
     # Construct final map from optimized components
     M = PolynomialMap(map_components; forwarddirection=:reference)
 
-    return M, iteration_histories
+    # Return composed map (including linear standardization) and histories
+    return ComposedMap(lm, M), iteration_histories
 end
 
 """
-    AdaptiveTransportMap(samples, maxterms, k_folds; kwargs...)
+    optimize_adaptive_transportmap(samples, maxterms, k_folds; kwargs...)
 
 Adaptively optimize a triangular transport map using k-fold cross-validation to
 select the number of terms per component.
@@ -73,7 +74,7 @@ select the number of terms per component.
 - `k_folds::Int`: Number of folds to use for cross-validation
 
 # Keyword Arguments
-- `lm::LinearMap=LinearMap()`: Linear map to standardize samples
+- `lm::AbstractLinearMap=LinearMap(samples)`: Linear map to standardize samples
 - `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
@@ -84,11 +85,11 @@ select the number of terms per component.
 - `fold_histories::Vector{Vector{OptimizationHistory}}`: Optimization history for each component and fold
 - `selected_terms::Vector{Int}`: Number of terms selected for each component
 """
-function AdaptiveTransportMap(
+function optimize_adaptive_transportmap(
     samples::Matrix{Float64},
     maxterms::Vector{Int64},
     k_folds::Int,
-    lm::LinearMap=LinearMap(),
+    lm::AbstractLinearMap=LinearMap(samples),
     rectifier::AbstractRectifierFunction=Softplus(),
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
@@ -120,7 +121,7 @@ function AdaptiveTransportMap(
             test_samples_fold = samples[test_idx, 1:k]
 
             println("   * Fold $fold_id / $k_folds")
-            _, history_fold = adaptive_optimization(
+            _, history_fold = optimize_adaptive_transportmapcomponent(
                 train_samples_fold,
                 test_samples_fold,
                 maxterms[k],
@@ -159,13 +160,15 @@ function AdaptiveTransportMap(
         fold_histories[k] = component_histories
     end
 
+    # Construct final map from optimized components
     M = PolynomialMap(map_components; forwarddirection=:reference)
 
-    return M, fold_histories, selected_terms, selected_fold
+    # Return composed map (including linear standardization) and histories
+    return ComposedMap(lm, M), fold_histories, selected_terms, selected_fold
 end
 
 """
-    adaptive_optimization(train_samples, test_samples, maxterms, rectifier, basis, optimizer, options)
+    optimize_adaptive_transportmapcomponent(train_samples, test_samples, maxterms, rectifier, basis, optimizer, options)
 
 Adaptively optimize a single transport map component by greedily enriching the multi-index set.
 
@@ -182,7 +185,7 @@ Adaptively optimize a single transport map component by greedily enriching the m
 - `component::PolynomialMapComponent`: The optimized map component
 - `history::OptimizationHistory`: Optimization history for this component
 """
-function adaptive_optimization(
+function optimize_adaptive_transportmapcomponent(
     train_samples::Matrix{Float64},
     test_samples::Matrix{Float64},
     maxterms::Int,

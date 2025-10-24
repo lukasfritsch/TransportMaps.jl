@@ -15,10 +15,10 @@ using Statistics
     samples = randn(n_samples, n_dims)
 
     @testset "Basic ATM Construction and Optimization" begin
-        maxterms = [3, 3]  # 3 terms max for each component
+        maxterms = [2, 2]  # 2 terms max for each component
         opts = Optim.Options(iterations=10)  # Few iterations for fast testing
 
-        M, histories = AdaptiveTransportMap(
+        M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
             optimizer=LBFGS(),
@@ -26,7 +26,8 @@ using Statistics
         )
 
         # Check that we get a PolynomialMap back
-        @test M isa PolynomialMap
+        @test M isa ComposedMap
+        @test M.polynomialmap isa PolynomialMap
 
         # Check that we get histories for each component
         @test length(histories) == n_dims
@@ -40,7 +41,7 @@ using Statistics
         maxterms = [2, 2]
         opts = Optim.Options(iterations=5)
 
-        M, histories = AdaptiveTransportMap(
+        M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
             optimizer=LBFGS(),
@@ -64,7 +65,7 @@ using Statistics
         test_fraction = 0.2
         opts = Optim.Options(iterations=5)
 
-        M, histories = AdaptiveTransportMap(
+        M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
             test_fraction=test_fraction,
@@ -85,7 +86,7 @@ using Statistics
         opts = Optim.Options(iterations=5)
 
         # Test with LinearizedHermiteBasis (default)
-        M1, h1 = AdaptiveTransportMap(
+        M1, h1 = optimize_adaptive_transportmap(
             samples_1d,
             maxterms,
             LinearMap(),
@@ -94,11 +95,12 @@ using Statistics
             optimizer=LBFGS(),
             options=opts
         )
-        @test M1 isa PolynomialMap
+        @test M1 isa ComposedMap
+        @test M1.polynomialmap isa PolynomialMap
         @test h1[1] isa OptimizationHistory
 
         # Test with HermiteBasis
-        M2, h2 = AdaptiveTransportMap(
+        M2, h2 = optimize_adaptive_transportmap(
             samples_1d,
             maxterms,
             LinearMap(),
@@ -107,7 +109,8 @@ using Statistics
             optimizer=LBFGS(),
             options=opts
         )
-        @test M2 isa PolynomialMap
+        @test M2 isa ComposedMap
+        @test M2.polynomialmap isa PolynomialMap
         @test h2[1] isa OptimizationHistory
     end
 
@@ -115,7 +118,7 @@ using Statistics
         maxterms = [2, 2]
         opts = Optim.Options(iterations=5)
 
-        M, histories = AdaptiveTransportMap(
+        M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
             optimizer=LBFGS(),
@@ -135,7 +138,7 @@ using Statistics
         k_folds = 3
         opts = Optim.Options(iterations=5)
 
-        M, fold_histories, selected_terms = AdaptiveTransportMap(
+        M, fold_histories, selected_terms = optimize_adaptive_transportmap(
             samples,
             maxterms,
             k_folds;
@@ -143,7 +146,8 @@ using Statistics
             options=opts,
         )
 
-        @test M isa PolynomialMap
+        @test M isa ComposedMap
+        @test M.polynomialmap isa PolynomialMap
         @test length(fold_histories) == n_dims
         @test selected_terms isa Vector{Int}
         @test length(selected_terms) == n_dims

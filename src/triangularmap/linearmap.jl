@@ -1,5 +1,5 @@
 # Implement a linear transport map (scaling by mean and stddev)
-struct LinearMap <: AbstractTriangularMap
+struct LinearMap <: AbstractLinearMap
     μ::Vector{Float64}
     σ::Vector{Float64}
 
@@ -13,6 +13,11 @@ struct LinearMap <: AbstractTriangularMap
     # Identity map
     function LinearMap()
         return new(zeros(Float64, 0), ones(Float64, 0))
+    end
+
+    # Identity map with specified dimension
+    function LinearMap(dim::Int)
+        return new(zeros(Float64, dim), ones(Float64, dim))
     end
 end
 

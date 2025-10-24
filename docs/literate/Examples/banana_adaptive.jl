@@ -53,7 +53,10 @@ println("Generated $(size(target_samples, 1)) samples")
 
 # ### Creating the Transport Map
 
-# First, create a linear transport map as a starting point
+# First, create a linear transport map as a starting point. This is also the default behavior
+# of the `optimize_adaptive_transportmap` function, which standardizes the samples
+# using a linear map based on their marginal mean and standard deviation when no explicit
+# linear map is provided.
 L = LinearMap(target_samples)
 
 # Then, we perform adaptive transport map learning with k-fold cross-validation.
@@ -61,14 +64,15 @@ L = LinearMap(target_samples)
 # use the modified Softplus rectifier with parameter $\beta = 2$ and $k = 5$ folds.
 # We set the maximum number of terms to 3 and 6 for the two components, respectively.
 
-# Calling the `AdaptiveTransportMap` function performs the adaptive learning of map terms
+# Calling the `optimize_adaptive_transportmap` function performs the adaptive learning of map terms
 # and returns the learned map, optimization results, selected terms, and selected folds.
 # We can provide the initial linear map `L` to standardize the samples before learning the
 # ATM, and also specify options, such as the `rectifier`, `basis` and options for the
 # optimization process.
+# The function returns the `ComposedMap` of the linear map and the learned adaptive transport map.
 
-ATM, results, selected_terms, selected_folds = AdaptiveTransportMap(
-    target_samples, [3, 6], 5, L, Softplus(2.), LinearizedHermiteBasis())
+M, results, selected_terms, selected_folds = optimize_adaptive_transportmap(
+    target_samples, [3, 6], 5, L, Softplus(2.))
 #md nothing # hide
 
 # The adaptive map learning prints out information about the learning process,
@@ -79,7 +83,7 @@ ATM, results, selected_terms, selected_folds = AdaptiveTransportMap(
 # The number of selected terms is chosen based on the test objective across the folds.
 
 # To visualized which terms were selected, we can plot the multi-index sets of the learned ATM:
-ind_atm = getmultiindexsets(ATM[2])
+ind_atm = getmultiindexsets(M.polynomialmap[2])
 
 dim = scatter(ind_atm[:, 1], ind_atm[:, 2], ms=30, legend=false)
 plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, maximum(ind_atm[:, 2]) + 0.5),
@@ -91,18 +95,13 @@ yticks!(0:maximum(ind_atm[:, 2]))
 # We see that the ATM algorithm selected terms in an L-shape pattern, indicating that
 # lower-order interactions were prioritized.
 
-
-# We can then compose the linear map and the learned adaptive transport map to perform
-# density evaluation and sampling:
-C = ComposedMap(L, ATM)
-
 # ### Testing the Map
 
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
 #md nothing #hide
 
-mapped_banana_samples = inverse(C, norm_samples)
+mapped_banana_samples = inverse(M, norm_samples)
 #md nothing #hide
 
 # ### Visualizing Results
@@ -131,7 +130,7 @@ x₁ = range(-3, 3, length=100)
 x₂ = range(-2.5, 4.0, length=100)
 
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
-learned_density = [pullback(C, [x1, x2]) for x2 in x₂, x1 in x₁]
+learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]
 
 p3 = contour(x₁, x₂, true_density,
     title="True Banana Density",

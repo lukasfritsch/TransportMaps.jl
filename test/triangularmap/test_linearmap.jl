@@ -35,6 +35,9 @@ using Random
         X = Array{Float64}(undef, 2, 0)
         @test size(evaluate(L0, X)) == size(X)
         @test size(inverse(L0, X)) == size(X)
+
+        L2 = LinearMap(2)
+        @test numberdimensions(L2) == 2
     end
 
     @testset "Show" begin

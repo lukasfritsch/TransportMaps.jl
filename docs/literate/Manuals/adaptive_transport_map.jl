@@ -68,15 +68,15 @@
 
 # ## Usage in TransportMaps.jl
 #
-# The `AdaptiveTransportMap` function provides two main interfaces for constructing adaptive transport maps.
+# The `optimize_adaptive_transportmap` function provides two main interfaces for constructing adaptive transport maps.
 
 #
 # The simplest approach uses a fixed train-test split to monitor overfitting:
 # ```julia
-# M, histories = AdaptiveTransportMap(
+# M, histories = optimize_adaptive_transportmap(
 #     samples,             # Matrix of samples (n_samples × d)
 #     maxterms,            # Vector of maximum terms per component
-#     lm,                  # Linear map for standardization (default: LinearMap())
+#     lm,                  # Linear map for standardization (default: LinearMap(samples))
 #     rectifier,           # Rectifier function (default: Softplus())
 #     basis;               # Polynomial basis (default: LinearizedHermiteBasis())
 #     optimizer = LBFGS(),
@@ -88,11 +88,11 @@
 # For automatic model selection, use k-fold cross-validation. This implementation is based
 # on the original algorithm proposed in [baptista2023](@cite):
 # ```julia
-# M, fold_histories, selected_terms, selected_folds = AdaptiveTransportMap(
+# M, fold_histories, selected_terms, selected_folds = optimize_adaptive_transportmap(
 #     samples,             # Matrix of samples (n_samples × d)
 #     maxterms,            # Vector of maximum terms per component
 #     k_folds,             # Number of folds for cross-validation
-#     lm,                  # Linear map for standardization (default: LinearMap())
+#     lm,                  # Linear map for standardization (default: LinearMap(samples))
 #     rectifier,           # Rectifier function (default: Softplus())
 #     basis;               # Polynomial basis (default: LinearizedHermiteBasis())
 #     optimizer = LBFGS(),
@@ -101,7 +101,7 @@
 # ```
 
 # The k-fold version returns:
-# - `M`: The final transport map trained on all data with the selected number of terms
+# - `M`: The final composed transport map trained on all data with the selected number of terms
 # - `fold_histories`: Optimization histories for each component and fold
 # - `selected_terms`: Number of terms selected for each component based on cross-validation
 # - `selected_folds`: Which fold had the best performance for each component

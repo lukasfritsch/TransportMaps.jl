@@ -21,6 +21,7 @@ abstract type AbstractRectifierFunction end
 abstract type AbstractQuadratureWeights end
 abstract type AbstractMapDensity end
 abstract type AbstractComposedMap end
+abstract type AbstractLinearMap <: AbstractTriangularMap end
 
 # Export abstract types
 export AbstractBasisFunction
@@ -32,6 +33,7 @@ export AbstractRectifierFunction
 export AbstractQuadratureWeights
 export AbstractMapDensity
 export AbstractComposedMap
+export AbstractLinearMap
 
 # Export functions/methods
 # Basis functions and evaluation
@@ -76,8 +78,8 @@ export kldivergence_gradient
 export optimize!
 export variance_diagnostic
 export reduced_margin
-export adaptive_optimization
-export AdaptiveTransportMap
+export optimize_adaptive_transportmap
+export optimize_adaptive_transportmapcomponent
 export OptimizationHistory
 export OptimizationResult
 
