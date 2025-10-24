@@ -102,6 +102,7 @@ export RadialBasis
 
 export MultivariateBasis
 export LinearMap
+export LaplaceMap
 export ComposedMap
 export PolynomialMapComponent
 export PolynomialMap
@@ -130,6 +131,7 @@ include("mapcomponents/rectifier.jl")
 include("triangularmap/polynomialmap.jl")
 include("triangularmap/conditionaldensities.jl")
 include("triangularmap/linearmap.jl")
+include("triangularmap/laplacemap.jl")
 include("triangularmap/composedmap.jl")
 
 include("optimization/mapfromdensity.jl")
