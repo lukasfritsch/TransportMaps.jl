@@ -15,22 +15,22 @@ struct ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
     end
 end
 
-function evaluate(C::ComposedMap{LinearMap}, x::Vector{Float64}) where T<:AbstractLinearMap
+function evaluate(C::ComposedMap{T}, x::Vector{Float64}) where T<:AbstractLinearMap
     y = evaluate(C.linearmap, x)
     return evaluate(C.polynomialmap, y)
 end
 
-function evaluate(C::ComposedMap{LinearMap}, X::Matrix{Float64}) where T<:AbstractLinearMap
+function evaluate(C::ComposedMap{T}, X::Matrix{Float64}) where T<:AbstractLinearMap
     Y = evaluate(C.linearmap, X)
     return evaluate(C.polynomialmap, Y)
 end
 
-function inverse(C::ComposedMap{LinearMap}, z::Vector{Float64}) where T<:AbstractLinearMap
+function inverse(C::ComposedMap{T}, z::Vector{Float64}) where T<:AbstractLinearMap
     y = inverse(C.polynomialmap, z)
     return inverse(C.linearmap, y)
 end
 
-function inverse(C::ComposedMap{LinearMap}, Z::Matrix{Float64}) where T<:AbstractLinearMap
+function inverse(C::ComposedMap{T}, Z::Matrix{Float64}) where T<:AbstractLinearMap
     Y = inverse(C.polynomialmap, Z)
     return inverse(C.linearmap, Y)
 end
