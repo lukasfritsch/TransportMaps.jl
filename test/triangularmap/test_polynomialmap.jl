@@ -46,6 +46,9 @@ using LinearAlgebra
         setcoefficients!(pm_5d.components[4], [1.0, 0.15, 0.1, 0.05, 0.025])  # 5 coefficients for 4D degree 1
         setcoefficients!(pm_5d.components[5], [1.0, 0.1, 0.08, 0.04, 0.02, 0.01])  # 6 coefficients for 5D degree 1
         @test length(pm_5d.components) == 5
+
+        # Test error handling
+        @test_throws AssertionError PolynomialMap(1, 1, :uniform)
     end
 
     @testset "Direct Construction with Components" begin
@@ -149,7 +152,7 @@ using LinearAlgebra
         try
             x_inv_1d = inverse(pm_1d, z_1d)
             if all(isfinite.(x_inv_1d))
-                @test x_inv_1d ≈ x_1d atol=1e-2
+                @test x_inv_1d ≈ x_1d atol = 1e-2
             end
         catch
             # Skip test if inverse fails due to numerical issues
@@ -162,7 +165,7 @@ using LinearAlgebra
         try
             x_inv_origin_1d = inverse(pm_1d, z_origin_1d)
             if all(isfinite.(x_inv_origin_1d))
-                @test x_inv_origin_1d ≈ x_origin_1d atol=1e-3
+                @test x_inv_origin_1d ≈ x_origin_1d atol = 1e-3
             end
         catch
             @test true  # Mark as passing
@@ -430,7 +433,7 @@ using LinearAlgebra
 
         x_1d = [0.5]
         inv_jac_1d = inverse_jacobian(pm_1d, x_1d)
-        @test inv_jac_1d ≈ 1.0 atol=1e-10  # For identity map, inverse jacobian should be 1
+        @test inv_jac_1d ≈ 1.0 atol = 1e-10  # For identity map, inverse jacobian should be 1
 
         # Test 2D case with simple map
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -439,7 +442,7 @@ using LinearAlgebra
 
         x_2d = [0.3, 0.7]
         inv_jac_2d = inverse_jacobian(pm_2d, x_2d)
-        @test inv_jac_2d ≈ 1.0 atol=1e-10  # For identity-like map, inverse jacobian should be 1
+        @test inv_jac_2d ≈ 1.0 atol = 1e-10  # For identity-like map, inverse jacobian should be 1
 
         # Test with Softplus rectifier (should be positive)
         pm_softplus = PolynomialMap(2, 2, :normal, Softplus())
@@ -484,7 +487,7 @@ using LinearAlgebra
         pb_1d = pullback(pm_1d, x_1d)
         # For identity map, pullback should equal reference density at x
         ref_1d = pdf(MvNormal([0.0], I(1)), x_1d)
-        @test pb_1d ≈ ref_1d atol=1e-10
+        @test pb_1d ≈ ref_1d atol = 1e-10
 
         # Test 2D case with identity-like map
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -494,7 +497,7 @@ using LinearAlgebra
         x_2d = [0.3, 0.7]
         pb_2d = pullback(pm_2d, x_2d)
         ref_2d = pdf(MvNormal(zeros(2), I(2)), x_2d)
-        @test pb_2d ≈ ref_2d atol=1e-10
+        @test pb_2d ≈ ref_2d atol = 1e-10
 
         # Test mathematical consistency: pullback(M, x) = reference_density(inverse(M, x)) * |inverse_jacobian(M, x)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())
@@ -549,7 +552,7 @@ using LinearAlgebra
         z_1d = [0.5]
         pf_1d = pushforward(pm_1d, target, z_1d)
         # For identity map with standard normal target, pushforward should equal target at z
-        @test pf_1d ≈ target_density(z_1d) atol=1e-10
+        @test pf_1d ≈ target_density(z_1d) atol = 1e-10
 
         # Test 2D case
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -558,7 +561,7 @@ using LinearAlgebra
 
         z_2d = [0.3, 0.7]
         pf_2d = pushforward(pm_2d, target, z_2d)
-        @test pf_2d ≈ target.density(z_2d) atol=1e-10
+        @test pf_2d ≈ target.density(z_2d) atol = 1e-10
 
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())
@@ -795,5 +798,117 @@ using LinearAlgebra
         @test typeof(result_matrix_f32) == Matrix{Float64}
         @test size(result_matrix_f32, 2) == length(pm)
         @test size(result_matrix_f32, 1) == size(Z_f32, 1)
+
+        # Gradient: Vector{Int}
+        result_grad_int = gradient_zk(pm, z_int)
+        result_grad_float = gradient_zk(pm, Float64.(z_int))
+        @test result_grad_int ≈ result_grad_float
+        @test typeof(result_grad_int) == Vector{Float64}
+
+        # Gradient: Matrix{Int}
+        result_grad_matrix_int = gradient_zk(pm, Z_int)
+        result_grad_matrix_float = gradient_zk(pm, Float64.(Z_int))
+        @test result_grad_matrix_int ≈ result_grad_matrix_float
+        @test typeof(result_grad_matrix_int) == Matrix{Float64}
+
+        # Jacobian: Vector{Int}
+        result_jac_int = jacobian(pm, z_int)
+        result_jac_float = jacobian(pm, Float64.(z_int))
+        @test result_jac_int ≈ result_jac_float
+        @test typeof(result_jac_int) == Float64
+
+        # Jacobian: Matrix{Int}
+        result_jac_matrix_int = jacobian(pm, Z_int)
+        result_jac_matrix_float = jacobian(pm, Float64.(Z_int))
+        @test result_jac_matrix_int ≈ result_jac_matrix_float
+        @test typeof(result_jac_matrix_int) == Vector{Float64}
+
+        # Inverse: Vector{Int}
+        x_int = [2, 3]
+        result_inv_int = inverse(pm, x_int)
+        result_inv_float = inverse(pm, Float64.(x_int))
+        @test result_inv_int ≈ result_inv_float
+        @test typeof(result_inv_int) == Vector{Float64}
+
+        # Inverse: Matrix{Int}
+        X_int = [2 3; 4 5; 6 7]
+        result_inv_matrix_int = inverse(pm, X_int)
+        result_inv_matrix_float = inverse(pm, Float64.(X_int))
+        @test result_inv_matrix_int ≈ result_inv_matrix_float
+        @test typeof(result_inv_matrix_int) == Matrix{Float64}
+
+        # Inverse Jacobian: Vector{Int}
+        result_inv_jac_int = inverse_jacobian(pm, x_int)
+        result_inv_jac_float = inverse_jacobian(pm, Float64.(x_int))
+        @test result_inv_jac_int ≈ result_inv_jac_float
+        @test typeof(result_inv_jac_int) == Float64
+
+        # Inverse Jacobian: Matrix{Int}
+        result_inv_jac_matrix_int = inverse_jacobian(pm, X_int)
+        result_inv_jac_matrix_float = inverse_jacobian(pm, Float64.(X_int))
+        @test result_inv_jac_matrix_int ≈ result_inv_jac_matrix_float
+        @test typeof(result_inv_jac_matrix_int) == Vector{Float64}
+
+        # Pullback: Vector{Int}
+        result_pb_int = pullback(pm, x_int)
+        result_pb_float = pullback(pm, Float64.(x_int))
+        @test result_pb_int ≈ result_pb_float
+        @test typeof(result_pb_int) == Float64
+
+        # Pullback: Matrix{Int}
+        result_pb_matrix_int = pullback(pm, X_int)
+        result_pb_matrix_float = pullback(pm, Float64.(X_int))
+        @test result_pb_matrix_int ≈ result_pb_matrix_float
+        @test typeof(result_pb_matrix_int) == Vector{Float64}
+
+        # Pushforward: Vector{Int}
+        target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
+        target = MapTargetDensity(target_density, :auto_diff)
+        result_pf_int = pushforward(pm, target, z_int)
+        result_pf_float = pushforward(pm, target, Float64.(z_int))
+        @test result_pf_int ≈ result_pf_float
+        @test typeof(result_pf_int) == Float64
+
+        # Pushforward: Matrix{Int}
+        result_pf_matrix_int = pushforward(pm, target, Z_int)
+        result_pf_matrix_float = pushforward(pm, target, Float64.(Z_int))
+        @test result_pf_matrix_int ≈ result_pf_matrix_float
+        @test typeof(result_pf_matrix_int) == Vector{Float64}
+
+        # setcoefficients!: Vector{Int}
+        n_coeffs = numbercoefficients(pm)
+        coeffs_int = collect(1:n_coeffs)
+        setcoefficients!(pm, coeffs_int)
+        @test pm.components[1].coefficients ≈ Float64.(coeffs_int[1:length(pm.components[1].coefficients)])
+
+    end
+
+    @testset "Forward Direction" begin
+        pm = PolynomialMap(2, 2)
+        @test pm.forwarddirection == :target
+
+        TransportMaps.setforwarddirection!(pm, :reference)
+        @test pm.forwarddirection == :reference
+
+        @test_throws AssertionError TransportMaps.setforwarddirection!(pm, :minimize)
+    end
+
+    @testset "Show" begin
+        pm = PolynomialMap(2, 2)
+        @test_nowarn sprint(show, pm)
+        @test_nowarn sprint(print, pm)
+        @test_nowarn display(pm)
+
+        pm_empty = PolynomialMap(0, 0)
+        @test numbercoefficients(pm_empty) == 0
+        @test_nowarn sprint(show, pm_empty)
+        @test_nowarn sprint(print, pm_empty)
+        @test_nowarn display(pm_empty)
+
+
+        # Uninitialized coefficients
+        pm_uninit = PolynomialMap(2, 2)
+        setcoefficients!(pm_uninit, fill(NaN, numbercoefficients(pm_uninit)))
+        @test_nowarn display(pm_uninit)
     end
 end

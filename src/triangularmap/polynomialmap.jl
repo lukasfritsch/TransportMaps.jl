@@ -6,17 +6,16 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     function PolynomialMap(
         dimension::Int,
         degree::Int,
-        referencetype::Symbol = :normal,
-        rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
-        map_type::Symbol = :total
+        referencetype::Symbol=:normal,
+        rectifier::AbstractRectifierFunction=Softplus(),
+        basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
+        map_type::Symbol=:total
     )
         @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
+        @assert referencetype in [:normal] "Currently, only :normal reference density is supported"
 
         if referencetype == :normal
             referencedensity = Normal()
-        else
-            error("Unsupported reference density type: $referencetype")
         end
 
         return PolynomialMap(dimension, degree, referencedensity, rectifier, basis, map_type)
@@ -26,17 +25,21 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         dimension::Int,
         degree::Int,
         reference::Distributions.UnivariateDistribution,
-        rectifier::AbstractRectifierFunction = Softplus(),
-        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
-        map_type::Symbol = :total
+        rectifier::AbstractRectifierFunction=Softplus(),
+        basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
+        map_type::Symbol=:total
     )
         components = [PolynomialMapComponent(k, degree, rectifier, basis, reference, map_type) for k in 1:dimension]
 
         return PolynomialMap(components, reference)
     end
 
-    function PolynomialMap(components::Vector{PolynomialMapComponent{T}}, reference::Distributions.UnivariateDistribution=Normal()) where T <: AbstractPolynomialBasis
-        return new(components, MapReferenceDensity(reference), :target)
+    function PolynomialMap(
+        components::Vector{PolynomialMapComponent{T}},
+        reference::Distributions.UnivariateDistribution=Normal();
+        forwarddirection::Symbol=:target
+        ) where T<:AbstractPolynomialBasis
+        return new(components, MapReferenceDensity(reference), forwarddirection)
     end
 end
 
@@ -44,9 +47,9 @@ end
 function DiagonalMap(
     dimension::Int,
     degree::Int,
-    referencetype::Symbol = :normal,
-    rectifier::AbstractRectifierFunction = Softplus(),
-    basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+    referencetype::Symbol=:normal,
+    rectifier::AbstractRectifierFunction=Softplus(),
+    basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
 )
     return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :diagonal)
 end
@@ -55,9 +58,9 @@ end
 function NoMixedMap(
     dimension::Int,
     degree::Int,
-    referencetype::Symbol = :normal,
-    rectifier::AbstractRectifierFunction = Softplus(),
-    basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+    referencetype::Symbol=:normal,
+    rectifier::AbstractRectifierFunction=Softplus(),
+    basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
 )
     return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :no_mixed)
 end
@@ -179,7 +182,7 @@ function gradient_coefficients(M::PolynomialMap, z::Vector{Float64})
         component_grad = gradient_coefficients(component, z[1:i])
 
         # Fill in the gradient matrix
-        gradient_matrix[i, coeff_offset:coeff_offset + n_component_coeffs - 1] = component_grad
+        gradient_matrix[i, coeff_offset:coeff_offset+n_component_coeffs-1] = component_grad
 
         # All other coefficients don't affect this component (triangular structure)
         # So gradient_matrix[i, other_indices] remains zero
@@ -243,7 +246,7 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::Vector{Float64})
         comp_grad = partial_derivative_zk_gradient_coefficients(component, z[1:i])
 
         # Add contribution: (1/diagonal_deriv) * comp_grad
-        coeff_range = coeff_offset:coeff_offset + n_comp_coeffs - 1
+        coeff_range = coeff_offset:coeff_offset+n_comp_coeffs-1
         gradient[coeff_range] += comp_grad / diagonal_deriv
 
         coeff_offset += n_comp_coeffs
@@ -325,7 +328,7 @@ function pullback(M::PolynomialMap, x::Vector{Float64})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     value = M.forwarddirection == :target ? M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x)) :
-                                            M.reference.density(evaluate(M, x)) * abs(jacobian(M, x))
+            M.reference.density(evaluate(M, x)) * abs(jacobian(M, x))
 
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
     return value
@@ -359,7 +362,7 @@ function pushforward(M::PolynomialMap, target::MapTargetDensity, z::Vector{Float
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     value = M.forwarddirection == :target ? target.density(evaluate(M, z)) * abs(jacobian(M, z)) :
-                                            error("Can't evaluate pushforward for a map from samples!")
+            error("Can't evaluate pushforward for a map from samples!")
 
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|
     return value
@@ -403,7 +406,7 @@ function getcoefficients(M::PolynomialMap)
     coefficients = Vector{Float64}(undef, numbercoefficients(M))
     counter = 1
     for component in M.components
-        coefficients[counter:counter+length(component.basisfunctions)-1] .= component.coefficients
+        coefficients[counter:counter+length(component.basisfunctions)-1] .= getcoefficients(component)
         counter += length(component.basisfunctions)
     end
     return coefficients
@@ -414,14 +417,13 @@ function setforwarddirection!(M::PolynomialMap, forwarddirection::Symbol)
     M.forwarddirection = forwarddirection
 end
 
-function setoptimizationdirection!(M::PolynomialMap, optimizationdirection::Symbol)
-    @assert optimizationdirection in [:forward, :backward] "Direction must be :forward, :backward"
-    M.optimizationdirection = optimizationdirection
-end
-
 # Number of coefficients in the polynomial map
 function numbercoefficients(M::PolynomialMap)
-    return sum(length(component.coefficients) for component in M.components)
+    if numberdimensions(M) == 0
+        return 0
+    else
+        return sum(length(component.coefficients) for component in M.components)
+    end
 end
 
 # Number of dimensions in the polynomial map
@@ -430,8 +432,9 @@ function numberdimensions(M::PolynomialMap)
 end
 
 function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
+    # Check dimensions
+    @assert size(samples, 2) == numberdimensions(M) "Samples must have the same number of columns as number of map components in M"
     setforwarddirection!(M, :reference)
-
     new_components = Vector{PolynomialMapComponent}(undef, length(M.components))
 
     # save coefficients

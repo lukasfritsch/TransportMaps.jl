@@ -20,6 +20,8 @@ abstract type AbstractMultivariateBasis end
 abstract type AbstractRectifierFunction end
 abstract type AbstractQuadratureWeights end
 abstract type AbstractMapDensity end
+abstract type AbstractComposedMap end
+abstract type AbstractLinearMap <: AbstractTriangularMap end
 
 # Export abstract types
 export AbstractBasisFunction
@@ -30,6 +32,8 @@ export AbstractTriangularMap
 export AbstractRectifierFunction
 export AbstractQuadratureWeights
 export AbstractMapDensity
+export AbstractComposedMap
+export AbstractLinearMap
 
 # Export functions/methods
 # Basis functions and evaluation
@@ -73,6 +77,11 @@ export kldivergence
 export kldivergence_gradient
 export optimize!
 export variance_diagnostic
+export reduced_margin
+export optimize_adaptive_transportmap
+export optimize_adaptive_transportmapcomponent
+export OptimizationHistory
+export OptimizationResult
 
 # Conditional densities and samples
 export conditional_density
@@ -92,6 +101,8 @@ export GaussianWeightedHermiteBasis
 export RadialBasis
 
 export MultivariateBasis
+export LinearMap
+export ComposedMap
 export PolynomialMapComponent
 export PolynomialMap
 export Softplus
@@ -110,14 +121,21 @@ include("mapcomponents/univariatebases/hermitebasis.jl")
 include("mapcomponents/univariatebases/linearizedhermitebasis.jl")
 include("mapcomponents/univariatebases/cubicsplinehermitebasis.jl")
 include("mapcomponents/univariatebases/gaussianweighthermitebasis.jl")
-include("mapcomponents/univariatebases/radialbasis.jl")
 
 include("mapcomponents/multivariatebasis.jl")
+include("mapcomponents/multivariateindices.jl")
 include("mapcomponents/polynomialmapcomponent.jl")
 include("mapcomponents/rectifier.jl")
+
 include("triangularmap/polynomialmap.jl")
-include("triangularmap/optimization.jl")
 include("triangularmap/conditionaldensities.jl")
+include("triangularmap/linearmap.jl")
+include("triangularmap/composedmap.jl")
+
+include("optimization/mapfromdensity.jl")
+include("optimization/mapfromsamples.jl")
+include("optimization/optimizationhistory.jl")
+include("optimization/adaptivetransportmap.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")

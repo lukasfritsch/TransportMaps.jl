@@ -26,7 +26,7 @@ end
 function _cubic_weight_derivative(z::Float64, r::Float64)
     if abs(z) < r
         m = abs(z) / r
-        return (6*abs(z)^2/r^3 - 6*abs(z)/r^2) * sign(z)
+        return (6 * abs(z)^2 / r^3 - 6 * abs(z) / r^2) * sign(z)
     else
         return 0.0
     end
@@ -48,7 +48,7 @@ function basisfunction_derivative(basis::CubicSplineHermiteBasis, αᵢ::Real, z
     if n <= 1
         return hermite_derivative(n, zᵢ)
     else
-        return n * hermite_derivative(n-1, zᵢ) * _cubic_weight(zᵢ, r) + hermite_polynomial(n, zᵢ) * _cubic_weight_derivative(zᵢ, r)
+        return n * hermite_derivative(n - 1, zᵢ) * _cubic_weight(zᵢ, r) + hermite_polynomial(n, zᵢ) * _cubic_weight_derivative(zᵢ, r)
     end
 end
 

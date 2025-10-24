@@ -5,7 +5,7 @@ using Plots
 
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
 
-num_samples = 1000
+num_samples = 500
 
 function generate_banana_samples(n_samples::Int)
     samples = Matrix{Float64}(undef, n_samples, 2)
@@ -30,18 +30,21 @@ println("Generated $(size(target_samples, 1)) samples")
 
 L = LinearMap(target_samples)
 
-M = PolynomialMap(2, 2, :normal, Softplus())
+M, results, selected_terms, selected_folds = optimize_adaptive_transportmap(
+    target_samples, [3, 6], 5, L, Softplus(2.))
 
-res = optimize!(M, target_samples, L)
+ind_atm = getmultiindexsets(M.polynomialmap[2])
 
-C = ComposedMap(L, M)
+dim = scatter(ind_atm[:, 1], ind_atm[:, 2], ms=30, legend=false)
+plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, maximum(ind_atm[:, 2]) + 0.5),
+    aspect_ratio=1, xlabel="Multi-index α₁", ylabel="Multi-index α₂")
+xticks!(0:maximum(ind_atm[:, 1]))
+yticks!(0:maximum(ind_atm[:, 2]))
 
 new_samples = generate_banana_samples(1000)
 norm_samples = randn(1000, 2)
 
-mapped_samples = evaluate(C, new_samples)
-
-mapped_banana_samples = inverse(C, norm_samples)
+mapped_banana_samples = inverse(M, norm_samples)
 
 p11 = scatter(new_samples[:, 1], new_samples[:, 2],
     label="Original Samples", alpha=0.5, color=1,
@@ -55,24 +58,11 @@ scatter!(p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
 
 plot(p11, size=(600, 400))
 
-p12 = scatter(norm_samples[:, 1], norm_samples[:, 2],
-    label="Original Samples", alpha=0.5, color=1,
-    title="Original Banana Distribution Samples",
-    xlabel="x₁", ylabel="x₂")
-
-scatter!(p12, mapped_samples[:, 1], mapped_samples[:, 2],
-    label="Mapped Samples", alpha=0.5, color=2,
-    title="Transport Map Generated Samples",
-    xlabel="x₁", ylabel="x₂")
-
-plot(p12, size=(600, 400), aspect_ratio=1)
-
 x₁ = range(-3, 3, length=100)
 x₂ = range(-2.5, 4.0, length=100)
 
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
-
-learned_density = [pullback(C, [x1, x2]) for x2 in x₂, x1 in x₁]
+learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]
 
 p3 = contour(x₁, x₂, true_density,
     title="True Banana Density",
@@ -86,22 +76,28 @@ p4 = contour(x₁, x₂, learned_density,
 
 plot(p3, p4, layout=(1, 2), size=(800, 400))
 
-scatter(target_samples[:, 1], target_samples[:, 2],
-    label="Original Samples", alpha=0.3, color=1,
-    xlabel="x₁", ylabel="x₂",
-    title="Banana Distribution: Samples and Learned Density")
+map_index = 2  # Choose 2nd component
+best_fold = selected_folds[map_index]
+res_best = results[map_index][best_fold]
 
-contour!(x₁, x₂, learned_density ./ maximum(learned_density),
-    levels=5, colormap=:viridis, alpha=0.8,
-    label="Learned Density Contours")
+max_1 = maximum(res_best.terms[end][:, 1])
+max_2 = maximum(res_best.terms[end][:, 2])
 
-xlims!(-3, 3)
-ylims!(-2.5, 4.0)
+p = plot(layout=(2, 3), xlims=(-0.5, max_1 + 0.5), ylims=(-0.5, max_2 + 0.5),
+    aspect_ratio=1, xlabel="Multi-index α₁", ylabel="Multi-index α₂", legend=false,)
 
-println("Sample Statistics Comparison:")
-println("Original samples - Mean: ", Distributions.mean(target_samples, dims=1))
-println("Original samples - Std:  ", Distributions.std(target_samples, dims=1))
-println("Mapped samples - Mean:   ", Distributions.mean(mapped_banana_samples, dims=1))
-println("Mapped samples - Std:    ", Distributions.std(mapped_banana_samples, dims=1))
+for (i, term) in enumerate(res_best.terms)
+    scatter!(p, term[:, 1], term[:, 2], ms=20, title="Iteration $i", subplot=i)
+end
+
+xticks!(0:max_1)
+yticks!(0:max_2)
+plot!(p, size=(800, 600))
+
+plot(res_best.train_objectives, label="Train Objective", lw=2, ls=:dash, marker=:o)
+plot!(res_best.test_objectives, label="Test Objective", lw=2, ls=:dash, marker=:o)
+plot!(xlabel="Iteration", ylabel="Objective Value",
+    title="Training and Test Objectives over Iterations")
+plot!(size=(600, 400))
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl

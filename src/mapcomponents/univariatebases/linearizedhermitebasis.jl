@@ -7,13 +7,13 @@ struct LinearizedHermiteBasis <: AbstractPolynomialBasis
     end
 end
 
-LinearizedHermiteBasis(max_degree::Int) = LinearizedHermiteBasis(normalization=ones(max_degree+1))
+LinearizedHermiteBasis(max_degree::Int) = LinearizedHermiteBasis(normalization=ones(max_degree + 1))
 
 function LinearizedHermiteBasis(samples::Vector{<:Real}, max_degree::Int, k::Int)
     lower_bound, upper_bound = quantile(samples, 0.01), quantile(samples, 0.99)
     normalization = [factorial(n) for n in 0:max_degree]
     if k <= max_degree
-        normalization[k+1] = factorial(k+1)
+        normalization[k+1] = factorial(k + 1)
     end
     return LinearizedHermiteBasis(lower=lower_bound, upper=upper_bound, normalization=normalization)
 end
@@ -22,7 +22,7 @@ function LinearizedHermiteBasis(density::Distributions.UnivariateDistribution, m
     lower_bound, upper_bound = quantile(density, 0.01), quantile(density, 0.99)
     normalization = [factorial(n) for n in 0:max_degree]
     if k <= max_degree
-        normalization[k+1] = factorial(k+1)
+        normalization[k+1] = factorial(k + 1)
     end
     return LinearizedHermiteBasis(lower=lower_bound, upper=upper_bound, normalization=normalization)
 end

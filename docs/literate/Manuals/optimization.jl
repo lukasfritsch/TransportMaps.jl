@@ -48,38 +48,38 @@ quadrature = GaussHermiteWeights(10, 2)
 #md nothing #hide
 
 # Set optimization options to print the trace every 20 iterations:
-opts_trace = Optim.Options(iterations = 200, show_trace = true, show_every = 20, store_trace = true)
+opts_trace = Optim.Options(iterations=200, show_trace=true, show_every=20, store_trace=true)
 
 # We will try the following optimizers from `Optim.jl`, ordered from simplest to most sophisticated:
 
 # ### Gradient Descent
 # The most basic optimization algorithm, Gradient Descent iteratively moves in the direction of the negative gradient. It is simple and robust, but can be slow to converge, especially for ill-conditioned problems.
 M_gd = PolynomialMap(2, 2)
-res_gd = optimize!(M_gd, target, quadrature; optimizer = GradientDescent(), options = opts_trace)
+res_gd = optimize!(M_gd, target, quadrature; optimizer=GradientDescent(), options=opts_trace)
 println(res_gd)
 
 # ### Conjugate Gradient
 # Conjugate Gradient improves upon basic gradient descent by using conjugate directions, which can accelerate convergence for large-scale or quadratic problems. It requires gradient information but not the Hessian.
 M_cg = PolynomialMap(2, 2)
-res_cg = optimize!(M_cg, target, quadrature; optimizer = ConjugateGradient(), options = opts_trace)
+res_cg = optimize!(M_cg, target, quadrature; optimizer=ConjugateGradient(), options=opts_trace)
 println(res_cg)
 
 # ### Nelder-Mead
 # Nelder-Mead is a derivative-free optimizer that uses a simplex of points to search for the minimum. It is useful when gradients are unavailable or unreliable, but may be less efficient for high-dimensional or smooth problems.
 M_nm = PolynomialMap(2, 2)
-res_nm = optimize!(M_nm, target, quadrature; optimizer = NelderMead(), options = opts_trace)
+res_nm = optimize!(M_nm, target, quadrature; optimizer=NelderMead(), options=opts_trace)
 println(res_nm)
 
 # ### BFGS
 # BFGS is a quasi-Newton method that builds up an approximation to the Hessian matrix using gradient evaluations. It is generally faster and more robust than gradient descent and conjugate gradient for smooth problems.
 M_bfgs = PolynomialMap(2, 2)
-res_bfgs = optimize!(M_bfgs, target, quadrature; optimizer = BFGS(), options = opts_trace)
+res_bfgs = optimize!(M_bfgs, target, quadrature; optimizer=BFGS(), options=opts_trace)
 println(res_bfgs)
 
 # ### LBFGS
 # LBFGS is a limited-memory version of BFGS, making it suitable for large-scale problems where storing the full Hessian approximation is impractical. It is the default optimizer in many scientific computing packages due to its efficiency and reliability.
 M_lbfgs = PolynomialMap(2, 2)
-res_lbfgs = optimize!(M_lbfgs, target, quadrature; optimizer = LBFGS(), options = opts_trace)
+res_lbfgs = optimize!(M_lbfgs, target, quadrature; optimizer=LBFGS(), options=opts_trace)
 println(res_lbfgs)
 
 # Finally, we can compare the results by means of variance diagnostic:
@@ -98,15 +98,15 @@ println("Variance diagnostic LBFGS:             ", v_lbfgs)
 
 # We can visualize the convergence of all optimizers:
 plot([res_gd.trace[i].iteration for i in 1:length(res_gd.trace)], lw=2,
-     [res_gd.trace[i].g_norm for i in 1:length(res_gd.trace)], label="GradientDescent")
+    [res_gd.trace[i].g_norm for i in 1:length(res_gd.trace)], label="GradientDescent")
 plot!([res_cg.trace[i].iteration for i in 1:length(res_cg.trace)], lw=2,
-     [res_cg.trace[i].g_norm for i in 1:length(res_cg.trace)], label="ConjugateGradient")
+    [res_cg.trace[i].g_norm for i in 1:length(res_cg.trace)], label="ConjugateGradient")
 plot!([res_nm.trace[i].iteration for i in 1:length(res_nm.trace)], lw=2,
-     [res_nm.trace[i].g_norm for i in 1:length(res_nm.trace)], label="NelderMead")
+    [res_nm.trace[i].g_norm for i in 1:length(res_nm.trace)], label="NelderMead")
 plot!([res_bfgs.trace[i].iteration for i in 1:length(res_bfgs.trace)], lw=2,
-     [res_bfgs.trace[i].g_norm for i in 1:length(res_bfgs.trace)], label="BFGS")
+    [res_bfgs.trace[i].g_norm for i in 1:length(res_bfgs.trace)], label="BFGS")
 plot!([res_lbfgs.trace[i].iteration for i in 1:length(res_lbfgs.trace)], lw=2,
-     [res_lbfgs.trace[i].g_norm for i in 1:length(res_lbfgs.trace)], label="LBFGS")
+    [res_lbfgs.trace[i].g_norm for i in 1:length(res_lbfgs.trace)], label="LBFGS")
 plot!(xaxis=:log, yaxis=:log, xlabel="Iteration", ylabel="Gradient norm",
     title="Convergence of different optimizers", xlims=(1, 200),
     legend=:bottomleft)

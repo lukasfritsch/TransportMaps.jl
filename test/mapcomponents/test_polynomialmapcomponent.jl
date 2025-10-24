@@ -16,10 +16,20 @@ using Test
         @test pmc_identity.index == 2
         @test pmc_identity.rectifier isa IdentityRectifier
 
-        # Test construction with custom basis
-        pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis())
+        # Test construction with custom basis: HermiteBasis
+        pmc_hermite = PolynomialMapComponent(1, 2, Softplus(), HermiteBasis(), Normal())
         @test pmc_hermite.rectifier isa Softplus
         @test all(basistype(bf) == HermiteBasis for bf in pmc_hermite.basisfunctions)
+
+
+        # Test construction with custom basis: GaussianWeightedHermiteBasis
+        pmc_gaussian = PolynomialMapComponent(1, 2, ShiftedELU(), GaussianWeightedHermiteBasis(), Normal())
+        @test pmc_gaussian.rectifier isa ShiftedELU
+        @test all(basistype(bf) == GaussianWeightedHermiteBasis for bf in pmc_gaussian.basisfunctions)
+
+        # Test construction with custom basis: CubicSplineHermiteBasis
+        pmc_spline = PolynomialMapComponent(1, 2, Softplus(), CubicSplineHermiteBasis(), Normal())
+        @test all(basistype(bf) == CubicSplineHermiteBasis for bf in pmc_spline.basisfunctions)
 
         # Test invalid construction
         @test_throws AssertionError PolynomialMapComponent(0, 2)  # Invalid index
@@ -28,10 +38,27 @@ using Test
         @test_throws AssertionError PolynomialMapComponent(1, -1)  # Negative degree
     end
 
+    @testset "Construction from Samples" begin
+        multi_indices = multivariate_indices(1, 2)
+        samps = randn(10, 2)
+
+        pmc_hermite = PolynomialMapComponent(multi_indices, Softplus(), HermiteBasis(), samps)
+        @test all(basistype(bf) == HermiteBasis for bf in pmc_hermite.basisfunctions)
+
+        pmc_linear = PolynomialMapComponent(multi_indices, IdentityRectifier(), LinearizedHermiteBasis(), samps)
+        @test all(basistype(bf) == LinearizedHermiteBasis for bf in pmc_linear.basisfunctions)
+
+        pmc_gaussian = PolynomialMapComponent(multi_indices, ShiftedELU(), GaussianWeightedHermiteBasis(), samps)
+        @test all(basistype(bf) == GaussianWeightedHermiteBasis for bf in pmc_gaussian.basisfunctions)
+
+        pmc_spline = PolynomialMapComponent(multi_indices, Softplus(), CubicSplineHermiteBasis(), samps)
+        @test all(basistype(bf) == CubicSplineHermiteBasis for bf in pmc_spline.basisfunctions)
+    end
+
     @testset "Direct Construction with Basis Functions" begin
         # Create basis functions manually
-    mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
-    mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
+        mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
+        mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]
 
@@ -49,8 +76,8 @@ using Test
     @testset "Evaluation" begin
         # Create a simple 1D polynomial map component
         # f(x) = a₀ + a₁*x with coefficients [1.0, 2.0]
-    mvb1 = MultivariateBasis([0], HermiteBasis())  # ψ₀(x) = H₀(x) = 1
-    mvb2 = MultivariateBasis([1], HermiteBasis())  # ψ₁(x) = H₁(x) = x
+        mvb1 = MultivariateBasis([0], HermiteBasis())  # ψ₀(x) = H₀(x) = 1
+        mvb2 = MultivariateBasis([1], HermiteBasis())  # ψ₁(x) = H₁(x) = x
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]  # f(x) = 1 + 2x
 
@@ -67,7 +94,7 @@ using Test
 
         # Test evaluation at x = 0 should give f(0)
         result_zero = evaluate(pmc, [0.0])
-        @test result_zero ≈ 1.0 atol=1e-6  # f(0) = 1
+        @test result_zero ≈ 1.0 atol = 1e-6  # f(0) = 1
 
         # Test dimension mismatch
         @test_throws AssertionError evaluate(pmc, [1.0, 2.0])  # Wrong dimension
@@ -75,8 +102,8 @@ using Test
 
     @testset "Partial Derivative" begin
         # Create a simple polynomial map component
-    mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
-    mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
+        mvb1 = MultivariateBasis([0], HermiteBasis())  # Constant
+        mvb2 = MultivariateBasis([1], HermiteBasis())  # Linear
         basisfunctions = [mvb1, mvb2]
         coefficients = [1.0, 2.0]  # f(x) = 1 + 2x
 
@@ -84,36 +111,36 @@ using Test
 
         # Test partial derivative: ∂M¹/∂x₁ = g(∂f/∂x₁) = g(2) = 2 (with IdentityRectifier)
         pd = partial_derivative_zk(pmc, [1.0])
-        @test pd ≈ 2.0 atol=1e-6
+        @test pd ≈ 2.0 atol = 1e-6
 
         # Test at different points
         pd_zero = partial_derivative_zk(pmc, [0.0])
-        @test pd_zero ≈ 2.0 atol=1e-6  # Should be constant for linear function
+        @test pd_zero ≈ 2.0 atol = 1e-6  # Should be constant for linear function
 
         pd_neg = partial_derivative_zk(pmc, [-1.0])
-        @test pd_neg ≈ 2.0 atol=1e-6
+        @test pd_neg ≈ 2.0 atol = 1e-6
     end
 
     @testset "Different Rectifiers" begin
         # Test with Softplus rectifier
-    mvb1 = MultivariateBasis([0], HermiteBasis())
-    mvb2 = MultivariateBasis([1], HermiteBasis())
+        mvb1 = MultivariateBasis([0], HermiteBasis())
+        mvb2 = MultivariateBasis([1], HermiteBasis())
         basisfunctions = [mvb1, mvb2]
         coefficients = [0.0, 1.0]  # f(x) = x, so ∂f/∂x = 1
 
         pmc_softplus = PolynomialMapComponent(basisfunctions, coefficients, Softplus(), 1)
         pd_softplus = partial_derivative_zk(pmc_softplus, [1.0])
-        @test pd_softplus ≈ log1p(exp(1.0)) atol=1e-6  # Softplus(1) = log(1 + e¹)
+        @test pd_softplus ≈ log1p(exp(1.0)) atol = 1e-6  # Softplus(1) = log(1 + e¹)
 
         # Test with ShiftedELU rectifier
         pmc_elu = PolynomialMapComponent(basisfunctions, coefficients, ShiftedELU(), 1)
         pd_elu = partial_derivative_zk(pmc_elu, [1.0])
-        @test pd_elu ≈ 2.0 atol=1e-6  # ShiftedELU(1) = 1 + 1 = 2
+        @test pd_elu ≈ 2.0 atol = 1e-6  # ShiftedELU(1) = 1 + 1 = 2
 
         # Test with IdentityRectifier
         pmc_identity = PolynomialMapComponent(basisfunctions, coefficients, IdentityRectifier(), 1)
         pd_identity = partial_derivative_zk(pmc_identity, [1.0])
-        @test pd_identity ≈ 1.0 atol=1e-6  # Identity(1) = 1
+        @test pd_identity ≈ 1.0 atol = 1e-6  # Identity(1) = 1
     end
 
     @testset "Higher Dimensions" begin
@@ -303,5 +330,35 @@ using Test
         @test result_matrix_f32 ≈ pmc(Float64.(Z_f32))
         @test typeof(result_matrix_f32) == Vector{Float64}
         @test length(result_matrix_f32) == size(Z_f32, 1)
+
+        # Setting of coefficients
+        coeffs_int = [1, 2, 3, 4, 5, 6]
+        setcoefficients!(pmc, coeffs_int)
+        @test pmc.coefficients ≈ Float64.(coeffs_int)
+    end
+
+    @testset "Multiindexset" begin
+        pmc = PolynomialMapComponent(2, 2)
+        mi_pmc = getmultiindexsets(pmc)
+        mis = permutedims(hcat(multivariate_indices(2,2)...))
+
+        @test maximum(mi_pmc, dims=1) ≈ [2 2]
+        @test mi_pmc ≈ mis
+    end
+
+    @testset "Show" begin
+        pmc = PolynomialMapComponent(1, 1)
+        @test_nowarn sprint(show, pmc)
+        @test_nowarn sprint(print, pmc)
+        @test_nowarn display(pmc)
+
+        # Uninitialized coefficients
+        pmc_uninit = PolynomialMapComponent(1, 1)
+        setcoefficients!(pmc_uninit, fill(NaN, numbercoefficients(pmc_uninit)))
+        @test_nowarn display(pmc_uninit)
+
+        # More than 5 coefficients
+        pmc_large = PolynomialMapComponent(1, 5)
+        @test_nowarn display(pmc_large)
     end
 end

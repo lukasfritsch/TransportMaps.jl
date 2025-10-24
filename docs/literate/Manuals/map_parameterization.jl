@@ -78,17 +78,17 @@ M_d = DiagonalMap(2, 3, :normal, Softplus(), HermiteBasis())
 # Extract the multi-index sets of the second component of each map for visualization:
 ind_to = getmultiindexsets(M_to.components[2])
 ind_nm = getmultiindexsets(M_nm.components[2])
-ind_d  = getmultiindexsets(M_d.components[2])
+ind_d = getmultiindexsets(M_d.components[2])
 #md nothing #hide
 
 # Finally, we plot the multi-index sets for each map type. This allows us to reproduce the
 # comparison of multi-index sets as shown in Figure 1 in [marzouk2016](@cite):
-scatter(ind_to[:, 1], ind_to[:, 2], ms=20, label = "Total Order",)
-scatter!(ind_nm[:, 1], ind_nm[:, 2], ms=12, label = "No Mixed")
-scatter!(ind_d[:, 1], ind_d[:, 2], ms=6, label = "Diagonal")
-scatter!(xlim = (-0.5, 3.5), ylim = (-0.5, 3.5), aspect_ratio = 1, legend=:topright,
-    xlabel = "Multi-index α₁", ylabel = "Multi-index α₂",
-    title = "Multi-index Set of Map Component M²")
+scatter(ind_to[:, 1], ind_to[:, 2], ms=20, label="Total Order",)
+scatter!(ind_nm[:, 1], ind_nm[:, 2], ms=12, label="No Mixed")
+scatter!(ind_d[:, 1], ind_d[:, 2], ms=6, label="Diagonal")
+scatter!(xlim=(-0.5, 3.5), ylim=(-0.5, 3.5), aspect_ratio=1, legend=:topright,
+    xlabel="Multi-index α₁", ylabel="Multi-index α₂",
+    title="Multi-index Set of Map Component M²")
 #md savefig("multi_indices.svg"); nothing # hide
 # ![Multi Index Sets](multi_indices.svg)
 
@@ -108,7 +108,7 @@ x₂ = range(-10, 20, length=1000)
 
 true_density = [cubic_density([x1, x2]) for x2 in x₂, x1 in x₁]
 contour(x₁, x₂, true_density;
-        label="x₁", ylabel="x₂", colormap=:viridis, levels=10)
+    label="x₁", ylabel="x₂", colormap=:viridis, levels=10)
 
 # We create the `MapTargetDensity` and quadrature weights for optimization:
 target = MapTargetDensity(cubic_density, :auto_diff)
@@ -130,7 +130,7 @@ var_diag = variance_diagnostic(M_to, target, samples_z)
 println("Variance Diagnostic: ", var_diag)
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
-    ms=4, label = nothing, c=1, title="Total Order",
+    ms=4, label=nothing, c=1, title="Total Order",
     xlabel="x₁", ylabel="x₂")
 #md savefig("total_order.svg"); nothing # hide
 # ![Total Order](total_order.svg)
@@ -144,7 +144,7 @@ var_diag_no_mixed = variance_diagnostic(M_nm, target, samples_z)
 println("Variance Diagnostic: ", var_diag_no_mixed)
 
 scatter(mapped_samples_no_mixed[:, 1], mapped_samples_no_mixed[:, 2],
-    ms=4, label = nothing, c=2, title="No Mixed",
+    ms=4, label=nothing, c=2, title="No Mixed",
     xlabel="x₁", ylabel="x₂")
 #md savefig("no_mixed.svg"); nothing # hide
 # ![No Mixed](no_mixed.svg)
@@ -158,10 +158,17 @@ var_diag_diagonal = variance_diagnostic(M_d, target, samples_z)
 println("Variance Diagnostic: ", var_diag_diagonal)
 
 scatter(mapped_samples_diagonal[:, 1], mapped_samples_diagonal[:, 2],
-    ms=4, label = nothing, c=3, title="Diagonal",
+    ms=4, label=nothing, c=3, title="Diagonal",
     xlabel="x₁", ylabel="x₂")
 #md savefig("diagonal.svg"); nothing # hide
 # ![Diagonal](diagonal.svg)
 
 # We observe that the total order and no-mixed-terms maps achieve similar variance diagnostics,
 # while the diagonal map performs significantly worse due to its inability to capture dependencies between variables.
+
+# !!! note "Adaptive Map Construction"
+#     The choice of map parameterization can significantly impact the performance of transport maps.
+#     In practice, one might start with a simpler map structure, such as the diagonal or no-mixed-terms map,
+#     and then adaptively enrich the map based on the observed performance, as discussed in [baptista2023](@cite).
+#     This adaptive approach allows for a balance between computational efficiency and approximation accuracy.
+#     For more information see the [Adaptive Transport Maps](@ref) manual and [baptista2023](@cite).

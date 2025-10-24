@@ -48,10 +48,12 @@ makedocs(
             "Quadrature Methods" => "Manuals/quadrature_methods.md",
             "Optimization" => "Manuals/optimization.md",
             "Conditional Densities and Samples" => "Manuals/conditional_densities.md",
+            "Adaptive Transport Maps" => "Manuals/adaptive_transport_map.md",
         ],
         "Examples" => [
             "Banana: Map from Density" => "Examples/banana_mapfromdensity.md",
             "Banana: Map from Samples" => "Examples/banana_mapfromsamples.md",
+            "Banana: Adaptive Transport Map from Samples" => "Examples/banana_adaptive.md",
             "Bayesian Inference: BOD" => "Examples/bod_bayesianinference.md",
         ],
         "API" => "api.md",

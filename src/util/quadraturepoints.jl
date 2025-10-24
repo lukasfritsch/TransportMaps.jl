@@ -53,18 +53,18 @@ struct MonteCarloWeights <: AbstractQuadratureWeights
         return new(points, weights)
     end
 
-    function MonteCarloWeights(points::Matrix{Float64}, weights::Vector{Float64} = Float64[])
+    function MonteCarloWeights(points::Matrix{Float64}, weights::Vector{Float64}=Float64[])
         if isempty(weights)
             # If no weights are provided, assume uniform weights
-            weights = 1/size(points, 1) * ones(size(points, 1))
+            weights = 1 / size(points, 1) * ones(size(points, 1))
         end
         return new(points, weights)
     end
 end
 
-function montecarlo_weights(numberpoints::Int64, dimension::Int64, distr::Distributions.UnivariateDistribution = Normal())
+function montecarlo_weights(numberpoints::Int64, dimension::Int64, distr::Distributions.UnivariateDistribution=Normal())
     points = rand(distr, numberpoints, dimension)
-    weights = 1/numberpoints*ones(numberpoints)
+    weights = 1 / numberpoints * ones(numberpoints)
     return points, weights
 end
 
@@ -84,9 +84,9 @@ struct LatinHypercubeWeights <: AbstractQuadratureWeights
     end
 end
 
-function latinhypercube_weights(numberpoints::Int64, dimension::Int64, distr::Distributions.UnivariateDistribution = Normal())
+function latinhypercube_weights(numberpoints::Int64, dimension::Int64, distr::Distributions.UnivariateDistribution=Normal())
     points = reshape([quantile(distr, u) for u in QuasiMonteCarlo.sample(numberpoints, dimension, LatinHypercubeSample())], numberpoints, dimension)
-    weights = 1/numberpoints*ones(numberpoints)
+    weights = 1 / numberpoints * ones(numberpoints)
     return points, weights
 end
 
