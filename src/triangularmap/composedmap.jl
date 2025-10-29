@@ -35,31 +35,17 @@ function inverse(C::ComposedMap{T}, Z::Matrix{Float64}) where T<:AbstractLinearM
     return inverse(C.linearmap, Y)
 end
 
-# Specifically, for ComposedMap with LinearMap
-function pullback(C::ComposedMap{LinearMap}, x::Vector{Float64})
+function pullback(C::ComposedMap{T}, x::Vector{Float64}) where T<:AbstractLinearMap
     y = evaluate(C.linearmap, x)
-    return pullback(C.polynomialmap, y) ./ prod(C.linearmap.σ)  # Adjust for linear map scaling
+    return pullback(C.polynomialmap, y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
 
-# Specifically, for ComposedMap with LinearMap
-function pullback(C::ComposedMap{LinearMap}, X::Matrix{Float64})
+function pullback(C::ComposedMap{T}, X::Matrix{Float64}) where T<:AbstractLinearMap
     Y = evaluate(C.linearmap, X)
-    return pullback(C.polynomialmap, Y) ./ prod(C.linearmap.σ)  # Adjust for linear map scaling
+    return pullback(C.polynomialmap, Y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
 
-# Specifically, for ComposedMap with LaplaceMap
-function pullback(C::ComposedMap{LaplaceMap}, x::Vector{Float64})
-    y = evaluate(C.linearmap, x)
-    return pullback(C.polynomialmap, y) ./ abs(det(C.linearmap.Chol))  # Adjust for linear map Jacobian
-end
-
-# Specifically, for ComposedMap with LaplaceMap
-function pullback(C::ComposedMap{LaplaceMap}, X::Matrix{Float64})
-    Y = evaluate(C.linearmap, X)
-    return pullback(C.polynomialmap, Y) ./ abs(det(C.linearmap.Chol))  # Adjust for linear map Jacobian
-end
-
-numberdimensions(C::ComposedMap) where T<:AbstractLinearMap = numberdimensions(C.linearmap)
+numberdimensions(C::ComposedMap{T}) where T<:AbstractLinearMap = numberdimensions(C.linearmap)
 
 function Base.show(io::IO, C::ComposedMap{T}) where T<:AbstractLinearMap
     println(io, "ComposedMap{$(T)} with $(numberdimensions(C)) dimensions:")

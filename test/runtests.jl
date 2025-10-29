@@ -21,11 +21,13 @@ using Test
         include("triangularmap/test_multithreading.jl")
         include("triangularmap/test_conditionaldensities.jl")
         include("triangularmap/test_linearmap.jl")
+        include("triangularmap/test_laplacemap.jl")
         include("triangularmap/test_composedmap.jl")
     end
 
     # Optimization-related tests (split by source responsibility)
     @testset "Optimization" begin
+        include("optimization/test_precomputed_basis.jl")
         include("optimization/test_mapfromdensity.jl")
         include("optimization/test_mapfromsamples.jl")
         include("optimization/test_optimizationhistory.jl")

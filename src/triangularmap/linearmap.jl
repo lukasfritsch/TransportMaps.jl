@@ -59,6 +59,10 @@ function inverse(L::LinearMap, Y::Matrix{Float64})
     end
 end
 
+function jacobian(L::LinearMap)
+    return prod(L.σ)
+end
+
 numberdimensions(L::LinearMap) = length(L.μ)
 
 function Base.show(io::IO, L::LinearMap)

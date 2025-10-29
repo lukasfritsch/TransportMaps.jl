@@ -114,6 +114,8 @@ export LatinHypercubeWeights
 export MapTargetDensity
 export MapReferenceDensity
 export SparseSmolyakWeights
+export PrecomputedBasis
+export PrecomputedMapBasis
 
 # Include files
 include("util/mapdensity.jl")
@@ -133,6 +135,8 @@ include("triangularmap/conditionaldensities.jl")
 include("triangularmap/linearmap.jl")
 include("triangularmap/laplacemap.jl")
 include("triangularmap/composedmap.jl")
+
+include("mapcomponents/precomputed_basis.jl")
 
 include("optimization/mapfromdensity.jl")
 include("optimization/mapfromsamples.jl")

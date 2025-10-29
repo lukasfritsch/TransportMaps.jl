@@ -15,6 +15,10 @@ using Distributions
 using LinearAlgebra
 using Plots
 
+#md using Random # hide
+#md Random.seed!(123) # hide
+#md nothing # hide
+
 # ### Generating Target Samples
 #
 # The banana distribution has the density:
