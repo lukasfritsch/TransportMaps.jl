@@ -77,6 +77,10 @@ using LinearAlgebra
         # Compute gradient using precomputed basis
         grad_precomp = TransportMaps.objective_gradient!(component, precomp)
 
+        # Compute using original function
+        grad_original = TransportMaps.objective_gradient!(component, train_samples)
+        @test isapprox(grad_precomp, grad_original, rtol=1e-10)
+
         # Compute gradient point by point for verification
         n_coeffs = length(component.coefficients)
         grad_direct = zeros(Float64, n_coeffs)
@@ -182,6 +186,11 @@ using LinearAlgebra
         train_samples = samples[:, 1:1]
         precomp = TransportMaps.PrecomputedBasis(component, train_samples)
 
+        @test_nowarn sprint(show, precomp)
+        @test_nowarn sprint(print, precomp)
+        @test_nowarn display(precomp)
+
+        precomp = TransportMaps.PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
         @test_nowarn sprint(show, precomp)
         @test_nowarn sprint(print, precomp)
         @test_nowarn display(precomp)

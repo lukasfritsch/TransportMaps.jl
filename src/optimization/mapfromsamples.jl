@@ -158,7 +158,7 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 function optimize!(
     M::PolynomialMap,
     samples::Matrix{Float64},
-    lm::LinearMap=LinearMap();
+    lm::AbstractLinearMap=LinearMap();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
     options::Optim.Options=Optim.Options(),
     test_fraction::Float64=0.0,
