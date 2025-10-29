@@ -3,7 +3,7 @@ struct ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
     linearmap::T
     polynomialmap::PolynomialMap
 
-    function ComposedMap(lm::LinearMap, pm::PolynomialMap)
+    function ComposedMap(lm::AbstractLinearMap, pm::PolynomialMap)
         if numberdimensions(lm) == 0
             T = typeof(lm)
             return new{T}(lm, pm)
@@ -35,16 +35,14 @@ function inverse(C::ComposedMap{T}, Z::Matrix{Float64}) where T<:AbstractLinearM
     return inverse(C.linearmap, Y)
 end
 
-# Specifically, for ComposedMap with LinearMap
-function pullback(C::ComposedMap{LinearMap}, x::Vector{Float64})
+function pullback(C::ComposedMap{T}, x::Vector{Float64}) where T<:AbstractLinearMap
     y = evaluate(C.linearmap, x)
-    return pullback(C.polynomialmap, y) ./ prod(C.linearmap.σ)  # Adjust for linear map scaling
+    return pullback(C.polynomialmap, y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
 
-# Specifically, for ComposedMap with LinearMap
-function pullback(C::ComposedMap{LinearMap}, X::Matrix{Float64})
+function pullback(C::ComposedMap{T}, X::Matrix{Float64}) where T<:AbstractLinearMap
     Y = evaluate(C.linearmap, X)
-    return pullback(C.polynomialmap, Y) ./ prod(C.linearmap.σ)  # Adjust for linear map scaling
+    return pullback(C.polynomialmap, Y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
 
 numberdimensions(C::ComposedMap{T}) where T<:AbstractLinearMap = numberdimensions(C.linearmap)

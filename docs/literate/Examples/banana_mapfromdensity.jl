@@ -14,6 +14,10 @@ using TransportMaps
 using Distributions
 using Plots
 
+#md using Random # hide
+#md Random.seed!(123) # hide
+#md nothing # hide
+
 # ### Creating the Transport Map
 #
 # We start by creating a 2-dimensional polynomial transport map with degree 2

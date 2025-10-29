@@ -37,6 +37,10 @@ using Distributions
 # \end{aligned}
 # ```
 
+#md using Random # hide
+#md Random.seed!(123) # hide
+#md nothing # hide
+
 # We define the forward model as a function of $\theta$ and $t$ in Julia:
 
 function forward_model(t, θ)

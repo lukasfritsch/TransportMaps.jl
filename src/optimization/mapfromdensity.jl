@@ -67,6 +67,71 @@ function kldivergence_gradient(
     return gradient_total
 end
 
+# KL divergence using precomputed basis
+function kldivergence(
+    M::PolynomialMap,
+    target::AbstractMapDensity,
+    precomp::PrecomputedMapBasis
+)
+    total = 0.0
+    δ = eps()  # Small value to avoid log(0)
+
+    for i in 1:precomp.n_quad
+        # Evaluate map using precomputed basis
+        Mᵢ = evaluate_map(M, precomp, i)
+        Mᵢ .+= δ .* precomp.quad_points[i, :]
+
+        log_π = log(target.density(Mᵢ) + δ)
+
+        # Jacobian determinant (product of diagonal for triangular map)
+        diag = jacobian_diagonal_map(M, precomp, i)
+        log_detJ = sum(log.(abs.(diag)))
+
+        total += precomp.quad_weights[i] * (-log_π - log_detJ)
+    end
+
+    return total
+end
+
+# Gradient of KL divergence using precomputed basis
+function kldivergence_gradient(
+    M::PolynomialMap,
+    target::AbstractMapDensity,
+    precomp::PrecomputedMapBasis
+)
+    n_coeffs = numbercoefficients(M)
+    gradient_total = zeros(Float64, n_coeffs)
+
+    for i in 1:precomp.n_quad
+        # Evaluate map using precomputed basis
+        Mᵢ = evaluate_map(M, precomp, i)
+
+        # Evaluate gradient of target density w.r.t. x
+        ∇π = gradient(target, Mᵢ)
+        π_val = max(target.density(Mᵢ), 1e-12)
+
+        # Compute gradient of map with respect to coefficients using precomputed basis
+        ∂M_∂c = gradient_coefficients_map(M, precomp, i)  # Shape: (n_dims, n_coeffs)
+
+        # First term: -(∇π(M(z))/π(M(z))) · ∂M/∂c from ∂(-log π)/∂c
+        weight_factor = -precomp.quad_weights[i] / π_val
+
+        for j in 1:n_coeffs
+            for k in axes(∇π, 1)  # Iterate over dimensions
+                gradient_total[j] += weight_factor * ∇π[k] * ∂M_∂c[k, j]
+            end
+        end
+
+        # Second term: ∂(-log|det J_M|)/∂c using precomputed basis
+        jacobian_contrib = jacobian_logdet_gradient_map(M, precomp, i)
+        for j in 1:n_coeffs
+            gradient_total[j] -= precomp.quad_weights[i] * jacobian_contrib[j]
+        end
+    end
+
+    return gradient_total
+end
+
 """
     optimize!(M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
               optimizer::Optim.AbstractOptimizer = LBFGS(),
@@ -93,16 +158,31 @@ function optimize!(
     optimizer::Optim.AbstractOptimizer=LBFGS(),
     options::Optim.Options=Optim.Options()
 )
+    # Precompute basis evaluations at quadrature points
+    precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
+
+    # Call the optimized version
+    return optimize!(M, target, precomp, optimizer=optimizer, options=options)
+end
+
+# Optimized version using precomputed basis
+function optimize!(
+    M::PolynomialMap,
+    target::AbstractMapDensity,
+    precomp::PrecomputedMapBasis;
+    optimizer::Optim.AbstractOptimizer=LBFGS(),
+    options::Optim.Options=Optim.Options()
+)
 
     # Define objective function and gradient
     function objective_function(a)
         setcoefficients!(M, a)
-        return kldivergence(M, target, quadrature)
+        return kldivergence(M, target, precomp)
     end
 
     function gradient_function!(grad_storage, a)
         setcoefficients!(M, a)
-        grad_storage .= kldivergence_gradient(M, target, quadrature)
+        grad_storage .= kldivergence_gradient(M, target, precomp)
     end
 
     # Optimize with analytical gradient

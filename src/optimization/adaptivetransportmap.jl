@@ -50,7 +50,15 @@ function optimize_adaptive_transportmap(
 
     for k in 1:d
         println("Start optimizing component $k:")
-        component, history = optimize_adaptive_transportmapcomponent(train_samples[:, 1:k], test_samples[:, 1:k], maxterms[k], rectifier, basis, optimizer, options)
+        component, history = optimize_adaptive_transportmapcomponent(
+            train_samples[:, 1:k],
+            test_samples[:, 1:k],
+            maxterms[k],
+            rectifier,
+            basis,
+            optimizer,
+            options
+        )
         push!(map_components, component)
         push!(iteration_histories, history)
     end
@@ -205,11 +213,16 @@ function optimize_adaptive_transportmapcomponent(
     # Initialize component with the multi-index set
     println("   * Optimizing term 1 / $maxterms")
     component = PolynomialMapComponent(Λ, rectifier, basis, train_samples)
-    res = optimize!(component, train_samples, optimizer, options)
+
+    # Precompute basis for training samples
+    train_precomp = PrecomputedBasis(component, train_samples)
+    test_precomp = !isempty(test_samples) ? PrecomputedBasis(component, test_samples) : nothing
+
+    res = optimize!(component, train_precomp, optimizer, options)
 
     # Compute and store first iteration
-    train_obj = objective(component, train_samples) / size(train_samples, 1)
-    test_obj = !isempty(test_samples) ? objective(component, test_samples) / size(test_samples, 1) : 0.
+    train_obj = objective(component, train_precomp) / size(train_samples, 1)
+    test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.
     update_optimization_history!(history, Λ, train_obj, test_obj, Float64[], res, 1)
 
     # start greedy optimization
@@ -231,8 +244,11 @@ function optimize_adaptive_transportmapcomponent(
             # Copy the optimized component coefficients; set other to 0
             setcoefficients!(component_cand, [coeffs..., 0.0]) # set coefficients for existing terms
 
+            # Precompute basis for candidate component
+            train_precomp_cand = PrecomputedBasis(component_cand, train_samples)
+
             # evaluate objective and gradient of objective function
-            gradients[i] = abs(objective_gradient!(component_cand, train_samples)[end])
+            gradients[i] = abs(objective_gradient!(component_cand, train_precomp_cand)[end])
         end
 
         # select best candidate based on maximum gradient
@@ -243,11 +259,16 @@ function optimize_adaptive_transportmapcomponent(
         println("   * Adding term $t / $maxterms")
         component = PolynomialMapComponent(Λ, rectifier, basis, train_samples)
         setcoefficients!(component, [coeffs..., 0.0]) # set coefficients for existing terms
-        res = optimize!(component, train_samples, optimizer, options)
+
+        # Recompute precomputed basis with updated component
+        train_precomp = PrecomputedBasis(component, train_samples)
+        test_precomp = !isempty(test_samples) ? PrecomputedBasis(component, test_samples) : nothing
+
+        res = optimize!(component, train_precomp, optimizer, options)
 
         # Compute and store iteration
-        train_obj = objective(component, train_samples) / size(train_samples, 1)
-        test_obj = !isempty(test_samples) ? objective(component, test_samples) / size(test_samples, 1) : 0.
+        train_obj = objective(component, train_precomp) / size(train_samples, 1)
+        test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.
         update_optimization_history!(history, Λ, train_obj, test_obj, gradients, res, t)
     end
 
