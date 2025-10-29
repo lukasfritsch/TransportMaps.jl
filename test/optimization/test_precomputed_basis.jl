@@ -190,6 +190,7 @@ using LinearAlgebra
         @test_nowarn sprint(print, precomp)
         @test_nowarn display(precomp)
 
+        quadrature = TransportMaps.GaussHermiteWeights(5, dimension)
         precomp = TransportMaps.PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
         @test_nowarn sprint(show, precomp)
         @test_nowarn sprint(print, precomp)
