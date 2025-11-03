@@ -29,6 +29,25 @@ using Distributions
         g_analytical = gradient(target_analytical, x)
         @test length(g_analytical) == 1
         @test isfinite(g_analytical[1])
+
+        @testset "Gradient Types" begin
+            # Test different gradient types
+            gradient_types_ad = [:auto_diff, :autodiff, :ad, :automatic, :forward_diff, :forwarddiff]
+
+            for type in gradient_types_ad
+                t = MapTargetDensity(x -> pdf(Normal(), x[1]), type)
+                @test t.gradient_type == :auto_diff
+            end
+
+            gradient_types_fd = [:finite_difference, :finitedifference, :finite_diff, :finitediff, :fd, :numerical, :numeric]
+
+            for type in gradient_types_fd
+                t = MapTargetDensity(x -> pdf(Normal(), x[1]), type)
+                @test t.gradient_type == :finite_difference
+            end
+
+        end
+
     end
 
     @testset "MapReferenceDensity" begin
