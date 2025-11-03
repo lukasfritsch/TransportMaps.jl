@@ -10,6 +10,8 @@ using Random
 using StatsFuns
 using Statistics
 
+import Distributions: mean, mode, cov, MvNormal
+
 # Abstract type definitions
 abstract type AbstractBasisFunction end
 abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
@@ -116,6 +118,12 @@ export MapReferenceDensity
 export SparseSmolyakWeights
 export PrecomputedBasis
 export PrecomputedMapBasis
+
+# Laplace Map
+export mean
+export cov
+export mode
+export MvNormal
 
 # Include files
 include("util/mapdensity.jl")
