@@ -1,44 +1,49 @@
-struct MapTargetDensity <: AbstractMapDensity
-    density::Function
+struct MapTargetDensity{F,G} <: AbstractMapDensity
+    density::F
     gradient_type::Symbol
-    grad_density::Function
+    grad_density::G
 
-    MapTargetDensity(density::Function, grad_density::Function) = new(density, :analytical, grad_density)
-
-    function MapTargetDensity(density::Function, gradient_type::Symbol, grad_density::Function)
-
-        if gradient_type != :analytical
-            throw(ArgumentError("gradient_type must be :analytical"))
-        end
-        return new(density, gradient_type, grad_density)
+    function MapTargetDensity(density::F, grad_density::G) where {F,G}
+        return new{F,G}(density, :analytical, grad_density)
     end
 
-    function MapTargetDensity(density::Function, gradient_type::Symbol)
-        if gradient_type != :auto_diff && gradient_type != :finite_difference
-            throw(ArgumentError("gradient_type must be either :auto_diff, or :finite_difference"))
-        end
-        # Define automatic differentiation gradient
-        if gradient_type == :auto_diff
-            grad_density = x -> ForwardDiff.gradient(density, x)
-            # Define finite difference gradient
-        elseif gradient_type == :finite_difference
-            grad_density = x -> central_difference_gradient(density, x)
+    function MapTargetDensity(density::F, gradient_type::Symbol, grad_density::G) where {F,G}
+
+        if gradient_type ∉ [:analytical, :analytic]
+            throw(ArgumentError("gradient_type must be :analytical (or :analytic) when providing a custom gradient function."))
         end
 
-        return new(density, gradient_type, grad_density)
+        return new{F,G}(density, gradient_type, grad_density)
+    end
+
+    function MapTargetDensity(density::F, gradient_type::Symbol) where {F}
+        # Check gradient type and set gradient function accordingly
+        if gradient_type ∈ [:auto_diff, :autodiff, :ad, :automatic, :forward_diff, :forwarddiff]
+            grad_density = x -> ForwardDiff.gradient(density, x)
+            gradient_type = :auto_diff
+        elseif gradient_type ∈ [:finite_difference, :finitedifference, :finite_diff, :finitediff, :fd, :numerical, :numeric]
+            grad_density = x -> central_difference_gradient(density, x)
+            gradient_type = :finite_difference
+        else
+            throw(ArgumentError("gradient_type must be either :auto_diff (or :autodiff, :ad,
+            :automatic, :forward_diff) or :finite_difference (or :fd, :finite_diff, :finitediff, :numerical)."))
+        end
+
+        return new{F,typeof(grad_density)}(density, gradient_type, grad_density)
     end
 end
 
-struct MapReferenceDensity <: AbstractMapDensity
-    density::Function
+struct MapReferenceDensity{F, G} <: AbstractMapDensity
+    density::F
     gradient_type::Symbol
-    grad_density::Function
+    grad_density::G
     densitytype::Distributions.UnivariateDistribution
 
     # base constructor for reference density, directly using automatic differentiation
     function MapReferenceDensity(densitytype::Distributions.UnivariateDistribution=Normal())
         density = x -> prod(map(Base.Fix1(pdf, densitytype), x))
-        return new(density, :auto_diff, x -> ForwardDiff.gradient(density, x), densitytype)
+        gradient = x -> ForwardDiff.gradient(density, x)
+        return new{typeof(density), typeof(gradient)}(density, :auto_diff, gradient, densitytype)
     end
 
     function MapReferenceDensity(densitytype::Distributions.Uniform)
@@ -48,10 +53,10 @@ end
 
 gradient(density::AbstractMapDensity, x::AbstractArray{<:Real}) = density.grad_density(x)
 
-function Base.show(io:: IO, target::MapTargetDensity)
-    print(io, "MapTargetDensity(density=$(target.density), gradient_type=$(target.gradient_type))")
+function Base.show(io::IO, target::MapTargetDensity)
+    print(io, "MapTargetDensity(gradient_type=:$(target.gradient_type)) ")
 end
 
-function Base.show(io:: IO, ref::MapReferenceDensity)
+function Base.show(io::IO, ref::MapReferenceDensity)
     print(io, "MapReferenceDensity(density=$(ref.densitytype)")
 end
