@@ -54,58 +54,58 @@ println(&quot;Optimization result: &quot;, res)</code></pre><pre class="document
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 5.05e-09 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 3.10e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 5.15e-14 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 8.27e-15 ≰ 0.0e+00
-    |g(x)|                 = 9.94e-09 ≤ 1.0e-08
+    |x - x&#39;|               = 6.09e-10 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 3.74e-10 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 3.20e-14 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 5.13e-15 ≰ 0.0e+00
+    |g(x)|                 = 3.60e-09 ≤ 1.0e-08
 
  * Work counters
-    Seconds run:   13  (vs limit Inf)
-    Iterations:    90
-    f(x) calls:    278
-    ∇f(x) calls:   278</code></pre><h3 id="Generating-Posterior-Samples"><a class="docs-heading-anchor" href="#Generating-Posterior-Samples">Generating Posterior Samples</a><a id="Generating-Posterior-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Posterior-Samples" title="Permalink"></a></h3><p>Generate samples from the standard normal distribution and map them to the posterior:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
-  0.135842   -0.0125184
-  0.44978    -1.34981
- -0.300365    0.643979
- -0.419973    1.31141
-  0.512052   -0.0592132
-  0.498891   -2.07729
-  1.02786     1.67056
-  0.623019    0.987139
- -0.447743   -1.87321
-  1.06387     0.74919
+    Seconds run:   2  (vs limit Inf)
+    Iterations:    118
+    f(x) calls:    348
+    ∇f(x) calls:   348</code></pre><h3 id="Generating-Posterior-Samples"><a class="docs-heading-anchor" href="#Generating-Posterior-Samples">Generating Posterior Samples</a><a id="Generating-Posterior-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-Posterior-Samples" title="Permalink"></a></h3><p>Generate samples from the standard normal distribution and map them to the posterior:</p><pre><code class="language-julia hljs">samples_z = randn(1000, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.808288    1.29539
+ -1.12207    -0.0401347
+ -1.10464     0.875608
+ -0.416993    0.585995
+  0.287588   -0.927587
+  0.229819   -0.414203
+ -0.421769   -0.0856216
+ -1.35559    -0.570313
+  0.0694591  -0.242781
+ -0.117323   -3.05756
   ⋮          
-  1.38369     0.34872
- -1.10745     0.796071
-  0.162378   -0.692841
-  0.967411   -0.205638
-  0.139203    0.721807
- -0.585057    0.0973878
-  0.545048    1.21588
- -0.0825046   0.252548
-  0.478887    0.919066</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, samples_z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
- -0.0224803  0.789292
-  0.0892161  0.441358
- -0.144047   1.20162
- -0.171975   1.48231
-  0.114339   0.565015
-  0.108939   0.340394
-  0.369993   0.468771
-  0.161862   0.640018
- -0.178176   0.786209
-  0.391531   0.35039
-  ⋮          
-  0.608734   0.158793
- -0.299985   1.81976
- -0.01392    0.66983
-  0.335044   0.307705
- -0.0214045  0.91731
- -0.207381   1.24619
-  0.128092   0.725856
- -0.0875559  0.970567
-  0.100826   0.723925</code></pre><h3 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h3><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
-println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.021129754348736193</code></pre><h3 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h3><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">θ₁ = range(-0.5, 1.5, length=100)
+ -0.905438   -1.73076
+  1.84802     0.432257
+ -1.29846     0.183927
+  0.596723    1.55975
+  0.431956    1.60559
+ -0.797097    0.723346
+ -0.0625319   0.474741
+ -1.25053    -0.0100866
+ -0.34637    -1.01294</code></pre><p>Map the samples through our transport map:</p><pre><code class="language-julia hljs">mapped_samples = evaluate(M, samples_z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1000×2 Matrix{Float64}:
+  0.249834     0.562551
+ -0.302225     1.51078
+ -0.299552     1.85242
+ -0.171303     1.26672
+  0.0285727    0.572629
+  0.00852592   0.673581
+ -0.172379     1.1052
+ -0.335899     1.44634
+ -0.043252     0.790022
+ -0.0971124    0.491078
+  ⋮           
+ -0.267242     0.992317
+  1.0237      -0.0146723
+ -0.328008     1.68645
+  0.150269     0.744177
+  0.0822202    0.873511
+ -0.248179     1.5726
+ -0.0819777    1.00281
+ -0.321221     1.58806
+ -0.15503      0.8809</code></pre><h3 id="Quality-Assessment"><a class="docs-heading-anchor" href="#Quality-Assessment">Quality Assessment</a><a id="Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Assessment" title="Permalink"></a></h3><p>Compute the variance diagnostic to assess the quality of our approximation:</p><pre><code class="language-julia hljs">var_diag = variance_diagnostic(M, target, samples_z)
+println(&quot;Variance Diagnostic: &quot;, var_diag)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance Diagnostic: 0.01803772398363724</code></pre><h3 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h3><p>Plot the mapped samples along with contours of the true posterior density:</p><pre><code class="language-julia hljs">θ₁ = range(-0.5, 1.5, length=100)
 θ₂ = range(-0.5, 3, length=100)
 
 posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
@@ -127,4 +127,4 @@ posterior_conditional(θ₂) = posterior([θ₁, θ₂]) / int_analytical
 conditional_analytical = posterior_conditional.(θ_range)</code></pre><p>Then we compute the conditional density using the transport map, which is given as:</p><p class="math-container">\[\pi(\theta_2 | \theta_1) = \rho_2\left(T^2(\theta_1, \theta_2)^{-1}\right) \left|\frac{\partial T^2(\theta_1, \theta_2)^{-1}}{\partial \theta_2}\right|\]</p><pre><code class="language-julia hljs">conditional_mapped = conditional_density(M, θ_range, θ₁)</code></pre><p>Finally, we plot the results:</p><pre><code class="language-julia hljs">histogram(conditional_samples, bins=50, normalize=:pdf, α=0.5,
     label=&quot;Conditional Samples&quot;, xlabel=&quot;θ₂&quot;, ylabel=&quot;π(θ₂ | θ₁=$θ₁)&quot;)
 plot!(θ_range, conditional_analytical, lw=2, label=&quot;Analytical Conditional PDF&quot;)
-plot!(θ_range, conditional_mapped, lw=2, label=&quot;TM Conditional PDF&quot;)</code></pre><p><img src="../conditional-bod.svg" alt="BOD Conditional Density"/></p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_adaptive/">« Banana: Adaptive Transport Map from Samples</a><a class="docs-footer-nextpage" href="../../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Friday 24 October 2025 11:24">Friday 24 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+plot!(θ_range, conditional_mapped, lw=2, label=&quot;TM Conditional PDF&quot;)</code></pre><p><img src="../conditional-bod.svg" alt="BOD Conditional Density"/></p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_adaptive/">« Banana: Adaptive Transport Map from Samples</a><a class="docs-footer-nextpage" href="../../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Tuesday 4 November 2025 09:17">Tuesday 4 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
