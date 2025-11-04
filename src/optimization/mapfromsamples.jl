@@ -38,7 +38,7 @@ function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
     grad = zeros(Float64, n_coeffs)
 
     n_points = size(X, 1)
-    for i in 1:n_points
+    @inbounds for i in 1:n_points
         z = X[i, :]
 
         # Evaluate scalar map value and its diagonal partial derivative
@@ -80,59 +80,46 @@ function objective_gradient!(Mk::PolynomialMapComponent, precomp::PrecomputedBas
     grad = zeros(Float64, n_basis)
 
     # For each sample, compute gradient contributions
-    for i in 1:n_samples
+    @inbounds for i in 1:n_samples
         # First term: M * ∂M/∂c
         # ∂M/∂cⱼ = ∂f₀/∂cⱼ + ∂(integral)/∂cⱼ
         # where ∂f₀/∂cⱼ = ψⱼ(z₁,...,z_{k-1},0)
         #   and ∂(integral)/∂cⱼ = ∫₀^{z_k} g'(∂f/∂x_k) * ∂²f/(∂x_k∂cⱼ) dx_k
         #                        = ∫₀^{z_k} g'(∂f/∂x_k) * ∂ψⱼ/∂x_k dx_k
 
-        # Contribution from f₀ term
-        for j in 1:n_basis
-            grad[j] += M_vals[i] * precomp.Ψ₀[i, j]
-        end
+        # Vectorized contribution from f₀ term
+        grad .+= M_vals[i] .* view(precomp.Ψ₀, i, :)
 
         # Contribution from integral term (using quadrature)
         scale = precomp.quad_scales[i]
         for q in 1:n_quad
-            # Compute ∂f/∂x_k at this quadrature point
-            ∂f = 0.0
-            for j in 1:n_basis
-                ∂f += c[j] * precomp.∂Ψ_quad[i, q, j]
-            end
+            # Vectorized computation of ∂f/∂x_k at this quadrature point
+            ∂f = dot(view(precomp.∂Ψ_quad, i, q, :), c)
 
             # Compute g'(∂f/∂x_k)
             g_prime = derivative(Mk.rectifier, ∂f)
 
-            # Add contribution: M * weight * g' * ∂ψⱼ/∂x_k
+            # Vectorized contribution: M * weight * g' * ∂ψⱼ/∂x_k
             weight_factor = M_vals[i] * precomp.quad_weights[q] * g_prime * scale
-            for j in 1:n_basis
-                grad[j] += weight_factor * precomp.∂Ψ_quad[i, q, j]
-            end
+            grad .+= weight_factor .* view(precomp.∂Ψ_quad, i, q, :)
         end
 
         # Second term: -(1/∂M) * ∂(∂M)/∂c
         # ∂M/∂zₖ = g(∂f/∂zₖ), so ∂(∂M/∂zₖ)/∂cⱼ = g'(∂f/∂zₖ) * ∂²f/(∂zₖ∂cⱼ)
         #                                        = g'(∂f/∂zₖ) * ∂ψⱼ/∂zₖ
 
-        # Compute ∂f/∂zₖ at z using precomputed values
-        ∂f_at_z = 0.0
-        for j in 1:n_basis
-            ∂f_at_z += c[j] * precomp.∂Ψ_z[i, j]
-        end
+        # Vectorized computation of ∂f/∂zₖ at z using precomputed values
+        ∂f_at_z = dot(view(precomp.∂Ψ_z, i, :), c)
 
         g_prime_at_z = derivative(Mk.rectifier, ∂f_at_z)
         denom = max(abs(∂M_vals[i]), eps())
 
-        for j in 1:n_basis
-            grad[j] -= (g_prime_at_z / denom) * precomp.∂Ψ_z[i, j]
-        end
+        # Vectorized gradient update
+        grad .-= (g_prime_at_z / denom) .* view(precomp.∂Ψ_z, i, :)
     end
 
     return grad
 end
-
-
 
 """
     optimize!(M::PolynomialMap, samples::Matrix{Float64};
