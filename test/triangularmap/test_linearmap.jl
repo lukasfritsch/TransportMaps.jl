@@ -22,6 +22,10 @@ using Random
         Y = evaluate(L, X)
         X_rec = inverse(L, Y)
         @test isapprox(X_rec, X; atol=1e-10, rtol=1e-10)
+
+        # Jacobian
+        jac = jacobian(L)
+        @test isapprox(jac, prod(L.σ); atol=1e-10, rtol=1e-10)
     end
 
     @testset "Identity LinearMap" begin

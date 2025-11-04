@@ -12,6 +12,22 @@ function objective(component::PolynomialMapComponent, samples::Matrix{Float64})
 
 end
 
+# Objective for optimization using precomputed basis evaluations
+function objective(component::PolynomialMapComponent, precomp::PrecomputedBasis)
+    # Get current coefficients
+    c = component.coefficients
+
+    # Evaluate Mᵏ(z) = f₀ + ∫₀^{z_k} g(∂f/∂x_k) dx_k using precomputed basis
+    M_vals = evaluate_M(precomp, c, component.rectifier)
+
+    # Evaluate ∂Mᵏ/∂zₖ = g(∂f/∂zₖ) using precomputed basis
+    ∂M_vals = evaluate_∂M(precomp, c, component.rectifier)
+
+    # Monte Carlo estimate of the objective
+    obj = sum(0.5 * M_vals .^ 2 - log.(abs.(∂M_vals)))
+    return obj
+end
+
 # Gradient of objective for optimization of component coefficients from samples
 function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
     # Analytical gradient of objective w.r.t. coefficients c of component Mk
@@ -22,7 +38,7 @@ function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
     grad = zeros(Float64, n_coeffs)
 
     n_points = size(X, 1)
-    for i in 1:n_points
+    @inbounds for i in 1:n_points
         z = X[i, :]
 
         # Evaluate scalar map value and its diagonal partial derivative
@@ -45,6 +61,65 @@ function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
     return grad
 end
 
+# Gradient of objective using precomputed basis evaluations
+function objective_gradient!(Mk::PolynomialMapComponent, precomp::PrecomputedBasis)
+    # Analytical gradient of objective w.r.t. coefficients c
+    # Objective: J = Σᵢ [0.5 * Mᵏ(zⁱ)² - log|∂Mᵏ/∂zₖ(zⁱ)|]
+    # where Mᵏ(z) = f₀(z) + ∫₀^{z_k} g(∂f/∂x_k) dx_k
+
+    c = Mk.coefficients
+    n_samples = precomp.n_samples
+    n_basis = precomp.n_basis
+    n_quad = precomp.n_quad
+
+    # Evaluate M and ∂M for all samples
+    M_vals = evaluate_M(precomp, c, Mk.rectifier)
+    ∂M_vals = evaluate_∂M(precomp, c, Mk.rectifier)
+
+    # Initialize gradient
+    grad = zeros(Float64, n_basis)
+
+    # For each sample, compute gradient contributions
+    @inbounds for i in 1:n_samples
+        # First term: M * ∂M/∂c
+        # ∂M/∂cⱼ = ∂f₀/∂cⱼ + ∂(integral)/∂cⱼ
+        # where ∂f₀/∂cⱼ = ψⱼ(z₁,...,z_{k-1},0)
+        #   and ∂(integral)/∂cⱼ = ∫₀^{z_k} g'(∂f/∂x_k) * ∂²f/(∂x_k∂cⱼ) dx_k
+        #                        = ∫₀^{z_k} g'(∂f/∂x_k) * ∂ψⱼ/∂x_k dx_k
+
+        # Vectorized contribution from f₀ term
+        grad .+= M_vals[i] .* view(precomp.Ψ₀, i, :)
+
+        # Contribution from integral term (using quadrature)
+        scale = precomp.quad_scales[i]
+        for q in 1:n_quad
+            # Vectorized computation of ∂f/∂x_k at this quadrature point
+            ∂f = dot(view(precomp.∂Ψ_quad, i, q, :), c)
+
+            # Compute g'(∂f/∂x_k)
+            g_prime = derivative(Mk.rectifier, ∂f)
+
+            # Vectorized contribution: M * weight * g' * ∂ψⱼ/∂x_k
+            weight_factor = M_vals[i] * precomp.quad_weights[q] * g_prime * scale
+            grad .+= weight_factor .* view(precomp.∂Ψ_quad, i, q, :)
+        end
+
+        # Second term: -(1/∂M) * ∂(∂M)/∂c
+        # ∂M/∂zₖ = g(∂f/∂zₖ), so ∂(∂M/∂zₖ)/∂cⱼ = g'(∂f/∂zₖ) * ∂²f/(∂zₖ∂cⱼ)
+        #                                        = g'(∂f/∂zₖ) * ∂ψⱼ/∂zₖ
+
+        # Vectorized computation of ∂f/∂zₖ at z using precomputed values
+        ∂f_at_z = dot(view(precomp.∂Ψ_z, i, :), c)
+
+        g_prime_at_z = derivative(Mk.rectifier, ∂f_at_z)
+        denom = max(abs(∂M_vals[i]), eps())
+
+        # Vectorized gradient update
+        grad .-= (g_prime_at_z / denom) .* view(precomp.∂Ψ_z, i, :)
+    end
+
+    return grad
+end
 
 """
     optimize!(M::PolynomialMap, samples::Matrix{Float64};
@@ -70,7 +145,7 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 function optimize!(
     M::PolynomialMap,
     samples::Matrix{Float64},
-    lm::LinearMap=LinearMap();
+    lm::AbstractLinearMap=LinearMap();
     optimizer::Optim.AbstractOptimizer=LBFGS(),
     options::Optim.Options=Optim.Options(),
     test_fraction::Float64=0.0,
@@ -92,11 +167,16 @@ function optimize!(
     for k in 1:numberdimensions(M)
         component = M[k]
         println("Optimizing component $(k) / $(numberdimensions(M))")
-        res = optimize!(component, train_samples[:, 1:k], optimizer, options)
 
-        # Compute validation objective
-        train_obj = objective(component, train_samples[:, 1:k]) / size(train_samples, 1)
-        test_obj = !isempty(test_samples) ? objective(component, test_samples[:, 1:k]) / size(test_samples, 1) : 0.
+        # Precompute basis evaluations for this component
+        train_precomp = PrecomputedBasis(component, train_samples[:, 1:k])
+        test_precomp = !isempty(test_samples) ? PrecomputedBasis(component, test_samples[:, 1:k]) : nothing
+
+        res = optimize!(component, train_precomp, optimizer, options)
+
+        # Compute validation objective using precomputed basis
+        train_obj = objective(component, train_precomp) / size(train_samples, 1)
+        test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.
 
         update_optimization_result!(results, k, train_obj, test_obj, res)
     end
@@ -104,22 +184,36 @@ function optimize!(
     return results
 end
 
-# Optimize a single map component
+# Optimize a single map component (original interface, for backwards compatibility)
 function optimize!(
     component::PolynomialMapComponent,
     samples::Matrix{Float64},
     optimizer::Optim.AbstractOptimizer,
     options::Optim.Options
 )
+    # Precompute basis evaluations
+    precomp = PrecomputedBasis(component, samples)
+
+    # Call the optimized version
+    return optimize!(component, precomp, optimizer, options)
+end
+
+# Optimize a single map component using precomputed basis
+function optimize!(
+    component::PolynomialMapComponent,
+    precomp::PrecomputedBasis,
+    optimizer::Optim.AbstractOptimizer,
+    options::Optim.Options
+)
 
     obj_fun = c -> begin
         setcoefficients!(component, c)
-        objective(component, samples)
+        objective(component, precomp)
     end
 
     grad_fun! = (g, c) -> begin
         setcoefficients!(component, c)
-        grad = objective_gradient!(component, samples)
+        grad = objective_gradient!(component, precomp)
         g .= grad
     end
 
