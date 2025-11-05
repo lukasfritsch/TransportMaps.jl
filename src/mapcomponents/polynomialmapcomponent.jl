@@ -120,6 +120,42 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
+    function PolynomialMapComponent(
+        multi_indices::Vector{Vector{Int}},
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        reference_density::Distributions.UnivariateDistribution,
+    )
+        # Determine index from multi_indices and type of basis
+        index = length(multi_indices[1])
+        T = typeof(basis)
+        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
+
+        for (i, multiindexset) in enumerate(multi_indices)
+            # Build per-dimension univariate bases with the correct degree
+            dim = length(multiindexset)
+            uni_bases = Vector{typeof(basis)}(undef, dim)
+
+            for j in 1:dim
+                deg_j = multiindexset[j]
+                if isa(basis, HermiteBasis)
+                    uni_bases[j] = HermiteBasis()
+                elseif isa(basis, LinearizedHermiteBasis)
+                    uni_bases[j] = LinearizedHermiteBasis(reference_density, deg_j, index)
+                elseif isa(basis, GaussianWeightedHermiteBasis)
+                    uni_bases[j] = GaussianWeightedHermiteBasis()
+                elseif isa(basis, CubicSplineHermiteBasis)
+                    uni_bases[j] = CubicSplineHermiteBasis(reference_density)
+                end
+            end
+
+            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
+        end
+
+        coefficients = zeros(length(basisfunctions))
+        return new{T}(basisfunctions, coefficients, rectifier, index)
+    end
+
     function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis{T}}, coefficients::Vector{Float64}, rectifier::AbstractRectifierFunction, index::Int) where T<:AbstractPolynomialBasis
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
@@ -352,6 +388,10 @@ function getmultiindexsets(map_component::PolynomialMapComponent)
     multiindices = [basis.multiindexset for basis in map_component.basisfunctions]
     return permutedims(hcat(multiindices...))
 end
+
+getmultivariateindices(map_component::PolynomialMapComponent) = [basis.multiindexset for basis in map_component.basisfunctions]
+
+getbasis(map_component::PolynomialMapComponent) = map_component.basisfunctions[1].univariatebases[1]
 
 numbercoefficients(map_component::PolynomialMapComponent) = length(map_component.coefficients)
 
