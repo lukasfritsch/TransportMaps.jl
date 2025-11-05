@@ -15,6 +15,7 @@ struct LaplaceMap <: AbstractLinearMap
     function LaplaceMap(
         density::MapTargetDensity,
         x0::Vector{Float64};
+        hessian_type::Symbol = :auto_diff,      # type of Hessian computation (:auto_diff or :finite_difference)
         optimizer::Optim.AbstractOptimizer = LBFGS(),
         options::Optim.Options = Optim.Options()
     )
@@ -42,7 +43,7 @@ struct LaplaceMap <: AbstractLinearMap
         end
 
         # Compute Hessian at mode
-        if density.gradient_type == :auto_diff
+        if density.gradient_type ∈ [:auto_diff, :analytical] && hessian_type ∈ [:auto_diff, :autodiff, :ad, :automatic, :forward_diff, :forwarddiff]
             H = ForwardDiff.hessian(obj, mode)
         else
             H = central_difference_hessian(obj, mode)

@@ -65,6 +65,24 @@ function NoMixedMap(
     return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :no_mixed)
 end
 
+# Construct PolynomialMap from multi-index sets Λ and given density
+function PolynomialMap(
+    Λ::Vector{Vector{Vector{Int}}},
+    rectifier::AbstractRectifierFunction,
+    basis::AbstractPolynomialBasis,
+    reference_density::Distributions.UnivariateDistribution=Normal()
+)
+    d = length(Λ)
+    T = typeof(basis)
+    components = Vector{PolynomialMapComponent{T}}(undef, d)
+
+    for k in 1:d
+        components[k] = PolynomialMapComponent(Λ[k], rectifier, basis, reference_density)
+    end
+
+    return PolynomialMap(components; forwarddirection=:reference)
+end
+
 # Evaluate the polynomial map at z (single vector)
 function evaluate(M::PolynomialMap, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
