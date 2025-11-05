@@ -151,6 +151,7 @@ include("optimization/mapfromdensity.jl")
 include("optimization/mapfromsamples.jl")
 include("optimization/optimizationhistory.jl")
 include("optimization/adaptivetransportmap.jl")
+include("optimization/adaptivetransportmap_density.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")
