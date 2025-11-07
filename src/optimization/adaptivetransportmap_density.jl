@@ -43,10 +43,8 @@ function optimize_adaptive_transportmap(
 )
     d = size(quadrature.points, 2)
 
-    #! Initialize multi-index sets for all components (changed to have at least constant term)
-    Λ = [multivariate_indices(1, k; mode=:diagonal) for k in 1:d]
-
     # Initialize map with constant terms only
+    Λ = [multivariate_indices(0, k) for k in 1:d]
 
     M = PolynomialMap(Λ, rectifier, basis, reference_density)
     num_initial_coefficients = numbercoefficients(M)
@@ -92,7 +90,7 @@ function optimize_adaptive_transportmap(
             # Get gradient component corresponding to the new coefficient (last one for component k)
             # Find position of new coefficient in the full coefficient vector
             coeff_offset = k == 1 ? 0 : sum(numbercoefficients(M_cand[j]) for j in 1:(k-1))
-            new_coeff_idx = coeff_offset + length(numbercoefficients(M_cand[k]))
+            new_coeff_idx = coeff_offset + numbercoefficients(M_cand[k])
 
             # Use absolute value of gradient as metric
             gradient_metrics[i] = abs(grad[new_coeff_idx])
@@ -133,6 +131,7 @@ function update_multiindexset!(
 )
     # Get k-th component to update
     component = M[k]
+    coeffs = getcoefficients(component)
 
     # Get the current multi-index set for the k-th component and add new index
     Λ = getmultivariateindices(component)
@@ -140,10 +139,10 @@ function update_multiindexset!(
 
     # Reconstruct map component with updated multi-index set
     M.components[k] = PolynomialMapComponent(Λ, component.rectifier, getbasis(component), M.reference.densitytype)
+    setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
 
 end
 
 # todo:
 # * add validation with variance diagnostic
 # * save iteration history
-# * fix behavior where it doesn't seem to find "good" terms (maybe the gradient criterion is not useful?)
