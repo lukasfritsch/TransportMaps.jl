@@ -11,12 +11,12 @@ function kldivergence(
 )
 
     total = 0.0
-    δ = eps()  # Small value to avoid log(0)
+    δ = 1e-9 # Small value to avoid log(0)
 
     for (i, zᵢ) in enumerate(eachrow(quadrature.points))
         # Add δ for regularization
         Mᵢ = evaluate(M, zᵢ) .+ δ * zᵢ
-        log_π = log(target.density(Mᵢ) + δ)
+        log_π = target.density(Mᵢ)  #! should be changed to log-pdf for numerical stability
         # Log determinant
         log_detJ = log(abs(jacobian(M, zᵢ)))
 
@@ -41,9 +41,9 @@ function kldivergence_gradient(
         Mᵢ = evaluate(M, zᵢ)
 
         # Evaluate gradient of target density w.r.t. x
-        ∇π = gradient(target, Mᵢ)
+        ∇π = gradient(target, Mᵢ) #! should be changed to gradient of log-pdf for numerical stability
 
-        π_val = max(target.density(Mᵢ), 1e-12)
+        π_val = target.density(Mᵢ)
 
         # Compute gradient of map with respect to coefficients
         ∂M_∂c = gradient_coefficients(M, zᵢ)  # Shape: (n_dims, n_coeffs)
@@ -74,14 +74,14 @@ function kldivergence(
     precomp::PrecomputedMapBasis
 )
     total = 0.0
-    δ = eps()  # Small value to avoid log(0)
+    δ = 1e-9  # Small value to avoid log(0)
 
     for i in 1:precomp.n_quad
         # Evaluate map using precomputed basis
         Mᵢ = evaluate_map(M, precomp, i)
         Mᵢ .+= δ .* precomp.quad_points[i, :]
 
-        log_π = log(target.density(Mᵢ) + δ)
+        log_π = target.density(Mᵢ) #! should be changed to log-pdf for numerical stability
 
         # Jacobian determinant (product of diagonal for triangular map)
         diag = jacobian_diagonal_map(M, precomp, i)
@@ -107,8 +107,8 @@ function kldivergence_gradient(
         Mᵢ = evaluate_map(M, precomp, i)
 
         # Evaluate gradient of target density w.r.t. x
-        ∇π = gradient(target, Mᵢ)
-        π_val = max(target.density(Mᵢ), 1e-12)
+        ∇π = gradient(target, Mᵢ) #! should be changed to gradient of log-pdf for numerical stability
+        π_val = target.density(Mᵢ)
 
         # Compute gradient of map with respect to coefficients using precomputed basis
         ∂M_∂c = gradient_coefficients_map(M, precomp, i)  # Shape: (n_dims, n_coeffs)
@@ -187,7 +187,7 @@ function optimize!(
 
     # Optimize with analytical gradient
     initial_coefficients = getcoefficients(M)
-    result = optimize(objective_function, gradient_function!, initial_coefficients, optimizer, options)
+    result = optimize(objective_function, initial_coefficients, optimizer, options) #! removed gradient for now (it's broken)
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients
 
