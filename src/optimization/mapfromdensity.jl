@@ -9,22 +9,21 @@ function kldivergence(
     target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights,
 )
+    # Small regularization term
+    δ = 1e-9
 
-    total = 0.0
-    δ = 1e-9 # Small value to avoid log(0)
+    # Evaluate map and add small δ for regularization
+    Mᵢ = evaluate(M, quadrature.points) + δ * quadrature.points
+    # Evaluate target logdensity
+    log_π = logdensity(target, Mᵢ)
+    # Evaluate log determinant of Jacobian
+    log_detJ = log.(abs.(jacobian(M, quadrature.points)))
 
-    for (i, zᵢ) in enumerate(eachrow(quadrature.points))
-        # Add δ for regularization
-        Mᵢ = evaluate(M, zᵢ) .+ δ * zᵢ
-        log_π = target.density(Mᵢ)  #! should be changed to log-pdf for numerical stability
-        # Log determinant
-        log_detJ = log(abs(jacobian(M, zᵢ)))
-
-        total += quadrature.weights[i] * (-log_π - log_detJ)
-    end
-
-    return total
+    return sum(quadrature.weights .* (-log_π .- log_detJ))
 end
+
+#! Finally, make one function of kldivergence and gradient that uses both
+#! also, use precomputed basis here
 
 # Gradient of KL divergence with respect to map coefficients
 function kldivergence_gradient(
@@ -36,24 +35,21 @@ function kldivergence_gradient(
     n_coeffs = numbercoefficients(M)
     gradient_total = zeros(Float64, n_coeffs)
 
+    #! vectorize this later!
     for (i, zᵢ) in enumerate(eachrow(quadrature.points))
         # Evaluate map
         Mᵢ = evaluate(M, zᵢ)
 
         # Evaluate gradient of target density w.r.t. x
-        ∇π = gradient(target, Mᵢ) #! should be changed to gradient of log-pdf for numerical stability
-
-        π_val = target.density(Mᵢ)
+        ∇π = gradient_log(target, Mᵢ)
 
         # Compute gradient of map with respect to coefficients
-        ∂M_∂c = gradient_coefficients(M, zᵢ)  # Shape: (n_dims, n_coeffs)
+        ∂M_∂c = gradient_coefficients(M, zᵢ)
 
-        # First term: -(∇π(M(z))/π(M(z))) · ∂M/∂c from ∂(-log π)/∂c
-        weight_factor = -quadrature.weights[i] / π_val
-
+        # First term: -∇[log π(M(z))]· ∂M/∂c from ∂(-log π)/∂c
         for j in 1:n_coeffs
             for k in axes(∇π, 1)  # Iterate over dimensions
-                gradient_total[j] += weight_factor * ∇π[k] * ∂M_∂c[k, j]
+                gradient_total[j] += -quadrature.weights[i] * ∇π[k] * ∂M_∂c[k, j]
             end
         end
 
@@ -76,12 +72,13 @@ function kldivergence(
     total = 0.0
     δ = 1e-9  # Small value to avoid log(0)
 
+    #! Vectorize this
     for i in 1:precomp.n_quad
         # Evaluate map using precomputed basis
         Mᵢ = evaluate_map(M, precomp, i)
         Mᵢ .+= δ .* precomp.quad_points[i, :]
 
-        log_π = target.density(Mᵢ) #! should be changed to log-pdf for numerical stability
+        log_π = logdensity(target, Mᵢ)
 
         # Jacobian determinant (product of diagonal for triangular map)
         diag = jacobian_diagonal_map(M, precomp, i)
@@ -107,18 +104,16 @@ function kldivergence_gradient(
         Mᵢ = evaluate_map(M, precomp, i)
 
         # Evaluate gradient of target density w.r.t. x
-        ∇π = gradient(target, Mᵢ) #! should be changed to gradient of log-pdf for numerical stability
-        π_val = target.density(Mᵢ)
+        ∇π = gradient_log(target, Mᵢ)
 
         # Compute gradient of map with respect to coefficients using precomputed basis
         ∂M_∂c = gradient_coefficients_map(M, precomp, i)  # Shape: (n_dims, n_coeffs)
 
-        # First term: -(∇π(M(z))/π(M(z))) · ∂M/∂c from ∂(-log π)/∂c
-        weight_factor = -precomp.quad_weights[i] / π_val
+        # First term: -∇[log π(M(z))]· ∂M/∂c from ∂(-log π)/∂c
 
         for j in 1:n_coeffs
             for k in axes(∇π, 1)  # Iterate over dimensions
-                gradient_total[j] += weight_factor * ∇π[k] * ∂M_∂c[k, j]
+                gradient_total[j] += -precomp.quad_weights[i] * ∇π[k] * ∂M_∂c[k, j]
             end
         end
 
@@ -187,7 +182,7 @@ function optimize!(
 
     # Optimize with analytical gradient
     initial_coefficients = getcoefficients(M)
-    result = optimize(objective_function, initial_coefficients, optimizer, options) #! removed gradient for now (it's broken)
+    result = optimize(objective_function, gradient_function!, initial_coefficients, optimizer, options)
 
     setcoefficients!(M, result.minimizer)  # Update the polynomial map with optimized coefficients
 
