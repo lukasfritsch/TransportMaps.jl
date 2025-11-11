@@ -31,7 +31,7 @@ function posterior(θ)
     return prior * likelihood
 end
 
-target = MapTargetDensity(posterior, :auto_diff)
+target = MapTargetDensity(x -> log(posterior(x)), :auto_diff)
 
 M = PolynomialMap(2, 3, :normal, Softplus(), LinearizedHermiteBasis())
 

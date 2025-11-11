@@ -1,15 +1,15 @@
 struct Softplus <: AbstractRectifierFunction
     β::Float64
-    Softplus(β::Float64=2.0) = new(β)
+    Softplus(β::Float64=1.0) = new(β)
 end
 
 function (r::Softplus)(ξ)
-    return (log1p(exp(-abs(log(r.β) * ξ))) + max(0, log(r.β) * ξ)) / log(r.β)  # numerically stable version
+    return 1 / r.β   * log1p(exp(r.β * ξ))
 end
 
 # Derivative of Softplus: d/dξ Softplus(ξ) = σ(βξ) = 1 / (1 + exp(-βξ))
 function derivative(r::Softplus, ξ)
-    return 1.0 / (1.0 + exp(-log(r.β) * ξ))  # sigmoid function
+    return 1.0 / (1.0 + exp(-r.β * ξ))  # sigmoid function
 end
 
 struct ShiftedELU <: AbstractRectifierFunction
@@ -35,6 +35,28 @@ end
 # Derivative of IdentityRectifier
 function derivative(r::IdentityRectifier, ξ)
     return 1.0
+end
+
+struct Squared <: AbstractRectifierFunction
+end
+
+function (r::Squared)(ξ)
+    return ξ .^ 2
+end
+
+function derivative(r::Squared, ξ)
+    return 2 .* ξ
+end
+
+struct Exponential <: AbstractRectifierFunction
+end
+
+function (r::Exponential)(ξ)
+    return exp.(ξ)
+end
+
+function derivative(r::Exponential, ξ)
+    return exp.(ξ)
 end
 
 # Display methods for Softplus

@@ -58,7 +58,7 @@ println("Initial coefficients: ", getcoefficients(M))
 # Example: Correlated Gaussian
 function correlated_gaussian(x; ρ=0.8)
     Σ = [1.0 ρ; ρ 1.0]
-    return pdf(MvNormal(zeros(2), Σ), x)
+    return logpdf(MvNormal(zeros(2), Σ), x)
 end
 #md nothing #hide
 
@@ -142,7 +142,7 @@ println("  ShiftedELU: ", var_diag_elu)
 
 # Define banana density
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-target_density_banana = MapTargetDensity(banana_density, :auto_diff)
+target_density_banana = MapTargetDensity(x -> log.(banana_density(x)), :auto_diff)
 
 # Create a new map for this target and optimize:
 M_banana = PolynomialMap(2, 2, Normal(), Softplus())

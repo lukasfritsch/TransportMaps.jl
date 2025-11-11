@@ -47,7 +47,7 @@ end
 
 @testset "LaplaceMap from Density" begin
 
-    density(x) = pdf(LogNormal(0.0, 0.5), x[1]) * pdf(LogNormal(1, 0.5), x[2] - x[1])
+    density(x) = logpdf(LogNormal(0.0, 0.5), x[1]) + logpdf(LogNormal(1, 0.5), x[2] - x[1])
     target = MapTargetDensity(density, :ad)
 
     x0 = [0.5, 1.0]
