@@ -80,7 +80,7 @@ function PolynomialMap(
         components[k] = PolynomialMapComponent(Λ[k], rectifier, basis, reference_density)
     end
 
-    return PolynomialMap(components; forwarddirection=:reference)
+    return PolynomialMap(components; forwarddirection=:target)
 end
 
 # Evaluate the polynomial map at z (single vector)
