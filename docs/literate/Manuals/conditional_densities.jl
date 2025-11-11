@@ -37,7 +37,7 @@ using TransportMaps
 using Plots
 using Distributions
 
-banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
 target = MapTargetDensity(banana_density, :auto_diff)
 #md nothing #hide
 
