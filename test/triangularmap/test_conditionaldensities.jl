@@ -8,7 +8,7 @@ using Distributions
     M = PolynomialMap(2, 2, :normal)
     quadrature = SparseSmolyakWeights(2, 2)
 
-    banana(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+    banana(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
     target = MapTargetDensity(banana, :auto_diff)
 
     # Optimize the map coefficients
@@ -58,9 +58,9 @@ end
     quadrature = SparseSmolyakWeights(2, 3)
 
     # Define a 3D target density (extending the banana example)
-    banana3d(x) = pdf(Normal(), x[1]) *
-                  pdf(Normal(), x[2] - 0.5 * x[1]^2) *
-                  pdf(Normal(), x[3] - 0.3 * x[2])
+    banana3d(x) = logpdf(Normal(), x[1]) +
+                  logpdf(Normal(), x[2] - 0.5 * x[1]^2) +
+                  logpdf(Normal(), x[3] - 0.3 * x[2])
     target3d = MapTargetDensity(banana3d, :auto_diff)
 
     # Optimize the map coefficients

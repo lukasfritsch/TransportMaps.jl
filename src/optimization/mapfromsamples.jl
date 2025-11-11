@@ -28,6 +28,7 @@ function objective(component::PolynomialMapComponent, precomp::PrecomputedBasis)
     return obj
 end
 
+#! vectorize?
 # Gradient of objective for optimization of component coefficients from samples
 function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
     # Analytical gradient of objective w.r.t. coefficients c of component Mk

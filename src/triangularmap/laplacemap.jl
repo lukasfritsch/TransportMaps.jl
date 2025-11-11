@@ -22,14 +22,12 @@ struct LaplaceMap <: AbstractLinearMap
 
         # objective: f(x) = -log(π(x))
         function obj(x)
-            return -log(density.density(x))
+            return -logpdf(density, x)
         end
 
-        # gradient: f'(x) = - ∇(π(x)) / π(x) (chain rule)
+        # gradient: f'(x) = - ∇(log(π(x))) (chain rule)
         function grad!(storage, x)
-            dens_val = density.density(x)
-            grad_val = gradient(density, x)
-            storage .= -grad_val ./ dens_val
+            storage .= -grad_logpdf(density, x)
             return storage
         end
 

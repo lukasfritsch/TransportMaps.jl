@@ -345,8 +345,8 @@ inverse_jacobian(M::PolynomialMap, X::AbstractMatrix{<:Real}) = inverse_jacobian
 function pullback(M::PolynomialMap, x::Vector{Float64})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
-    value = M.forwarddirection == :target ? M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x)) :
-            M.reference.density(evaluate(M, x)) * abs(jacobian(M, x))
+    value = M.forwarddirection == :target ? pdf(M.reference, inverse(M, x)) * abs(inverse_jacobian(M, x)) :
+            pdf(M.reference, evaluate(M, x)) * abs(jacobian(M, x))
 
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
     return value
@@ -379,7 +379,7 @@ pullback(M::PolynomialMap, X::AbstractMatrix{<:Real}) = pullback(M, Matrix{Float
 function pushforward(M::PolynomialMap, target::MapTargetDensity, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
-    value = M.forwarddirection == :target ? target.density(evaluate(M, z)) * abs(jacobian(M, z)) :
+    value = M.forwarddirection == :target ? pdf(target, evaluate(M, z)) * abs(jacobian(M, z)) :
             error("Can't evaluate pushforward for a map from samples!")
 
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|

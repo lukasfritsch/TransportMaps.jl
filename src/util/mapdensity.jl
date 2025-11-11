@@ -33,18 +33,17 @@ struct MapTargetDensity{F,G} <: AbstractMapDensity
     end
 end
 
-#! maybe also replace density with logdensity here for numerical stability
-struct MapReferenceDensity{F, G} <: AbstractMapDensity
-    density::F
+struct MapReferenceDensity{F,G} <: AbstractMapDensity
+    logdensity::F
     gradient_type::Symbol
-    grad_density::G
+    grad_logdensity::G
     densitytype::Distributions.UnivariateDistribution
 
     # base constructor for reference density, directly using automatic differentiation
     function MapReferenceDensity(densitytype::Distributions.UnivariateDistribution=Normal())
-        density = x -> prod(map(Base.Fix1(pdf, densitytype), x))
+        density = x -> sum(map(Base.Fix1(logpdf, densitytype), x))
         gradient = x -> ForwardDiff.gradient(density, x)
-        return new{typeof(density), typeof(gradient)}(density, :auto_diff, gradient, densitytype)
+        return new{typeof(density),typeof(gradient)}(density, :auto_diff, gradient, densitytype)
     end
 
     function MapReferenceDensity(densitytype::Distributions.Uniform)
@@ -52,11 +51,11 @@ struct MapReferenceDensity{F, G} <: AbstractMapDensity
     end
 end
 
-#! Clean up this file
+logpdf(density::AbstractMapDensity, x::Vector{<:Real}) = density.logdensity(x)
 
-logdensity(density::MapTargetDensity, x::Vector{<:Real}) = density.logdensity(x)
+logpdf(density::AbstractMapDensity, x::Real) = logpdf(density, [x])
 
-function logdensity(density::MapTargetDensity, X::Matrix{<:Real})
+function logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
     n = size(X, 1)
     logdensities = zeros(Float64, n)
 
@@ -66,20 +65,31 @@ function logdensity(density::MapTargetDensity, X::Matrix{<:Real})
     return logdensities
 end
 
-gradient(density::AbstractMapDensity, x::AbstractArray{<:Real}) = density.grad_density(x)
+grad_logpdf(density::AbstractMapDensity, x::Vector{<:Real}) = density.grad_logdensity(x)
 
-gradient_log(density::MapTargetDensity, x::Vector{<:Real}) = density.grad_logdensity(x)
-
-function gradient_log(density::MapTargetDensity, X::Matrix{<:Real})
+function grad_logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
     n, d = size(X)
     log_gradients = zeros(Float64, n, d)
 
     Threads.@threads for i in 1:n
-        log_gradients[i,:] .= density.grad_logdensity(view(X, i, :))
+        log_gradients[i, :] .= density.grad_logdensity(view(X, i, :))
     end
     return log_gradients
 end
 
+pdf(density::AbstractMapDensity, x::Vector{<:Real}) = exp(density.logdensity(x))
+
+pdf(density::AbstractMapDensity, x::Real) = pdf(density, [x])
+
+function pdf(density::AbstractMapDensity, X::Matrix{<:Real})
+    n = size(X, 1)
+    densities = zeros(Float64, n)
+
+    Threads.@threads for i in 1:n
+        densities[i] = exp(density.density(view(X, i, :)))
+    end
+    return densities
+end
 
 function Base.show(io::IO, target::MapTargetDensity)
     print(io, "MapTargetDensity(gradient_type=:$(target.gradient_type)) ")

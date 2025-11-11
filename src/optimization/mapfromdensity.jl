@@ -14,8 +14,8 @@ function kldivergence(
 
     # Evaluate map and add small δ for regularization
     Mᵢ = evaluate(M, quadrature.points) + δ * quadrature.points
-    # Evaluate target logdensity
-    log_π = logdensity(target, Mᵢ)
+    # Evaluate target logpdf
+    log_π = logpdf(target, Mᵢ)
     # Evaluate log determinant of Jacobian
     log_detJ = log.(abs.(jacobian(M, quadrature.points)))
 
@@ -41,7 +41,7 @@ function kldivergence_gradient(
         Mᵢ = evaluate(M, zᵢ)
 
         # Evaluate gradient of target density w.r.t. x
-        ∇π = gradient_log(target, Mᵢ)
+        ∇π = grad_logpdf(target, Mᵢ)
 
         # Compute gradient of map with respect to coefficients
         ∂M_∂c = gradient_coefficients(M, zᵢ)
@@ -49,7 +49,7 @@ function kldivergence_gradient(
         # First term: -∇[log π(M(z))]· ∂M/∂c from ∂(-log π)/∂c
         for j in 1:n_coeffs
             for k in axes(∇π, 1)  # Iterate over dimensions
-                gradient_total[j] += -quadrature.weights[i] * ∇π[k] * ∂M_∂c[k, j]
+                gradient_total[j] -= quadrature.weights[i] * ∇π[k] * ∂M_∂c[k, j]
             end
         end
 
@@ -78,7 +78,7 @@ function kldivergence(
         Mᵢ = evaluate_map(M, precomp, i)
         Mᵢ .+= δ .* precomp.quad_points[i, :]
 
-        log_π = logdensity(target, Mᵢ)
+        log_π = logpdf(target, Mᵢ)
 
         # Jacobian determinant (product of diagonal for triangular map)
         diag = jacobian_diagonal_map(M, precomp, i)
@@ -104,7 +104,7 @@ function kldivergence_gradient(
         Mᵢ = evaluate_map(M, precomp, i)
 
         # Evaluate gradient of target density w.r.t. x
-        ∇π = gradient_log(target, Mᵢ)
+        ∇π = grad_logpdf(target, Mᵢ)
 
         # Compute gradient of map with respect to coefficients using precomputed basis
         ∂M_∂c = gradient_coefficients_map(M, precomp, i)  # Shape: (n_dims, n_coeffs)
@@ -113,7 +113,7 @@ function kldivergence_gradient(
 
         for j in 1:n_coeffs
             for k in axes(∇π, 1)  # Iterate over dimensions
-                gradient_total[j] += -precomp.quad_weights[i] * ∇π[k] * ∂M_∂c[k, j]
+                gradient_total[j] -= precomp.quad_weights[i] * ∇π[k] * ∂M_∂c[k, j]
             end
         end
 
@@ -197,12 +197,5 @@ function variance_diagnostic(
 )
     @assert size(Z, 2) == numberdimensions(M) "Z must have the same number of columns as number of map components in M"
 
-    # Initialize
-    total = zeros(Float64, size(Z, 1))
-
-    for (i, zᵢ) in enumerate(eachrow(Z))
-        total[i] = log(pushforward(M, target, zᵢ)) - log.(M.reference.density(zᵢ))
-    end
-
-    return 0.5 * var(total)
+    return 0.5 * var(log.(pushforward(M, target, Z)) - logpdf(M.reference, Z))
 end
