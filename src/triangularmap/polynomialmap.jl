@@ -213,6 +213,26 @@ end
 
 gradient_coefficients(M::PolynomialMap, z::AbstractVector{<:Real}) = gradient_coefficients(M, Vector{Float64}(z))
 
+# Gradient of the map with respect to the coefficients at multiple points (matrix input) using multithreading
+function gradient_coefficients(M::PolynomialMap, Z::Matrix{Float64})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+    n_dims = length(M.components)
+    n_coeffs = numbercoefficients(M)
+
+    # Preallocate result: 3D array (n_points × n_dims × n_coeffs)
+    results = Array{Float64,3}(undef, n_points, n_dims, n_coeffs)
+
+    # Use multithreading to compute gradient for each point
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i, :, :] = gradient_coefficients(M, Vector{Float64}(z_point))
+    end
+
+    return results
+end
+
 # Compute the Jacobian determinant of the polynomial map at z (single vector)
 function jacobian(M::PolynomialMap, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
@@ -274,6 +294,23 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::Vector{Float64})
 end
 
 jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{<:Real}) = jacobian_logdet_gradient(M, Vector{Float64}(z))
+
+# Compute the gradient of log|det J_M| with respect to coefficients at multiple points (matrix input)
+function jacobian_logdet_gradient(M::PolynomialMap, Z::Matrix{Float64})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+    n_coeffs = numbercoefficients(M)
+
+    results = Matrix{Float64}(undef, n_points, n_coeffs)
+
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i, :] = jacobian_logdet_gradient(M, Vector{Float64}(z_point))
+    end
+
+    return results
+end
 
 # Compute the inverse of the first k components of the polynomial map at z (single vector)
 function inverse(M::PolynomialMap, x::Vector{Float64}, k::Int=numberdimensions(M))
