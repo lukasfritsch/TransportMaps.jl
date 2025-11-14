@@ -28,8 +28,9 @@ the multi-index set across all components simultaneously.
 - `validation_samples::Matrix{Float64}=Matrix{Float64}(undef,0,0)`: Samples for variance diagnostic validation
 
 # Returns
-- `M::PolynomialMap`: The optimized triangular transport map
+- `M::PolynomialMap`: The optimized triangular transport map (with best validation variance diagnostic)
 - `history::OptimizationHistory`: History of optimization iterations
+- `best_iteration::Int`: Iteration with best validation variance diagnostic
 """
 function optimize_adaptive_transportmap(
     target::AbstractMapDensity,
@@ -50,6 +51,9 @@ function optimize_adaptive_transportmap(
     num_initial_coefficients = numbercoefficients(M)
     println("Initialized map with $(num_initial_coefficients) initial coefficients.")
 
+    # Initialize history tracking
+    history = MapOptimizationResult(maxterms-num_initial_coefficients+1)
+
     # Precompute basis for quadrature points
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
 
@@ -58,6 +62,26 @@ function optimize_adaptive_transportmap(
     train_obj = minimum(res)
 
     println("Initial KL divergence: $(kldivergence(M, target, quadrature))")
+
+    # Validation points
+    n_val = 2000
+    validation_points = randn(n_val, d)
+
+    # Store initial state in history
+    var_diag_tra_init = variance_diagnostic(M, target, quadrature.points)
+    var_diag_val_init = variance_diagnostic(M, target, validation_points)
+
+    update_optimization_history!(
+        history,
+        deepcopy(M),
+        var_diag_tra_init,
+        var_diag_val_init,
+        Float64[],
+        res,
+        1,
+    )
+    println("Initial variance diagnostic (training): $var_diag_tra_init")
+    println("Initial variance diagnostic (validation): $var_diag_val_init")
 
     # Greedy optimization loop
     for iteration in (num_initial_coefficients+1):maxterms
@@ -113,14 +137,40 @@ function optimize_adaptive_transportmap(
         res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
 
         # Compute objectives
-        train_obj = kldivergence(M, target, precomp)
+        train_obj = Optim.minimum(res)
+
+        var_diag_tra = variance_diagnostic(M, target, quadrature.points)
+        var_diag_val = variance_diagnostic(M, target, validation_points)
+
+        # Store in history
+        iter_idx = iteration - num_initial_coefficients + 1
+        update_optimization_history!(
+            history,
+            deepcopy(M),
+            var_diag_tra,
+            var_diag_val,  # test_objective not used for density-based optimization
+            gradient_metrics,
+            res,
+            iter_idx,
+        )
 
         println("   KL divergence: $train_obj")
+        println("   Variance diagnostic (training): $var_diag_tra")
+        println("   Variance diagnostic (validation): $var_diag_val")
         println("   Optimizer: $(Optim.converged(res) ? "Converged" : "Not converged") ($(Optim.iterations(res)) iterations)")
     end
 
-    # Return the optimized polynomial map and history
-    return M, []
+    # Select model with best validation variance diagnostic
+    best_iteration = argmin(history.test_objectives)
+    println("\nBest iteration: $best_iteration (variance diagnostic: $(history.test_objectives[best_iteration]))")
+
+    M_best = history.maps[best_iteration]
+
+    println("Final variance diagnostic (train): $(variance_diagnostic(M_best, target, quadrature.points))")
+    println("Final variance diagnostic (validation): $(variance_diagnostic(M_best, target, validation_points))")
+
+    # Return the optimized polynomial map with best variance diagnostic and history
+    return M_best, history
 end
 
 # Update the polynomial map with a new multi-index α in component k
@@ -142,7 +192,3 @@ function update_multiindexset!(
     setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
 
 end
-
-# todo:
-# * add validation with variance diagnostic
-# * save iteration history

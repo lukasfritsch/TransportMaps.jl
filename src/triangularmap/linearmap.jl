@@ -1,4 +1,4 @@
-# Implement a linear transport map (scaling by mean and stddev)
+# Implement a linear transport map (scaling by mean and standard deviation)
 struct LinearMap <: AbstractLinearMap
     μ::Vector{Float64}
     σ::Vector{Float64}
