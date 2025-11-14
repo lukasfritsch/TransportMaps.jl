@@ -175,5 +175,6 @@ function variance_diagnostic(
 )
     @assert size(Z, 2) == numberdimensions(M) "Z must have the same number of columns as number of map components in M"
 
-    return 0.5 * var(log.(pushforward(M, target, Z)) - logpdf(M.reference, Z))
+    log_pushforward = logpdf(target, evaluate(M, Z)) + log.(abs.(jacobian(M, Z)))
+    return 0.5 * var(log_pushforward - logpdf(M.reference, Z))
 end

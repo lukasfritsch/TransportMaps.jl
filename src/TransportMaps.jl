@@ -83,6 +83,7 @@ export optimize_adaptive_transportmap
 export optimize_adaptive_transportmapcomponent
 export OptimizationHistory
 export OptimizationResult
+export MapOptimizationResult
 
 # Conditional densities and samples
 export conditional_density
