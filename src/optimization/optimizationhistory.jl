@@ -92,3 +92,37 @@ function Base.show(io::IO, result::OptimizationResult)
         println(io, "  Test  : ", result.test_objectives[i])
     end
 end
+
+
+struct MapOptimizationResult
+    maps::Vector{PolynomialMap}
+    train_objectives::Vector{Float64}
+    test_objectives::Vector{Float64}
+    gradients::Vector{Vector{Float64}}
+    optimization_results::Vector{Optim.MultivariateOptimizationResults}
+
+    function MapOptimizationResult(maxiterations::Int)
+        maps = Vector{PolynomialMap}(undef, maxiterations)
+        train_objectives = Vector{Float64}(undef, maxiterations)
+        test_objectives = Vector{Float64}(undef, maxiterations)
+        gradients = [Float64[] for _ in 1:maxiterations]
+        optimization_results = Vector{Optim.MultivariateOptimizationResults}(undef, maxiterations)
+        return new(maps, train_objectives, test_objectives, gradients, optimization_results)
+    end
+end
+
+function update_optimization_history!(
+    result::MapOptimizationResult,
+    map::PolynomialMap,
+    train_objective::Float64,
+    test_objective::Float64,
+    gradient::Vector{Float64},
+    optimization_result::Optim.MultivariateOptimizationResults,
+    iteration::Int
+)
+    result.maps[iteration] = map
+    result.train_objectives[iteration] = train_objective
+    result.test_objectives[iteration] = test_objective
+    result.gradients[iteration] = gradient
+    result.optimization_results[iteration] = optimization_result
+end
