@@ -37,6 +37,9 @@ using Random
         y_test = evaluate(L2, x_test)
         x_recovered = inverse(L2, y_test)
         @test isapprox(x_recovered, x_test; atol=1e-10, rtol=1e-10)
+        # Jacobian
+        jac = jacobian(L)
+        @test isapprox(jac, prod(L.σ); atol=1e-10, rtol=1e-10)
     end
 
     @testset "Identity LinearMap" begin
