@@ -66,6 +66,7 @@ export pushforward
 
 # Coefficient utilities
 export setcoefficients!
+export setparameters!
 export getcoefficients
 export numbercoefficients
 export numberdimensions
