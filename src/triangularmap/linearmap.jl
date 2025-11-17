@@ -19,6 +19,15 @@ struct LinearMap <: AbstractLinearMap
     function LinearMap(dim::Int)
         return new(zeros(Float64, dim), ones(Float64, dim))
     end
+
+    function LinearMap(μ::Vector{Float64}, σ::Vector{Float64})
+        return new(μ, σ)
+    end
+end
+
+function setparameters!(map::LinearMap, μ::Vector{Float64}, σ::Vector{Float64})
+    map.μ .= μ
+    map.σ .= σ
 end
 
 function evaluate(L::LinearMap, x::Vector{Float64})
