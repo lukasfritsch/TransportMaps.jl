@@ -101,12 +101,12 @@ scatter!(xlim=(-0.5, 3.5), ylim=(-0.5, 3.5), aspect_ratio=1, legend=:topright,
 # where $\phi$ is the standard normal PDF.
 
 # Define the cubic target density and visualize it:
-cubic_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^3 - x[1]^2)
+cubic_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^3 - x[1]^2)
 
 x₁ = range(-3, 3, length=1000)
 x₂ = range(-10, 20, length=1000)
 
-true_density = [cubic_density([x1, x2]) for x2 in x₂, x1 in x₁]
+true_density = [exp(cubic_density([x1, x2])) for x2 in x₂, x1 in x₁]
 contour(x₁, x₂, true_density;
     label="x₁", ylabel="x₂", colormap=:viridis, levels=10)
 

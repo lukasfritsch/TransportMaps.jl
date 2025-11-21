@@ -4,7 +4,7 @@ struct Softplus <: AbstractRectifierFunction
 end
 
 function (r::Softplus)(ξ)
-    return 1 / r.β * log1p(exp(r.β * ξ)) # log(1 + exp(βξ)) / β
+    return 1 / r.β   * log1p(exp(r.β * ξ))
 end
 
 # Derivative of Softplus: d/dξ Softplus(ξ) = σ(βξ) = 1 / (1 + exp(-βξ))
@@ -35,6 +35,28 @@ end
 # Derivative of IdentityRectifier
 function derivative(r::IdentityRectifier, ξ)
     return 1.0
+end
+
+struct Squared <: AbstractRectifierFunction
+end
+
+function (r::Squared)(ξ)
+    return ξ .^ 2
+end
+
+function derivative(r::Squared, ξ)
+    return 2 .* ξ
+end
+
+struct Exponential <: AbstractRectifierFunction
+end
+
+function (r::Exponential)(ξ)
+    return exp.(ξ)
+end
+
+function derivative(r::Exponential, ξ)
+    return exp.(ξ)
 end
 
 # Display methods for Softplus
