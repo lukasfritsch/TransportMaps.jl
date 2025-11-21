@@ -126,3 +126,13 @@ function update_optimization_history!(
     result.gradients[iteration] = gradient
     result.optimization_results[iteration] = optimization_result
 end
+
+function Base.show(io::IO, result::MapOptimizationResult)
+    dim = length(result.train_objectives)
+    println(io, "OptimizationResult for $dim components:")
+    for i in 1:dim
+        println(io, " Component $i:")
+        println(io, "  Train : ", result.train_objectives[i])
+        println(io, "  Test  : ", result.test_objectives[i])
+    end
+end

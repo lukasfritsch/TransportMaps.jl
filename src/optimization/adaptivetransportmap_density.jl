@@ -1,9 +1,3 @@
-# Adaptive transport map optimization from density using greedy basis selection
-# Similar to the sample-based version but:
-#   - Considers reduced margins of all components simultaneously
-#   - Selects terms based on KL divergence gradient magnitude
-#   - Uses variance diagnostic for validation
-
 """
     optimize_adaptive_transportmap(
         target::AbstractMapDensity,
@@ -30,7 +24,6 @@ the multi-index set across all components simultaneously.
 # Returns
 - `M::PolynomialMap`: The optimized triangular transport map (with best validation variance diagnostic)
 - `history::OptimizationHistory`: History of optimization iterations
-- `best_iteration::Int`: Iteration with best validation variance diagnostic
 """
 function optimize_adaptive_transportmap(
     target::AbstractMapDensity,
@@ -41,6 +34,7 @@ function optimize_adaptive_transportmap(
     reference_density::Distributions.UnivariateDistribution=Normal(),
     optimizer::Optim.AbstractOptimizer=LBFGS(),
     options::Optim.Options=Optim.Options(),
+    validation::Union{AbstractQuadratureWeights,Nothing}=nothing
 )
     d = size(quadrature.points, 2)
 
@@ -52,7 +46,7 @@ function optimize_adaptive_transportmap(
     println("Initialized map with $(num_initial_coefficients) initial coefficients.")
 
     # Initialize history tracking
-    history = MapOptimizationResult(maxterms-num_initial_coefficients+1)
+    history = MapOptimizationResult(maxterms - num_initial_coefficients + 1)
 
     # Precompute basis for quadrature points
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
@@ -61,27 +55,25 @@ function optimize_adaptive_transportmap(
     res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
     train_obj = minimum(res)
 
-    println("Initial KL divergence: $(kldivergence(M, target, quadrature))")
+    println("Initial KL divergence (train): $train_obj")
 
-    # Validation points
-    n_val = 2000
-    validation_points = randn(n_val, d)
-
-    # Store initial state in history
-    var_diag_tra_init = variance_diagnostic(M, target, quadrature.points)
-    var_diag_val_init = variance_diagnostic(M, target, validation_points)
+    # Perform validation if not set to nothing
+    if !isnothing(validation)
+        validation_obj = kldivergence(M, target, validation)
+        println("Initial KL divergence (valid): $validation_obj")
+    else
+        validation_obj = NaN
+    end
 
     update_optimization_history!(
         history,
         deepcopy(M),
-        var_diag_tra_init,
-        var_diag_val_init,
+        train_obj,
+        validation_obj,
         Float64[],
         res,
         1,
     )
-    println("Initial variance diagnostic (training): $var_diag_tra_init")
-    println("Initial variance diagnostic (validation): $var_diag_val_init")
 
     # Greedy optimization loop
     for iteration in (num_initial_coefficients+1):maxterms
@@ -138,38 +130,43 @@ function optimize_adaptive_transportmap(
 
         # Compute objectives
         train_obj = Optim.minimum(res)
+        println("   KL divergence (train): $train_obj")
 
-        var_diag_tra = variance_diagnostic(M, target, quadrature.points)
-        var_diag_val = variance_diagnostic(M, target, validation_points)
+        if !isnothing(validation)
+            validation_obj = kldivergence(M, target, validation)
+            println("   KL divergence (valid): $validation_obj")
+        else
+            validation_obj = NaN
+        end
 
         # Store in history
         iter_idx = iteration - num_initial_coefficients + 1
         update_optimization_history!(
             history,
             deepcopy(M),
-            var_diag_tra,
-            var_diag_val,  # test_objective not used for density-based optimization
+            train_obj,
+            validation_obj,
             gradient_metrics,
             res,
             iter_idx,
         )
 
-        println("   KL divergence: $train_obj")
-        println("   Variance diagnostic (training): $var_diag_tra")
-        println("   Variance diagnostic (validation): $var_diag_val")
-        println("   Optimizer: $(Optim.converged(res) ? "Converged" : "Not converged") ($(Optim.iterations(res)) iterations)")
     end
 
-    # Select model with best validation variance diagnostic
-    best_iteration = argmin(history.test_objectives)
-    println("\nBest iteration: $best_iteration (variance diagnostic: $(history.test_objectives[best_iteration]))")
+    # Select model with best KL divergence
+    if !isnothing(validation)
+        best_iteration = argmin(history.test_objectives)
+        println("\nBest iteration: $best_iteration")
+        println("Final KL divergence (train): $(history.train_objectives[best_iteration])")
+        println("Final KL divergence (valid): $(history.test_objectives[best_iteration])")
+    else
+        best_iteration = argmin(history.train_objectives)
+        println("Final KL divergence (train): $(history.train_objectives[best_iteration])")
+    end
 
+    # Get best map
     M_best = history.maps[best_iteration]
 
-    println("Final variance diagnostic (train): $(variance_diagnostic(M_best, target, quadrature.points))")
-    println("Final variance diagnostic (validation): $(variance_diagnostic(M_best, target, validation_points))")
-
-    # Return the optimized polynomial map with best variance diagnostic and history
     return M_best, history
 end
 
