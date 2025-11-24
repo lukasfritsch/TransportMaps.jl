@@ -86,7 +86,7 @@ function pdf(density::AbstractMapDensity, X::Matrix{<:Real})
     densities = zeros(Float64, n)
 
     Threads.@threads for i in 1:n
-        densities[i] = exp(density.density(view(X, i, :)))
+        densities[i] = exp(density.logdensity(view(X, i, :)))
     end
     return densities
 end

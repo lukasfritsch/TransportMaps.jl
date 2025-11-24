@@ -73,6 +73,19 @@ using Test
         @test_throws AssertionError PolynomialMapComponent([mvb1], [1.0, 2.0], IdentityRectifier(), 1)
     end
 
+    @testset "Construction from multivariate-indices" begin
+        multi_indices = multivariate_indices(1, 1)
+
+        bases = [HermiteBasis(), LinearizedHermiteBasis(), GaussianWeightedHermiteBasis(), CubicSplineHermiteBasis()]
+
+        for basis in bases
+            pmc = PolynomialMapComponent(multi_indices, Softplus(), basis, Normal())
+            @test length(pmc.basisfunctions) == length(multi_indices)
+            @test length(pmc.coefficients) == length(multi_indices)
+            @test all(basistype(bf) == typeof(basis) for bf in pmc.basisfunctions)
+        end
+    end
+
     @testset "Evaluation" begin
         # Create a simple 1D polynomial map component
         # f(x) = a₀ + a₁*x with coefficients [1.0, 2.0]

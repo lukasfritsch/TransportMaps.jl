@@ -74,6 +74,28 @@ using Test
         @test identity_rect(1.0) isa Float64
     end
 
+    @testset "Exponential" begin
+
+        exponential_rect = TransportMaps.Exponential()
+
+        # Test basic functionality
+        @test exponential_rect(0.0) ≈ 1.0
+        @test exponential_rect(2.0) ≈ exp(2.0)
+        @test exponential_rect(-3.0) ≈ exp(-3.0)
+
+        # Test monotonicity
+        @test exponential_rect(-1.0) < exponential_rect(0.0) < exponential_rect(1.0) < exponential_rect(2.0)
+
+        # Test derivative
+        @test TransportMaps.derivative(exponential_rect, 0.0) ≈ exp(0.0)
+        @test TransportMaps.derivative(exponential_rect, 1.0) ≈ exp(1.0)
+        @test TransportMaps.derivative(exponential_rect, -1.0) ≈ exp(-1.0)
+
+        # Test type stability
+        @test exponential_rect(1) isa Real
+        @test exponential_rect(1.0) isa Float64
+    end
+
     @testset "Show" begin
         sp = Softplus()
         se = ShiftedELU()

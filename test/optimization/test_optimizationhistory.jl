@@ -42,3 +42,16 @@ end
 
     @test_nowarn show(result)
 end
+
+@testset "MapOptimizationResult" begin
+    maxiter = 5
+    result = MapOptimizationResult(maxiter)
+
+    @test length(result.maps) == maxiter
+    @test length(result.train_objectives) == maxiter
+    @test length(result.test_objectives) == maxiter
+    @test length(result.gradients) == maxiter
+    @test length(result.optimization_results) == maxiter
+
+    @test_nowarn show(result)
+end

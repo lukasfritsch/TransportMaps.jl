@@ -15,7 +15,7 @@ using LinearAlgebra
 using Plots
 
 #md using Random # hide
-#md Random.seed!(123)
+#md Random.seed!(123) # hide
 #md nothing # hide
 
 # Define the target density and `MapTargetDensity` object

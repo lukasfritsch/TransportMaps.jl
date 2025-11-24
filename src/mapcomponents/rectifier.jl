@@ -37,17 +37,6 @@ function derivative(r::IdentityRectifier, ξ)
     return 1.0
 end
 
-struct Squared <: AbstractRectifierFunction
-end
-
-function (r::Squared)(ξ)
-    return ξ .^ 2
-end
-
-function derivative(r::Squared, ξ)
-    return 2 .* ξ
-end
-
 struct Exponential <: AbstractRectifierFunction
 end
 

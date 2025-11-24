@@ -119,7 +119,6 @@ export SparseSmolyakWeights
 export PrecomputedBasis
 export PrecomputedMapBasis
 export Exponential
-export Squared
 
 # Laplace Map
 export mean

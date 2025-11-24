@@ -12,6 +12,27 @@ using Distributions
         @test length(g) == 1
         @test isfinite(g[1])
 
+        # Test logpdf and pdf methods
+        @test logpdf(target, [0.0]) ≈ logpdf(Normal(), 0.0)
+        @test logpdf(target, 0.0) ≈ logpdf(Normal(), 0.0)
+        @test pdf(target, [0.0]) ≈ pdf(Normal(), 0.0)
+        @test pdf(target, 0.0) ≈ pdf(Normal(), 0.0)
+
+        # Test logpdf with matrix input
+        X = permutedims([-1.0 0.0 1.0])
+        logpdfs = logpdf(target, X)
+        @test length(logpdfs) == 3
+        @test logpdfs[1] ≈ logpdf(Normal(), -1.0)
+        @test logpdfs[2] ≈ logpdf(Normal(), 0.0)
+        @test logpdfs[3] ≈ logpdf(Normal(), 1.0)
+
+        # Test pdf with matrix input
+        pdfs = pdf(target, X)
+        @test length(pdfs) == 3
+        @test pdfs[1] ≈ pdf(Normal(), -1.0)
+        @test pdfs[2] ≈ pdf(Normal(), 0.0)
+        @test pdfs[3] ≈ pdf(Normal(), 1.0)
+
         @test_throws ArgumentError MapTargetDensity(x -> pdf(Normal(), x[1]), :finite_difference, x -> zeros(length(x)))
         @test_throws ArgumentError MapTargetDensity(x -> pdf(Normal(), x[1]), :analytical)
 
