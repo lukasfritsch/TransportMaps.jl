@@ -6,6 +6,9 @@ using TransportMaps
 # Setup bibliography
 bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"))
 
+# Configure Plots to not display interactively
+ENV["GKSwstype"] = "100"  # Set GR to non-interactive mode
+
 # Process Literate.jl files
 const LITERATE_DIR = joinpath(@__DIR__, "literate")
 const OUTPUT_DIR = joinpath(@__DIR__, "src")
