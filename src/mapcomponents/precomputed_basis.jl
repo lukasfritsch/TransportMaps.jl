@@ -175,23 +175,16 @@ function evaluate_integral(precomp::PrecomputedBasis, coefficients::Vector{Float
     n_samples = precomp.n_samples
     n_quad = precomp.n_quad
     integrals = Vector{Float64}(undef, n_samples)
-
-    # For each sample, compute the integral using quadrature
+    # Vectorized computation over quadrature points for each sample
     @inbounds for i in 1:n_samples
-        integral_val = 0.0
-        scale = precomp.quad_scales[i]
+        # Compute ∂f for all quadrature points at once: (n_quad,)
+        ∂f_quad = vec(precomp.∂Ψ_quad[i, :, :] * coefficients)
 
-        # Sum over quadrature points
-        for q in 1:n_quad
-            # Vectorized computation of ∂f/∂x_k at this quadrature point
-            ∂f = dot(view(precomp.∂Ψ_quad, i, q, :), coefficients)
+        # Apply rectifier and compute weighted sum
+        integral_val = dot(precomp.quad_weights, rectifier.(∂f_quad))
 
-            # Apply rectifier and add weighted contribution
-            integral_val += precomp.quad_weights[q] * rectifier(∂f)
-        end
-
-        # Scale by integration domain (0.5 * z_k for mapping from [-1,1] to [0, z_k])
-        integrals[i] = integral_val * scale
+        # Scale by integration domain
+        integrals[i] = integral_val * precomp.quad_scales[i]
     end
 
     return integrals

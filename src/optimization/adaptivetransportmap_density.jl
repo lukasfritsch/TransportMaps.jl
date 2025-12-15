@@ -83,8 +83,8 @@ function optimize_adaptive_transportmap(
         candidates = Vector{Tuple{Int,Vector{Int}}}()  # (component_idx, multi_index)
 
         for k in 1:d
-            Λ_rm_k = reduced_margin(getmultivariateindices(M[k]))
-            for α in Λ_rm_k
+            Λᵣₘᵏ = reduced_margin(getmultivariateindices(M[k]))
+            for α in Λᵣₘᵏ
                 push!(candidates, (k, α))
             end
         end

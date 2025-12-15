@@ -26,29 +26,29 @@
 # ```
 # where $f$ is a multivariate polynomial:
 # ```math
-# f(z_1, \ldots, z_k; \boldsymbol{a}) = \sum_{\alpha \in \Lambda_k} a_\alpha \Psi_\alpha(z_1, \ldots, z_k)
+# f(z_1, \ldots, z_k; \boldsymbol{a}) = \sum_{\alpha \in \mathcal{A}_k} a_\alpha \Psi_\alpha(z_1, \ldots, z_k)
 # ```
-# Here, $\Lambda_k$ is the multi-index set that determines which terms are included.
+# Here, $\mathcal{A}_k$ is the multi-index set that determines which terms are included.
 
 # The ATM algorithm starts with a minimal multi-index set (typically containing only the constant term)
 # and iteratively adds terms that maximize the improvement in the objective function.
-# At each iteration $t$, given the current multi-index set $\Lambda_t$, the algorithm:
+# At each iteration $t$, given the current multi-index set $\mathcal{A}_t$, the algorithm:
 #
-# 1. Identifies candidate terms from the **reduced margin** of $\Lambda_t$:
+# 1. Identifies candidate terms from the **reduced margin** of $\mathcal{A}_t$:
 # ```math
-# \mathcal{RM}(\Lambda_t) = \{\alpha \notin \Lambda_t : \alpha - e_i \in \Lambda_t \text{ for all } i \text{ with } \alpha_i > 0\}
+# \mathcal{A}_{\mathrm{RM}}(\mathcal{A}_t) = \{\alpha \notin \mathcal{A}_t : \alpha - e_i \in \mathcal{A}_t \text{ for all } i \text{ with } \alpha_i > 0\}
 # ```
 # where $e_i$ is the $i$-th standard basis vector.
 #
-# 2. For each candidate $\alpha \in \mathcal{RM}(\Lambda_t)$, evaluates the gradient of the objective
+# 2. For each candidate $\alpha \in \mathcal{A}_{\mathrm{RM}}(\mathcal{A}_t)$, evaluates the gradient of the objective
 #    with respect to the coefficient $a_\alpha$ (initialized to zero).
 #
 # 3. Selects the candidate with the largest absolute gradient value:
 # ```math
-# \alpha^+ = \arg\max_{\alpha \in \mathcal{RM}(\Lambda_t)} \left|\frac{\partial J}{\partial a_\alpha}\right|
+# \alpha^+ = \arg\max_{\alpha \in \mathcal{A}_{\mathrm{RM}}(\mathcal{A}_t)} \left|\frac{\partial J}{\partial a_\alpha}\right|
 # ```
 #
-# 4. Updates the multi-index set: $\Lambda_{t+1} = \Lambda_t \cup \{\alpha^+\}$ and optimizes all coefficients.
+# 4. Updates the multi-index set: $\mathcal{A}_{t+1} = \mathcal{A}_t \cup \{\alpha^+\}$ and optimizes all coefficients.
 
 # This greedy selection strategy ensures that at each iteration, the term most likely to improve
 # the objective function is added, leading to sparse and efficient representations.
@@ -68,10 +68,12 @@
 
 # ## Usage in TransportMaps.jl
 #
-# The `optimize_adaptive_transportmap` function provides two main interfaces for constructing adaptive transport maps.
+# The `optimize_adaptive_transportmap` function provides interfaces for constructing adaptive transport maps
+# from either samples or a known density function.
 
+# ### Adaptive Maps from Samples
 #
-# The simplest approach uses a fixed train-test split to monitor overfitting:
+# When working with sample data, the simplest approach uses a fixed train-test split to monitor overfitting:
 # ```julia
 # M, histories = optimize_adaptive_transportmap(
 #     samples,             # Matrix of samples (n_samples × d)
@@ -106,8 +108,42 @@
 # - `selected_terms`: Number of terms selected for each component based on cross-validation
 # - `selected_folds`: Which fold had the best performance for each component
 
-# !!! example "Example"
+# !!! example "Example from Samples"
 #     The usage is demonstrated in the example [Banana: Adaptive Transport Map from Samples](@ref).
+
+# ### Adaptive Maps from Density
+#
+# When the target density function is known analytically, adaptive maps can be constructed directly
+# without requiring samples. This approach uses quadrature methods for integration and adaptively
+# enriches the multi-index set across all components simultaneously:
+# ```julia
+# M, history = optimize_adaptive_transportmap(
+#     target,              # AbstractMapDensity: Target density to approximate
+#     quadrature,          # AbstractQuadratureWeights: Quadrature points and weights
+#     maxterms;            # Maximum total number of terms to add across all components
+#     rectifier = Softplus(),
+#     basis = LinearizedHermiteBasis(),
+#     reference_density = Normal(),
+#     optimizer = LBFGS(),
+#     options = Optim.Options(),
+#     validation = nothing  # Optional: validation quadrature for model selection
+# )
+# ```
+
+# Key differences from the sample-based approach:
+# - Uses a single global budget of terms (`maxterms`) shared across all components
+# - Selects which component to enrich at each iteration based on gradient information
+# - Supports optional validation using a separate quadrature rule
+# - Returns the map with the best validation KL divergence (if validation is provided)
+
+# The returned history contains:
+# - `maps`: Array of maps at each iteration
+# - `train_objectives`: Training KL divergence values
+# - `test_objectives`: Validation KL divergence values (if validation provided)
+# - `gradients`: Gradient metrics for all candidates at each iteration
+
+# !!! example "Example from Density"
+#     The usage is demonstrated in the example [Cubic: Adaptive Transport Map from Density](@ref).
 
 # ## References
 #
