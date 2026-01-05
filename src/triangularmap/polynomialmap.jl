@@ -1,3 +1,18 @@
+"""
+    PolynomialMap <: AbstractTriangularMap
+
+Triangular transport map with polynomial basis.
+
+# Fields
+- `components::Vector{PolynomialMapComponent{<:AbstractPolynomialBasis}}`: Vector of map components
+- `reference::MapReferenceDensity`: Reference density of the map
+- `forwarddirection::Symbol`: `:target` for map from density, `:reference` for map from samples
+
+# Constructors
+- `PolynomialMap(dimension::Int,degree::Int, referencetype::Symbol=:normal, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=LinearizedHermiteBasis(), map_type::Symbol=:total)`: Initialize polynomial map for map from density.
+- `DiagonalMap(dimension::Int, degree::Int, referencetype::Symbol=:normal, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=LinearizedHermiteBasis())`: Initialize diagonal map with diagonal structure.
+- `NoMixedMap(dimension::Int, degree::Int, referencetype::Symbol=:normal, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=LinearizedHermiteBasis())`: Initialize diagonal map without mixed terms.
+"""
 mutable struct PolynomialMap <: AbstractTriangularMap
     components::Vector{PolynomialMapComponent{<:AbstractPolynomialBasis}}  # Vector of map components
     reference::MapReferenceDensity
@@ -38,7 +53,7 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         components::Vector{PolynomialMapComponent{T}},
         reference::Distributions.UnivariateDistribution=Normal();
         forwarddirection::Symbol=:target
-        ) where T<:AbstractPolynomialBasis
+    ) where T<:AbstractPolynomialBasis
         return new(components, MapReferenceDensity(reference), forwarddirection)
     end
 end

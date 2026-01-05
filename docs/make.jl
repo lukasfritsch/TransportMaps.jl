@@ -60,11 +60,18 @@ makedocs(
             "Cubic: Adaptive Transport Map from Density" => "Examples/cubic_adaptive_fromdensity.md",
             "Bayesian Inference: BOD" => "Examples/bod_bayesianinference.md",
         ],
-        "API" => "api.md",
+        "API" => [
+            "Bases" => "api/bases.md",
+            "Rectifiers" => "api/rectifiers.md",
+            "Reference and Target Densities" => "api/densities.md",
+            "Quadrature" => "api/quadrature.md",
+            "Maps" => "api/maps.md",
+            "Optimization" => "api/optimization.md"
+        ],
         "References" => "references.md"
     ],
     repo = "https://github.com/lukasfritsch/TransportMaps.jl/blob/{commit}{path}#{line}",
-    checkdocs = :none,  # Changed from :exports to :none since we don't have docstrings yet
+    checkdocs = :export,
     doctestfilters = [r"Ptr{0x[0-9a-f]+}"],
 )
 

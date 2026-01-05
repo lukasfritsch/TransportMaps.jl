@@ -1,3 +1,16 @@
+"""
+    CubicSplineHermiteBasis
+
+Probabilist Hermite polynomial basis with cubic spline edge control.
+
+# Fields
+- `radius::Float64`: radius of the spline for edge control.
+
+# Constructors
+- `CubicSplineHermiteBasis(radius::Float64=3.0)`: Explicit constructor with `radius=3.0`
+- `CubicSplineHermiteBasis(samples::Vector{<:Real})`: Construct radius from from 1st and 99th percentile of samples.
+- `CubicSplineHermiteBasis(density::Distributions.UnivariateDistribution)`: Construct radius from 1st and 99th percentile of reference density.
+"""
 struct CubicSplineHermiteBasis <: AbstractPolynomialBasis
     radius::Float64
 
@@ -32,6 +45,11 @@ function _cubic_weight_derivative(z::Float64, r::Float64)
     end
 end
 
+"""
+    basisfunction(basis::CubicSplineHermiteBasis, αᵢ::Real, zᵢ::Real)
+
+Evaluate `CubicSplineHermiteBasis` with degree `αᵢ` at `zᵢ`.
+"""
 function basisfunction(basis::CubicSplineHermiteBasis, αᵢ::Real, zᵢ::Real)
     n = Int(αᵢ)
     r = basis.radius
@@ -42,6 +60,11 @@ function basisfunction(basis::CubicSplineHermiteBasis, αᵢ::Real, zᵢ::Real)
     end
 end
 
+"""
+    basisfunction_derivative(basis::CubicSplineHermiteBasis, αᵢ::Real, zᵢ::Real)
+
+Evaluate derivative of `CubicSplineHermiteBasis` with degree `αᵢ` at `zᵢ`.
+"""
 function basisfunction_derivative(basis::CubicSplineHermiteBasis, αᵢ::Real, zᵢ::Real)
     n = Int(αᵢ)
     r = basis.radius

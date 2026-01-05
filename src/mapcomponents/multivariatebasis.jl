@@ -1,3 +1,16 @@
+"""
+    MultivariateBasis{T<:AbstractPolynomialBasis}
+
+A multivariate polynomial basis function constructed as a tensor product of univariate polynomial bases.
+
+# Fields
+- `multiindexset::Vector{Int}`: Multi-index representing the polynomial degrees for each dimension
+- `univariatebases::Vector{T}`: Vector of univariate basis functions, one for each dimension
+
+# Constructors
+- `MultivariateBasis(multiindexset::Vector{Int}, ::Type{T}) where T<:AbstractPolynomialBasis`: Create a multivariate basis with the specified multi-index and basis type.
+- `MultivariateBasis(multiindexset::Vector{Int}, basistype::AbstractPolynomialBasis)`: Constructor that accepts a basis instance instead of a type.
+"""
 struct MultivariateBasis{T<:AbstractPolynomialBasis} <: AbstractMultivariateBasis
     multiindexset::Vector{Int}
     univariatebases::Vector{T}  # Store univariate basis for each dimension

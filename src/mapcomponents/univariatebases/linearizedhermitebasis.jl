@@ -1,3 +1,18 @@
+"""
+    LinearizedHermiteBasis
+
+Probabilist Hermite polynomial basis with linearization outside specified bounds.
+
+# Fields
+- `linearizationbounds::Vector{Float64}`: lower and upper bounds for linearization.
+- `normalization::Vector{Float64}`: normalization factors for each degree.
+
+# Constructors
+- `LinearizedHermiteBasis(; lower=-Inf, upper=Inf, normalization=Float64[])`: Explicit constructor with specified bounds and normalization.
+- `LinearizedHermiteBasis(max_degree::Int)`: Construct with default normalization for given maximum degree.
+- `LinearizedHermiteBasis(samples::Vector{<:Real}, max_degree::Int, k::Int)`: Construct bounds from 1st and 99th percentile of samples.
+- `LinearizedHermiteBasis(density::Distributions.UnivariateDistribution, max_degree::Int, k::Int)`: Construct bounds from 1st and 99th percentile of reference density.
+"""
 struct LinearizedHermiteBasis <: AbstractPolynomialBasis
     linearizationbounds::Vector{Float64}
     normalization::Vector{Float64}
@@ -55,6 +70,11 @@ end
     end
 end
 
+"""
+    basisfunction(basis::LinearizedHermiteBasis, αᵢ::Real, zᵢ::Real)
+
+Evaluate `LinearizedHermiteBasis` with degree `αᵢ` at `zᵢ`.
+"""
 @inline function basisfunction(basis::LinearizedHermiteBasis, αᵢ::Real, zᵢ::Real)
     n = Int(αᵢ)
     if !isempty(basis.normalization) && isfinite(basis.linearizationbounds[1]) && isfinite(basis.linearizationbounds[2])
@@ -64,6 +84,11 @@ end
     end
 end
 
+"""
+    basisfunction_derivative(basis::LinearizedHermiteBasis, αᵢ::Real, zᵢ::Real)
+
+Evaluate derivative of `LinearizedHermiteBasis` with degree `αᵢ` at `zᵢ`.
+"""
 @inline function basisfunction_derivative(basis::LinearizedHermiteBasis, αᵢ::Real, zᵢ::Real)
     n = Int(αᵢ)
     if !isempty(basis.normalization) && isfinite(basis.linearizationbounds[1]) && isfinite(basis.linearizationbounds[2])

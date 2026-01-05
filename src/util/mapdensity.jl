@@ -1,3 +1,21 @@
+"""
+    MapTargetDensity
+
+Wrapper for target density functions used in transport map optimization.
+Stores the log-density function and its gradient, with support for automatic
+differentiation, finite differences, or analytical gradients.
+
+# Fields
+- `logdensity::F`: Function computing log-density `log π(x)`
+- `gradient_type::Symbol`: Type of gradient computation (`:analytical`, `:auto_diff`, or `:finite_difference`)
+- `grad_logdensity::G`: Function computing gradient `∇ log π(x)`
+
+# Constructors
+- `MapTargetDensity(logdensity, grad_logdensity)`: Provide both log-density and analytical gradient.
+- `MapTargetDensity(logdensity, :analytical, grad_logdensity)`: Explicitly specify analytical gradient.
+- `MapTargetDensity(logdensity, :auto_diff)`: Use automatic differentiation for gradient.
+- `MapTargetDensity(logdensity, :finite_difference)`: Use finite differences for gradient.
+"""
 struct MapTargetDensity{F,G} <: AbstractMapDensity
     logdensity::F
     gradient_type::Symbol
@@ -33,6 +51,23 @@ struct MapTargetDensity{F,G} <: AbstractMapDensity
     end
 end
 
+"""
+    MapReferenceDensity
+
+Wrapper for reference density (typically standard Gaussian) used in transport maps.
+The reference density defines the space from which samples are drawn and mapped
+to the target distribution.
+
+# Fields
+- `logdensity::F`: Function computing log-density `log ρ(z)`
+- `gradient_type::Symbol`: Type of gradient computation (always `:auto_diff`)
+- `grad_logdensity::G`: Function computing gradient `∇ log ρ(z)`
+- `densitytype::Distributions.UnivariateDistribution`: Univariate density type (e.g., `Normal()`)
+
+# Constructors
+- `MapReferenceDensity()`: Use standard normal distribution (default).
+- `MapReferenceDensity(densitytype::Distributions.UnivariateDistribution)`: Specify reference distribution.
+"""
 struct MapReferenceDensity{F,G} <: AbstractMapDensity
     logdensity::F
     gradient_type::Symbol
@@ -51,6 +86,18 @@ struct MapReferenceDensity{F,G} <: AbstractMapDensity
     end
 end
 
+"""
+    logpdf(density::AbstractMapDensity, x)
+
+Evaluate the log-density at point(s) `x`.
+
+# Arguments
+- `density::AbstractMapDensity`: Target or reference density
+- `x`: Point (vector) or multiple points (matrix, rows are samples) at which to evaluate
+
+# Returns
+- Scalar log-density value for vector input, or vector of log-densities for matrix input
+"""
 logpdf(density::AbstractMapDensity, x::Vector{<:Real}) = density.logdensity(x)
 
 logpdf(density::AbstractMapDensity, x::Real) = logpdf(density, [x])
@@ -65,6 +112,18 @@ function logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
     return logdensities
 end
 
+"""
+    grad_logpdf(density::AbstractMapDensity, x)
+
+Evaluate the gradient of log-density at point(s) `x`.
+
+# Arguments
+- `density::AbstractMapDensity`: Target or reference density
+- `x`: Point (vector) or multiple points (matrix, rows are samples) at which to evaluate
+
+# Returns
+- Gradient vector for vector input, or matrix of gradients (one per row) for matrix input
+"""
 grad_logpdf(density::AbstractMapDensity, x::Vector{<:Real}) = density.grad_logdensity(x)
 
 function grad_logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
@@ -77,6 +136,21 @@ function grad_logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
     return log_gradients
 end
 
+"""
+    pdf(density::AbstractMapDensity, x)
+
+Evaluate the probability density at point(s) `x`.
+
+# Arguments
+- `density::AbstractMapDensity`: Target or reference density
+- `x`: Point (vector) or multiple points (matrix, rows are samples) at which to evaluate
+
+# Returns
+- Scalar density value for vector input, or vector of densities for matrix input
+
+# Note
+This computes `exp(logpdf(density, x))`. For numerical stability, prefer using `logpdf` when possible.
+"""
 pdf(density::AbstractMapDensity, x::Vector{<:Real}) = exp(density.logdensity(x))
 
 pdf(density::AbstractMapDensity, x::Real) = pdf(density, [x])

@@ -1,3 +1,21 @@
+"""
+    LaplaceMap <: AbstractLinearMap
+
+A linear transport map based on the Laplace approximation of a target density.
+
+The Laplace approximation assumes the target density is approximately Gaussian around its mode.
+The map is defined by a location parameter (mode) and a scale parameter (Cholesky factor of the covariance).
+
+# Fields
+- `mode::Vector{Float64}`: Mode or mean vector of the approximation
+- `chol::Matrix{Float64}`: Lower Cholesky factor L of the covariance matrix (Σ = L * L')
+
+# Constructors
+
+- `LaplaceMap(samples::Matrix{Float64})`: Constructs a LaplaceMap from sample data by
+computing the empirical mean and covariance.
+- `LaplaceMap(density::MapTargetDensity, x0::Vector{Float64}; hessian_type::Symbol = :auto_diff, optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())`: Compute a Laplace approximation of a target density by finding the mode via optimization and computing the Hessian at the mode.
+"""
 struct LaplaceMap <: AbstractLinearMap
     mode::Vector{Float64}  # Mode / mean vector
     chol::Matrix{Float64}  # Cholesky decomposition of the covariance matrix

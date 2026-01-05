@@ -1,7 +1,8 @@
 """
     OptimizationHistory
 
-A data structure to store the iteration history of adaptive transport map optimization.
+A data structure to store the iteration history of adaptive transport map optimization from
+samples.
 
 # Fields
 - `terms::Vector{Matrix{Int64}}`: Multi-index sets at each iteration
@@ -56,7 +57,13 @@ end
 """
     OptimizationResult
 
-A data structure to store the optimization results for each component of a transport map.
+A data structure to store the optimization results for each component of a transport map
+when optimizing the map from samples.
+
+# Fields
+- `train_objectives::Vector{Float64}`: Train objective for each component
+- `test_objectives::Vector{Float64}`: Test objective for each component
+- `optimization_results::Vector{Optim.MultivariateOptimizationResults}`: Result from optimization with `Optim.jl`
 """
 struct OptimizationResult
     train_objectives::Vector{Float64}
@@ -93,7 +100,20 @@ function Base.show(io::IO, result::OptimizationResult)
     end
 end
 
+"""
+    MapOptimizationResult
 
+A data struct to store the iteration history of adaptive transport map optimization from
+density.
+
+# Fields
+- `maps::Vector{PolynomialMap}`: Maps for each iteration
+- `train_objectives::Vector{Float64}`: Train objectives for each iteration
+- `test_objectives::Vector{Float64}`: Test objectives for each iteration
+- `gradients::Vector{Vector{Float64}}`: Gradients of train objectives
+- `optimization_results::Vector{Optim.MultivariateOptimizationResults}`: Results of optimization with `Optim.jl`
+
+"""
 struct MapOptimizationResult
     maps::Vector{PolynomialMap}
     train_objectives::Vector{Float64}

@@ -71,7 +71,7 @@ function optimize_adaptive_transportmap(
 end
 
 """
-    optimize_adaptive_transportmap(samples, maxterms, k_folds; kwargs...)
+    optimize_adaptive_transportmap(samples, maxterms, k_folds, lm, rectifier, basis; optimizer, options)
 
 Adaptively optimize a triangular transport map using k-fold cross-validation to
 select the number of terms per component.
@@ -80,18 +80,19 @@ select the number of terms per component.
 - `samples::Matrix{Float64}`: Sample data where rows are samples and columns are dimensions
 - `maxterms::Vector{Int64}`: Upper bound on the number of terms to consider for each component
 - `k_folds::Int`: Number of folds to use for cross-validation
+- `lm::AbstractLinearMap`: Linear map to standardize samples (default: `LinearMap(samples)`)
+- `rectifier::AbstractRectifierFunction`: Rectifier function to use (default: `Softplus()`)
+- `basis::AbstractPolynomialBasis`: Polynomial basis (default: `LinearizedHermiteBasis()`)
 
 # Keyword Arguments
-- `lm::AbstractLinearMap=LinearMap(samples)`: Linear map to standardize samples
-- `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
-- `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
 - `options::Optim.Options=Optim.Options()`: Optimizer options
 
 # Returns
-- `M::PolynomialMap`: The optimized triangular transport map trained on all samples
+- `ComposedMap{LinearMap, PolynomialMap}`: The optimized triangular transport map trained on all samples
 - `fold_histories::Vector{Vector{OptimizationHistory}}`: Optimization history for each component and fold
 - `selected_terms::Vector{Int}`: Number of terms selected for each component
+- `selected_fold::Vector{Int}`: Index of the best fold for each component
 """
 function optimize_adaptive_transportmap(
     samples::Matrix{Float64},

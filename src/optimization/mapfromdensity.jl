@@ -1,9 +1,4 @@
-"""
-    kldivergence(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights)
-
-Compute the Kullback-Leibler divergence between the polynomial map and a target density.
-
-"""
+# Kullback-Leibler divergence between the polynomial map and a target density
 function kldivergence(
     M::PolynomialMap,
     target::AbstractMapDensity,
@@ -107,8 +102,7 @@ end
 
 """
     optimize!(M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
-              optimizer::Optim.AbstractOptimizer = LBFGS(),
-              options::Optim.Options = Optim.Options())
+              optimizer, options)
 
 Optimize polynomial map coefficients to minimize KL divergence to a target density.
 
@@ -117,9 +111,9 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 - `target::AbstractMapDensity`: Target map density object (provides the target density π(x) and any needed operations).
 - `quadrature::AbstractQuadratureWeights`: Quadrature points and weights used for numerical integration.
 
-# Optional keyword arguments:
-- `optimizer::Optim.AbstractOptimizer = LBFGS()`: Optimizer from Optim.jl to use (default: `LBFGS()`).
-- `options::Optim.Options = Optim.Options()`: Options passed to the optimizer (default: `Optim.Options()`).
+# Keyword Arguments
+- `optimizer`: Optimizer from Optim.jl to use (default: `LBFGS()`).
+- `options`: Options passed to the optimizer (default: `Optim.Options()`).
 
 # Returns
 - Optimization result from Optim.jl. The optimized coefficients are written back into `M`.
@@ -167,7 +161,25 @@ function optimize!(
     return result
 end
 
-# Compute the variance diagnostic for the polynomial map
+"""
+    variance_diagnostic(M::PolynomialMap, target::MapTargetDensity, Z::AbstractArray{<:Real})
+
+Compute a variance-based diagnostic for assessing the quality of a transport map.
+
+The diagnostic measures the variance of the log-ratio between the pushforward density
+and the reference density. A smaller variance indicates a better approximation of the
+target density by the transport map.
+
+# Arguments
+- `M::PolynomialMap`: The transport map to be evaluated
+- `target::MapTargetDensity`: The target density that the map should approximate
+- `Z::AbstractArray{<:Real}`: Sample points from the reference distribution, where each
+  row is a sample and columns correspond to dimensions
+
+# Returns
+- `Float64`: The computed variance diagnostic
+
+"""
 function variance_diagnostic(
     M::PolynomialMap,
     target::MapTargetDensity,

@@ -123,7 +123,7 @@ function objective_gradient!(Mk::PolynomialMapComponent, precomp::PrecomputedBas
 end
 
 """
-    optimize!(M::PolynomialMap, samples::Matrix{Float64};
+    optimize!(M::PolynomialMap, samples::Matrix{Float64}, lm::AbstractLinearMap=LinearMap();
               optimizer::Optim.AbstractOptimizer = LBFGS(),
               options::Optim.Options = Optim.Options(),
               test_fraction::Float64 = 0.0)
@@ -133,15 +133,15 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 # Arguments
 - `M::PolynomialMap`: The polynomial map to optimize.
 - `samples::Matrix{Float64}`: A matrix of sample data used to initialize and fit the map. Columns are interpreted as components/dimensions and rows as individual sample points.
-- `lm::LinearMap`: A linear map used to standardize the samples before optimization (default: identity map).
+- `lm::AbstractLinearMap`: A linear map used to standardize the samples before optimization (default: `LinearMap()`, identity map).
 
-# Optional keyword arguments:
-- `optimizer::Optim.AbstractOptimizer = LBFGS()`: Optimizer from Optim.jl to use (default: `LBFGS()`).
-- `options::Optim.Options = Optim.Options()`: Options passed to the optimizer (default: `Optim.Options()`).
-- `test_fraction::Float64 = 0.0`: Fraction of samples to hold out for testing/validation (default: 0.0, i.e. no test split).
+# Keyword Arguments
+- `optimizer::Optim.AbstractOptimizer`: Optimizer from Optim.jl to use (default: `LBFGS()`).
+- `options::Optim.Options`: Options passed to the optimizer (default: `Optim.Options()`).
+- `test_fraction::Float64`: Fraction of samples to hold out for testing/validation (default: `0.0`, i.e. no test split).
 
 # Returns
-- Optimization result from Optim.jl. The optimized coefficients are written back into `M`.
+- `OptimizationResult`: Optimization results containing training and test objectives for each component. The optimized coefficients are written back into `M`.
 """
 function optimize!(
     M::PolynomialMap,
