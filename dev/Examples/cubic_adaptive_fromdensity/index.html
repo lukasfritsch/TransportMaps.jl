@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Cubic: Adaptive Transport Map from Density · TransportMaps.jl</title><meta name="title" content="Cubic: Adaptive Transport Map from Density · TransportMaps.jl"/><meta property="og:title" content="Cubic: Adaptive Transport Map from Density · TransportMaps.jl"/><meta property="twitter:title" content="Cubic: Adaptive Transport Map from Density · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/cubic_adaptive_fromdensity/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Examples/cubic_adaptive_fromdensity/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Examples/cubic_adaptive_fromdensity/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../../Manuals/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../Manuals/basis_functions/">Basis Functions</a></li><li><a class="tocitem" href="../../Manuals/map_parameterization/">Map Parameterization</a></li><li><a class="tocitem" href="../../Manuals/quadrature_methods/">Quadrature Methods</a></li><li><a class="tocitem" href="../../Manuals/optimization/">Optimization</a></li><li><a class="tocitem" href="../../Manuals/conditional_densities/">Conditional Densities and Samples</a></li><li><a class="tocitem" href="../../Manuals/adaptive_transport_map/">Adaptive Transport Maps</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../banana_mapfromdensity/">Banana: Map from Density</a></li><li><a class="tocitem" href="../banana_mapfromsamples/">Banana: Map from Samples</a></li><li><a class="tocitem" href="../banana_adaptive/">Banana: Adaptive Transport Map from Samples</a></li><li class="is-active"><a class="tocitem" href>Cubic: Adaptive Transport Map from Density</a></li><li><a class="tocitem" href="../bod_bayesianinference/">Bayesian Inference: BOD</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api/bases/">Bases</a></li><li><a class="tocitem" href="../../api/rectifiers/">Rectifiers</a></li><li><a class="tocitem" href="../../api/densities/">Reference and Target Densities</a></li><li><a class="tocitem" href="../../api/quadrature/">Quadrature</a></li><li><a class="tocitem" href="../../api/maps/">Maps</a></li><li><a class="tocitem" href="../../api/optimization/">Optimization</a></li></ul></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Cubic: Adaptive Transport Map from Density</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Cubic: Adaptive Transport Map from Density</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/Examples/cubic_adaptive_fromdensity.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Cubic:-Adaptive-Transport-Map-from-Density"><a class="docs-heading-anchor" href="#Cubic:-Adaptive-Transport-Map-from-Density">Cubic: Adaptive Transport Map from Density</a><a id="Cubic:-Adaptive-Transport-Map-from-Density-1"></a><a class="docs-heading-anchor-permalink" href="#Cubic:-Adaptive-Transport-Map-from-Density" title="Permalink"></a></h1><p>This example demonstrates the adaptive map construction from a given density <span>$\pi(x)$</span>. The target is given by the unnormalized joint density</p><p class="math-container">\[p(x) = \phi(x_1) \cdot \phi(x_2 - x_1^3).\]</p><p>This density is similar to the banana density, however, it has a cubic instead of a quadratic term in the second term of the product.</p><h3 id="Key-Differences-from-Sample-Based-ATM"><a class="docs-heading-anchor" href="#Key-Differences-from-Sample-Based-ATM">Key Differences from Sample-Based ATM</a><a id="Key-Differences-from-Sample-Based-ATM-1"></a><a class="docs-heading-anchor-permalink" href="#Key-Differences-from-Sample-Based-ATM" title="Permalink"></a></h3><p>Unlike the sample-based adaptive transport map approach (see <a href="../banana_adaptive/#Banana:-Adaptive-Transport-Map-from-Samples">Banana: Adaptive Transport Map from Samples</a>), this method constructs the map directly from the analytical density function without requiring samples. The key differences are:</p><ul><li><strong>Global term budget</strong>: Instead of specifying maximum terms per component, we provide a single global budget that is shared across all components. The algorithm decides which component to enrich at each iteration.</li><li><strong>Quadrature-based optimization</strong>: Uses numerical integration via quadrature rules rather than empirical sample averages to evaluate the KL divergence.</li><li><strong>Simultaneous enrichment</strong>: At each iteration, the algorithm evaluates candidate terms from all components and selects the one with the largest gradient magnitude, leading to a more flexible enrichment strategy.</li><li><strong>No cross-validation</strong>: The density-based approach uses a simple train-validation split rather than k-fold cross-validation, making it more computationally efficient.</li></ul><p>More information is found in the manual page <a href="../../Manuals/adaptive_transport_map/#Adaptive-Transport-Maps">Adaptive Transport Maps</a>.</p><p>We start with loading the necessary packages:</p><pre><code class="language-julia hljs">using TransportMaps
+using Distributions
+using LinearAlgebra
+using Plots</code></pre><h3 id="Defining-the-Target-Density"><a class="docs-heading-anchor" href="#Defining-the-Target-Density">Defining the Target Density</a><a id="Defining-the-Target-Density-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-Target-Density" title="Permalink"></a></h3><p>We define the log-density function and wrap it in a <code>MapTargetDensity</code> object. The <code>:ad</code> argument indicates that automatic differentiation should be used for computing gradients.</p><pre><code class="language-julia hljs">target_density(x) = logpdf(Normal(0, 0.5), x[1]) + logpdf(Normal(0, 0.1), x[2] - x[1]^3)
+
+target = MapTargetDensity(target_density, :ad)</code></pre><h3 id="Choosing-a-Quadrature-Method"><a class="docs-heading-anchor" href="#Choosing-a-Quadrature-Method">Choosing a Quadrature Method</a><a id="Choosing-a-Quadrature-Method-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-a-Quadrature-Method" title="Permalink"></a></h3><p>For density-based ATM, we need to specify quadrature points and weights for numerical integration. Here, we use Smolyak sparse grid quadrature with level 3 in 2 dimensions, which provides a good balance between accuracy and computational cost.</p><pre><code class="language-julia hljs">quadrature = SparseSmolyakWeights(3, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">SparseSmolyakWeights:
+  Number of points: 49
+  Dimensions: 2
+  Quadrature type: Sparse Smolyak (Gauss-Hermite)
+  Reference measure: Standard Gaussian
+  Weight range: [-0.0740253073352043, 0.2440975028949389]
+</code></pre><h3 id="Adaptive-Map-Construction"><a class="docs-heading-anchor" href="#Adaptive-Map-Construction">Adaptive Map Construction</a><a id="Adaptive-Map-Construction-1"></a><a class="docs-heading-anchor-permalink" href="#Adaptive-Map-Construction" title="Permalink"></a></h3><p>We construct the adaptive transport map with a global budget of 10 terms (including the initial constant terms). The algorithm will iteratively add terms to the components that maximize the reduction in KL divergence.</p><p>For model selection, we provide validation quadrature points using Latin hypercube sampling. The algorithm returns the map with the best validation KL divergence.</p><pre><code class="language-julia hljs">T, hist = optimize_adaptive_transportmap(target, quadrature, 10;
+    validation = LatinHypercubeWeights(100, 2))
+display(hist)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Initialized map with 2 initial coefficients.
+Initial KL divergence (train): 107.73779227412545
+Initial KL divergence (valid): 106.28268388164106
+
+Term 3 / 10
+   Evaluating 3 candidates...
+   Best candidate: Component 1, adding term
+   Gradient magnitude: 255.03292359035316
+   KL divergence (train): 24.916202549808624
+   KL divergence (valid): 21.15561406738053
+
+Term 4 / 10
+   Evaluating 3 candidates...
+   Best candidate: Component 2, adding term
+   Gradient magnitude: 33.93601155755287
+   KL divergence (train): 3.329623966996172
+   KL divergence (valid): 3.266929403133024
+
+Term 5 / 10
+   Evaluating 3 candidates...
+   Best candidate: Component 2, adding term
+   Gradient magnitude: 3.9426851026819945
+   KL divergence (train): 3.2160766301156856
+   KL divergence (valid): 3.0705041053294364
+
+Term 6 / 10
+   Evaluating 4 candidates...
+   Best candidate: Component 2, adding term
+   Gradient magnitude: 9.190091216834806e-10
+   KL divergence (train): 3.2160766301156856
+   KL divergence (valid): 3.0705041053294364
+
+Term 7 / 10
+   Evaluating 4 candidates...
+   Best candidate: Component 2, adding term
+   Gradient magnitude: 4.091440465170177
+   KL divergence (train): 2.913553432115592
+   KL divergence (valid): 2.879447871962648
+
+Term 8 / 10
+   Evaluating 4 candidates...
+   Best candidate: Component 2, adding term
+   Gradient magnitude: 2.8244284199826606e-10
+   KL divergence (train): 2.913553432115592
+   KL divergence (valid): 2.879447871962648
+
+Term 9 / 10
+   Evaluating 4 candidates...
+   Best candidate: Component 2, adding term
+   Gradient magnitude: 0.9447513910864436
+   KL divergence (train): 2.8626416695459453
+   KL divergence (valid): 2.9319080639921093
+
+Term 10 / 10
+   Evaluating 4 candidates...
+   Best candidate: Component 1, adding term
+   Gradient magnitude: 8.067433894882248e-9
+   KL divergence (train): 2.8626416695459453
+   KL divergence (valid): 2.9319080639921093
+
+Best iteration: 6
+Final KL divergence (train): 2.913553432115592
+Final KL divergence (valid): 2.879447871962648</code></pre><p>The function uses default parameters:</p><ul><li><code>rectifier = Softplus()</code>: Monotonicity-enforcing function</li><li><code>basis = LinearizedHermiteBasis()</code>: Polynomial basis (Hermite polynomials with linearization)</li><li><code>reference_density = Normal()</code>: Reference distribution (standard normal)</li></ul><h3 id="Convergence-Analysis"><a class="docs-heading-anchor" href="#Convergence-Analysis">Convergence Analysis</a><a id="Convergence-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Convergence-Analysis" title="Permalink"></a></h3><p>The optimization history allows us to analyze the convergence behavior and model selection. We can plot both the training and validation KL divergence over iterations, as well as the maximum gradient magnitude among all candidate terms at each iteration. The gradient plot shows the maximum absolute gradient value among all candidate terms at each iteration. This indicates how much improvement we expect from adding the best term.</p><pre><code class="language-julia hljs">convergence_kl = plot(hist.train_objectives, label=&quot;Train Objective&quot;, xlabel=&quot;Iteration&quot;,
+    ylabel=&quot;KL divergence&quot;, title=&quot;Objective Value vs Iteration&quot;, marker=:o)
+plot!(convergence_kl, hist.test_objectives, label=&quot;Test Objective&quot;, marker=:o)
+yaxis!(:log10)
+
+grad_norms = maximum.(hist.gradients[2:end])
+
+convergence_grad = plot(2:length(hist.gradients), grad_norms; xlabel=&quot;Iteration&quot;,
+    ylabel=&quot;Maximum Gradient&quot;, label=nothing, marker=:o, title=&quot;Gradient&quot;)
+yaxis!(:log10)
+xlims!(xlims(convergence_kl))
+
+plot(convergence_kl, convergence_grad, layout=(2, 1))</code></pre><p><img src="../cubic-density-convergence.svg" alt="Cubic density: Convergence"/></p><p>We observe that:</p><ul><li>The training objective decreases monotonically as expected</li><li>The validation objective reaches a minimum and then may increase, indicating potential overfitting</li><li>The gradient magnitudes decrease over iterations, showing diminishing returns from adding new terms</li><li>The algorithm automatically selects the model with the best validation performance. Here, it is the map fitted at iteration 7.</li></ul><p>Generate samples and compare response</p><pre><code class="language-julia hljs">samples_z = randn(2000, 2)
+mapped_samples = evaluate(T, samples_z)</code></pre><p>We compare the computed map with the target pdf</p><pre><code class="language-julia hljs">x1 = -2:0.01:2
+x2 = -2:0.01:2
+
+pdf_val = [pdf(target, [x₁, x₂]) for x₂ in x2, x₁ in x1]
+
+s = scatter(mapped_samples[:, 1], mapped_samples[:, 2],
+    label=&quot;Mapped Samples&quot;, alpha=0.5, color=1,
+    xlabel=&quot;x₁&quot;, ylabel=&quot;x₂&quot;, title=&quot;Target Density and Mapped Samples&quot;)
+
+contour!(x1, x2, pdf_val)</code></pre><p><img src="../cubic-density.svg" alt="Cubic density: TM samples and density contour"/></p><h3 id="Selected-Multi-Index-Sets"><a class="docs-heading-anchor" href="#Selected-Multi-Index-Sets">Selected Multi-Index Sets</a><a id="Selected-Multi-Index-Sets-1"></a><a class="docs-heading-anchor-permalink" href="#Selected-Multi-Index-Sets" title="Permalink"></a></h3><p>We can visualize which polynomial terms were selected for each map component. The adaptive algorithm automatically determines the sparsity pattern based on the gradient information, potentially discovering non-trivial interaction structures.</p><pre><code class="language-julia hljs">ind_atm = getmultiindexsets(T[1])
+MIS1 = scatter(ind_atm[:, 1], zeros(length(ind_atm)), ms=30, legend=false)
+plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, 0.5),
+    aspect_ratio=1, xlabel=&quot;Multi-index α₁&quot;, ylabel=&quot;&quot;, title=&quot;Multi-indices Component 1&quot;)
+xticks!(0:maximum(ind_atm[:, 1]))
+yticks!(0:0)
+
+ind_atm = getmultiindexsets(T[2])
+MIS2 = scatter(ind_atm[:, 1], ind_atm[:, 2], ms=30, legend=false)
+plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, maximum(ind_atm[:, 2]) + 0.5),
+    aspect_ratio=1, xlabel=&quot;Multi-index α₁&quot;, ylabel=&quot;Multi-index α₂&quot;,
+    title=&quot;Multi-indices Component 2&quot;)
+xticks!(0:maximum(ind_atm[:, 1]))
+yticks!(0:maximum(ind_atm[:, 2]))
+
+plot(MIS1, MIS2, layout=(2, 1))</code></pre><p><img src="../cubic-density-terms.svg" alt="Cubic density: Terms in the multi-index sets of the two map components"/></p><p>The selected terms reveal the structure the algorithm discovered:</p><ul><li>Component 1 only contains univariate terms due to the triangular structure, i.e., <span>$T^1(z_1)$</span></li><li>Component 2 also only contains terms with no-mixed multivariate polynomials. This means, <span>$T^2$</span> does depend on both <span>$z_1$</span> and <span>$z_2$</span>, but there are no non-linear interaction terms.</li><li>The adaptive approach avoids unnecessary terms, resulting in a sparse representation. This is shown by the final form which contains 7 terms instead of the maximum possible 10 terms.</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_adaptive/">« Banana: Adaptive Transport Map from Samples</a><a class="docs-footer-nextpage" href="../bod_bayesianinference/">Bayesian Inference: BOD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 6 January 2026 08:08">Tuesday 6 January 2026</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

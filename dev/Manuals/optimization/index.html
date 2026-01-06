@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimization · TransportMaps.jl</title><meta name="title" content="Optimization · TransportMaps.jl"/><meta property="og:title" content="Optimization · TransportMaps.jl"/><meta property="twitter:title" content="Optimization · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Manuals/optimization/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Manuals/optimization/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Manuals/optimization/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../getting_started/">Getting Started</a></li><li><a class="tocitem" href="../basis_functions/">Basis Functions</a></li><li><a class="tocitem" href="../map_parameterization/">Map Parameterization</a></li><li><a class="tocitem" href="../quadrature_methods/">Quadrature Methods</a></li><li class="is-active"><a class="tocitem" href>Optimization</a><ul class="internal"><li><a class="tocitem" href="#Map-from-density"><span>Map-from-density</span></a></li><li><a class="tocitem" href="#Map-from-samples"><span>Map-from-samples</span></a></li></ul></li><li><a class="tocitem" href="../conditional_densities/">Conditional Densities and Samples</a></li><li><a class="tocitem" href="../adaptive_transport_map/">Adaptive Transport Maps</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../Examples/banana_mapfromdensity/">Banana: Map from Density</a></li><li><a class="tocitem" href="../../Examples/banana_mapfromsamples/">Banana: Map from Samples</a></li><li><a class="tocitem" href="../../Examples/banana_adaptive/">Banana: Adaptive Transport Map from Samples</a></li><li><a class="tocitem" href="../../Examples/bod_bayesianinference/">Bayesian Inference: BOD</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manuals</a></li><li class="is-active"><a href>Optimization</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimization</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/Manuals/optimization.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimization-of-the-Map-Coefficients"><a class="docs-heading-anchor" href="#Optimization-of-the-Map-Coefficients">Optimization of the Map Coefficients</a><a id="Optimization-of-the-Map-Coefficients-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization-of-the-Map-Coefficients" title="Permalink"></a></h1><p>A crucial step in constructing transport maps is the optimization of the map coefficients, which determine how well the map represents the target distribution. This process can be approached in two distinct ways, depending on the available information about the target distribution [<a href="../../references/#marzouk2016">1</a>].</p><h2 id="Map-from-density"><a class="docs-heading-anchor" href="#Map-from-density">Map-from-density</a><a id="Map-from-density-1"></a><a class="docs-heading-anchor-permalink" href="#Map-from-density" title="Permalink"></a></h2><p>One way to construct a transport map is to directly optimize its parameters based on the (unnormalized) target density, as shown in <a href="../../Examples/banana_mapfromdensity/#Banana:-Map-from-Density">Banana: Map from Density</a>. This approach requires access to the target density function and uses quadrature schemes to approximate integrals, as introduced in <a href="../quadrature_methods/#Quadrature-Methods">Quadrature Methods</a>.</p><p>Formally, we define the following optimization problem to determine the coefficients <span>$\boldsymbol{a}$</span> of the parameterized map <span>$T$</span>:</p><p class="math-container">\[\min_{\boldsymbol{a}} \sum_{i=1}^{N} w_{q,i}\Big[-\log\pi\bigl(T(\boldsymbol{a},\boldsymbol{z}_{q,i})\bigr)-\log |\det\nabla T(\boldsymbol{a},\boldsymbol{z}_{q,i}) |\Big]\]</p><p>As noted by [<a href="../../references/#marzouk2016">1</a>], this optimization problem is generally non-convex. Specifically, it is only convex when the target density <span>$\pi(\boldsymbol{x})$</span> is log-concave. Especially in Bayesian inference, where the target density represents the posterior density, the function is not log-concave, resulting in a non-convex optimization problem.</p><p>In this package, map optimization is performed with the help of <a href="https://julianlsolvers.github.io/Optim.jl/stable/"><code>Optim.jl</code></a>, and support a wide range of optimizers and options (such as convergence criteria and printing preferences). Specifically, we can pass our <code>optimize!</code> function the desired <code>optimizer</code> and <code>options</code>. For a full overview of available options, see the <a href="https://julianlsolvers.github.io/Optim.jl/stable/user/config/">Optim.jl configuration documentation</a>.</p><p>To perform the optimization of the map coefficients, we call:</p><pre><code class="language-julia hljs">optimize!(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights;
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimization · TransportMaps.jl</title><meta name="title" content="Optimization · TransportMaps.jl"/><meta property="og:title" content="Optimization · TransportMaps.jl"/><meta property="twitter:title" content="Optimization · TransportMaps.jl"/><meta name="description" content="Documentation for TransportMaps.jl."/><meta property="og:description" content="Documentation for TransportMaps.jl."/><meta property="twitter:description" content="Documentation for TransportMaps.jl."/><meta property="og:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Manuals/optimization/"/><meta property="twitter:url" content="https://lukasfritsch.github.io/TransportMaps.jl/Manuals/optimization/"/><link rel="canonical" href="https://lukasfritsch.github.io/TransportMaps.jl/Manuals/optimization/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TransportMaps.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../getting_started/">Getting Started</a></li><li><a class="tocitem" href="../basis_functions/">Basis Functions</a></li><li><a class="tocitem" href="../map_parameterization/">Map Parameterization</a></li><li><a class="tocitem" href="../quadrature_methods/">Quadrature Methods</a></li><li class="is-active"><a class="tocitem" href>Optimization</a><ul class="internal"><li><a class="tocitem" href="#Map-from-density"><span>Map-from-density</span></a></li><li><a class="tocitem" href="#Map-from-samples"><span>Map-from-samples</span></a></li></ul></li><li><a class="tocitem" href="../conditional_densities/">Conditional Densities and Samples</a></li><li><a class="tocitem" href="../adaptive_transport_map/">Adaptive Transport Maps</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../Examples/banana_mapfromdensity/">Banana: Map from Density</a></li><li><a class="tocitem" href="../../Examples/banana_mapfromsamples/">Banana: Map from Samples</a></li><li><a class="tocitem" href="../../Examples/banana_adaptive/">Banana: Adaptive Transport Map from Samples</a></li><li><a class="tocitem" href="../../Examples/cubic_adaptive_fromdensity/">Cubic: Adaptive Transport Map from Density</a></li><li><a class="tocitem" href="../../Examples/bod_bayesianinference/">Bayesian Inference: BOD</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api/bases/">Bases</a></li><li><a class="tocitem" href="../../api/rectifiers/">Rectifiers</a></li><li><a class="tocitem" href="../../api/densities/">Reference and Target Densities</a></li><li><a class="tocitem" href="../../api/quadrature/">Quadrature</a></li><li><a class="tocitem" href="../../api/maps/">Maps</a></li><li><a class="tocitem" href="../../api/optimization/">Optimization</a></li></ul></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manuals</a></li><li class="is-active"><a href>Optimization</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimization</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lukasfritsch/TransportMaps.jl/blob/main/docs/literate/Manuals/optimization.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimization-of-the-Map-Coefficients"><a class="docs-heading-anchor" href="#Optimization-of-the-Map-Coefficients">Optimization of the Map Coefficients</a><a id="Optimization-of-the-Map-Coefficients-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization-of-the-Map-Coefficients" title="Permalink"></a></h1><p>A crucial step in constructing transport maps is the optimization of the map coefficients, which determine how well the map represents the target distribution. This process can be approached in two distinct ways, depending on the available information about the target distribution [<a href="../../references/#marzouk2016">1</a>].</p><h2 id="Map-from-density"><a class="docs-heading-anchor" href="#Map-from-density">Map-from-density</a><a id="Map-from-density-1"></a><a class="docs-heading-anchor-permalink" href="#Map-from-density" title="Permalink"></a></h2><p>One way to construct a transport map is to directly optimize its parameters based on the (unnormalized) target density, as shown in <a href="../../Examples/banana_mapfromdensity/#Banana:-Map-from-Density">Banana: Map from Density</a>. This approach requires access to the target density function and uses quadrature schemes to approximate integrals, as introduced in <a href="../quadrature_methods/#Quadrature-Methods">Quadrature Methods</a>.</p><p>Formally, we define the following optimization problem to determine the coefficients <span>$\boldsymbol{a}$</span> of the parameterized map <span>$T$</span>:</p><p class="math-container">\[\min_{\boldsymbol{a}} \sum_{i=1}^{N} w_{q,i}\Big[-\log\pi\bigl(T(\boldsymbol{a},\boldsymbol{z}_{q,i})\bigr)-\log |\det\nabla T(\boldsymbol{a},\boldsymbol{z}_{q,i}) |\Big]\]</p><p>As noted by [<a href="../../references/#marzouk2016">1</a>], this optimization problem is generally non-convex. Specifically, it is only convex when the target density <span>$\pi(\boldsymbol{x})$</span> is log-concave. Especially in Bayesian inference, where the target density represents the posterior density, the function is not log-concave, resulting in a non-convex optimization problem.</p><p>In this package, map optimization is performed with the help of <a href="https://julianlsolvers.github.io/Optim.jl/stable/"><code>Optim.jl</code></a>, and support a wide range of optimizers and options (such as convergence criteria and printing preferences). Specifically, we can pass our <code>optimize!</code> function the desired <code>optimizer</code> and <code>options</code>. For a full overview of available options, see the <a href="https://julianlsolvers.github.io/Optim.jl/stable/user/config/">Optim.jl configuration documentation</a>.</p><p>To perform the optimization of the map coefficients, we call:</p><pre><code class="language-julia hljs">optimize!(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights;
   optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())</code></pre><p>We have to provide the polynomial map <code>M</code>, the target density function, and a quadrature scheme. Optionally, we can specify the optimizer (default is <code>LBFGS()</code>) and options.</p><div class="admonition is-info" id="Set-initial-coefficients-f41ef1f83c5d5dc5"><header class="admonition-header">Set initial coefficients<a class="admonition-anchor" href="#Set-initial-coefficients-f41ef1f83c5d5dc5" title="Permalink"></a></header><div class="admonition-body"><p>As the starting point of the optimization, the map coefficients can be set using <code>setcoefficients!(M, coeffs)</code>, where <code>coeffs</code> is a vector of coefficients.</p></div></div><h3 id="Usage"><a class="docs-heading-anchor" href="#Usage">Usage</a><a id="Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Usage" title="Permalink"></a></h3><p>First we load the packages:</p><pre><code class="language-julia hljs">using TransportMaps
 using Optim
 using Distributions
-using Plots</code></pre><p>Then, define the target density and quadrature scheme. Here, we use the same banana-shaped density as in <a href="../../Examples/banana_mapfromdensity/#Banana:-Map-from-Density">Banana: Map from Density</a>:</p><pre><code class="language-julia hljs">banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+using Plots</code></pre><p>Then, define the target density and quadrature scheme. Here, we use the same banana-shaped density as in <a href="../../Examples/banana_mapfromdensity/#Banana:-Map-from-Density">Banana: Map from Density</a>:</p><pre><code class="language-julia hljs">banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
 target = MapTargetDensity(banana_density, :auto_diff)
 quadrature = GaussHermiteWeights(10, 2)</code></pre><p>Set optimization options to print the trace every 20 iterations:</p><pre><code class="language-julia hljs">opts_trace = Optim.Options(iterations=200, show_trace=true, show_every=20, store_trace=true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">                x_abstol = 0.0
                 x_reltol = 0.0
@@ -34,107 +34,105 @@ quadrature = GaussHermiteWeights(10, 2)</code></pre><p>Set optimization options 
 </code></pre><p>We will try the following optimizers from <code>Optim.jl</code>, ordered from simplest to most sophisticated:</p><h3 id="Gradient-Descent"><a class="docs-heading-anchor" href="#Gradient-Descent">Gradient Descent</a><a id="Gradient-Descent-1"></a><a class="docs-heading-anchor-permalink" href="#Gradient-Descent" title="Permalink"></a></h3><p>The most basic optimization algorithm, Gradient Descent iteratively moves in the direction of the negative gradient. It is simple and robust, but can be slow to converge, especially for ill-conditioned problems.</p><pre><code class="language-julia hljs">M_gd = PolynomialMap(2, 2)
 res_gd = optimize!(M_gd, target, quadrature; optimizer=GradientDescent(), options=opts_trace)
 println(res_gd)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
-     0     3.397270e+00     4.787106e-01
- * time: 4.8160552978515625e-5
-    20     2.850583e+00     4.636258e-02
- * time: 0.7242681980133057
-    40     2.843996e+00     1.986536e-02
- * time: 0.8519182205200195
-    60     2.842033e+00     1.447127e-02
- * time: 0.9853930473327637
-    80     2.841016e+00     1.080135e-02
- * time: 1.1182332038879395
-   100     2.840453e+00     8.155141e-03
- * time: 1.2516541481018066
-   120     2.840135e+00     6.229660e-03
- * time: 1.4063100814819336
-   140     2.839953e+00     4.801671e-03
- * time: 1.5349500179290771
-   160     2.839845e+00     3.723620e-03
- * time: 1.6633059978485107
-   180     2.839781e+00     2.900462e-03
- * time: 1.7917711734771729
-   200     2.839742e+00     2.266765e-03
- * time: 1.9201030731201172
+     0     3.397609e+00     4.804530e-01
+ * time: 3.695487976074219e-5
+    20     2.846750e+00     3.244379e-02
+ * time: 1.0951879024505615
+    40     2.842356e+00     1.542633e-02
+ * time: 1.5480577945709229
+    60     2.841177e+00     1.139529e-02
+ * time: 1.9971308708190918
+    80     2.840543e+00     8.562586e-03
+ * time: 2.44647479057312
+   100     2.840190e+00     6.510633e-03
+ * time: 2.8972787857055664
+   120     2.839988e+00     4.992487e-03
+ * time: 3.346859931945801
+   140     2.839870e+00     3.852142e-03
+ * time: 3.79642391204834
+   160     2.839800e+00     2.986022e-03
+ * time: 4.244998931884766
+   180     2.839758e+00     2.322721e-03
+ * time: 4.697012901306152
+   200     2.839733e+00     1.811566e-03
+ * time: 5.148984909057617
  * Status: failure (reached maximum number of iterations)
 
  * Candidate solution
-    Final objective value:     2.839742e+00
+    Final objective value:     2.839733e+00
 
  * Found with
     Algorithm:     Gradient Descent
 
  * Convergence measures
-    |x - x&#39;|               = 5.15e-04 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 2.12e-04 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 1.50e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 5.30e-07 ≰ 0.0e+00
-    |g(x)|                 = 2.27e-03 ≰ 1.0e-08
+    |x - x&#39;|               = 3.70e-04 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 1.52e-04 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 9.84e-07 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 3.47e-07 ≰ 0.0e+00
+    |g(x)|                 = 1.81e-03 ≰ 1.0e-08
 
  * Work counters
-    Seconds run:   2  (vs limit Inf)
+    Seconds run:   5  (vs limit Inf)
     Iterations:    200
-    f(x) calls:    500
-    ∇f(x) calls:   500</code></pre><h3 id="Conjugate-Gradient"><a class="docs-heading-anchor" href="#Conjugate-Gradient">Conjugate Gradient</a><a id="Conjugate-Gradient-1"></a><a class="docs-heading-anchor-permalink" href="#Conjugate-Gradient" title="Permalink"></a></h3><p>Conjugate Gradient improves upon basic gradient descent by using conjugate directions, which can accelerate convergence for large-scale or quadratic problems. It requires gradient information but not the Hessian.</p><pre><code class="language-julia hljs">M_cg = PolynomialMap(2, 2)
+    f(x) calls:    503
+    ∇f(x) calls:   503</code></pre><h3 id="Conjugate-Gradient"><a class="docs-heading-anchor" href="#Conjugate-Gradient">Conjugate Gradient</a><a id="Conjugate-Gradient-1"></a><a class="docs-heading-anchor-permalink" href="#Conjugate-Gradient" title="Permalink"></a></h3><p>Conjugate Gradient improves upon basic gradient descent by using conjugate directions, which can accelerate convergence for large-scale or quadratic problems. It requires gradient information but not the Hessian.</p><pre><code class="language-julia hljs">M_cg = PolynomialMap(2, 2)
 res_cg = optimize!(M_cg, target, quadrature; optimizer=ConjugateGradient(), options=opts_trace)
 println(res_cg)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
-     0     3.397270e+00     4.787106e-01
- * time: 4.100799560546875e-5
-    20     2.839683e+00     4.653882e-04
- * time: 0.10898995399475098
-    40     2.839682e+00     7.485559e-06
- * time: 0.24600696563720703
-    60     2.839682e+00     2.112667e-07
- * time: 0.4232051372528076
+     0     3.397609e+00     4.804530e-01
+ * time: 4.410743713378906e-5
+    20     2.839693e+00     8.866133e-05
+ * time: 0.2572510242462158
+    40     2.839693e+00     4.561536e-07
+ * time: 0.4803800582885742
  * Status: success
 
  * Candidate solution
-    Final objective value:     2.839682e+00
+    Final objective value:     2.839693e+00
 
  * Found with
     Algorithm:     Conjugate Gradient
 
  * Convergence measures
-    |x - x&#39;|               = 3.48e-09 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 1.41e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 7.55e-13 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 2.66e-13 ≰ 0.0e+00
-    |g(x)|                 = 7.28e-09 ≤ 1.0e-08
+    |x - x&#39;|               = 3.19e-09 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 1.29e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 0.00e+00 ≤ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 0.00e+00 ≤ 0.0e+00
+    |g(x)|                 = 1.27e-08 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   1  (vs limit Inf)
-    Iterations:    73
-    f(x) calls:    223
-    ∇f(x) calls:   177</code></pre><h3 id="Nelder-Mead"><a class="docs-heading-anchor" href="#Nelder-Mead">Nelder-Mead</a><a id="Nelder-Mead-1"></a><a class="docs-heading-anchor-permalink" href="#Nelder-Mead" title="Permalink"></a></h3><p>Nelder-Mead is a derivative-free optimizer that uses a simplex of points to search for the minimum. It is useful when gradients are unavailable or unreliable, but may be less efficient for high-dimensional or smooth problems.</p><pre><code class="language-julia hljs">M_nm = PolynomialMap(2, 2)
+    Iterations:    50
+    f(x) calls:    109
+    ∇f(x) calls:   62</code></pre><h3 id="Nelder-Mead"><a class="docs-heading-anchor" href="#Nelder-Mead">Nelder-Mead</a><a id="Nelder-Mead-1"></a><a class="docs-heading-anchor-permalink" href="#Nelder-Mead" title="Permalink"></a></h3><p>Nelder-Mead is a derivative-free optimizer that uses a simplex of points to search for the minimum. It is useful when gradients are unavailable or unreliable, but may be less efficient for high-dimensional or smooth problems.</p><pre><code class="language-julia hljs">M_nm = PolynomialMap(2, 2)
 res_nm = optimize!(M_nm, target, quadrature; optimizer=NelderMead(), options=opts_trace)
 println(res_nm)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value    √(Σ(yᵢ-ȳ)²)/n
 ------   --------------    --------------
-     0     3.385576e+00     6.605357e-03
- * time: 6.699562072753906e-5
-    20     3.325067e+00     1.181961e-02
- * time: 0.031209945678710938
-    40     3.217121e+00     1.767829e-02
- * time: 0.0474858283996582
-    60     3.145469e+00     4.181385e-03
- * time: 0.06194901466369629
-    80     3.117130e+00     5.447402e-03
- * time: 0.07590794563293457
-   100     3.093404e+00     3.317705e-03
- * time: 0.08846783638000488
-   120     3.069923e+00     3.715482e-03
- * time: 0.09965300559997559
-   140     3.051873e+00     3.572744e-03
- * time: 0.11364889144897461
-   160     3.038170e+00     3.071205e-03
- * time: 0.12736797332763672
-   180     3.021624e+00     2.623480e-03
- * time: 0.14049291610717773
-   200     3.003034e+00     3.663396e-03
- * time: 0.15402698516845703
+     0     3.385910e+00     6.623032e-03
+ * time: 6.508827209472656e-5
+    20     3.325296e+00     1.183941e-02
+ * time: 0.05870413780212402
+    40     3.217172e+00     1.770408e-02
+ * time: 0.11462521553039551
+    60     3.145470e+00     4.181887e-03
+ * time: 0.16890215873718262
+    80     3.117131e+00     5.446265e-03
+ * time: 0.2108290195465088
+   100     3.093431e+00     3.313369e-03
+ * time: 0.25339698791503906
+   120     3.069929e+00     3.715059e-03
+ * time: 0.2857630252838135
+   140     3.051885e+00     3.568445e-03
+ * time: 0.3279712200164795
+   160     3.040074e+00     2.744730e-03
+ * time: 0.3689901828765869
+   180     3.030321e+00     2.994942e-03
+ * time: 0.4098222255706787
+   200     3.014241e+00     3.253376e-03
+ * time: 0.4445791244506836
  * Status: failure (reached maximum number of iterations)
 
  * Candidate solution
-    Final objective value:     3.001466e+00
+    Final objective value:     3.008308e+00
 
  * Found with
     Algorithm:     Nelder-Mead
@@ -145,49 +143,49 @@ println(res_nm)</code></pre><pre class="documenter-example-output"><code class="
  * Work counters
     Seconds run:   0  (vs limit Inf)
     Iterations:    200
-    f(x) calls:    306</code></pre><h3 id="BFGS"><a class="docs-heading-anchor" href="#BFGS">BFGS</a><a id="BFGS-1"></a><a class="docs-heading-anchor-permalink" href="#BFGS" title="Permalink"></a></h3><p>BFGS is a quasi-Newton method that builds up an approximation to the Hessian matrix using gradient evaluations. It is generally faster and more robust than gradient descent and conjugate gradient for smooth problems.</p><pre><code class="language-julia hljs">M_bfgs = PolynomialMap(2, 2)
+    f(x) calls:    304</code></pre><h3 id="BFGS"><a class="docs-heading-anchor" href="#BFGS">BFGS</a><a id="BFGS-1"></a><a class="docs-heading-anchor-permalink" href="#BFGS" title="Permalink"></a></h3><p>BFGS is a quasi-Newton method that builds up an approximation to the Hessian matrix using gradient evaluations. It is generally faster and more robust than gradient descent and conjugate gradient for smooth problems.</p><pre><code class="language-julia hljs">M_bfgs = PolynomialMap(2, 2)
 res_bfgs = optimize!(M_bfgs, target, quadrature; optimizer=BFGS(), options=opts_trace)
 println(res_bfgs)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
-     0     3.397270e+00     4.787106e-01
- * time: 4.100799560546875e-5
+     0     3.397609e+00     4.804530e-01
+ * time: 3.814697265625e-5
  * Status: success
 
  * Candidate solution
-    Final objective value:     2.839682e+00
+    Final objective value:     2.839693e+00
 
  * Found with
     Algorithm:     BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 2.13e-07 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 8.61e-08 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 6.04e-11 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 2.13e-11 ≰ 0.0e+00
-    |g(x)|                 = 2.54e-09 ≤ 1.0e-08
+    |x - x&#39;|               = 8.52e-09 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 3.45e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 4.44e-16 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 1.56e-16 ≰ 0.0e+00
+    |g(x)|                 = 3.25e-10 ≤ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
     Iterations:    12
-    f(x) calls:    32
-    ∇f(x) calls:   32</code></pre><h3 id="LBFGS"><a class="docs-heading-anchor" href="#LBFGS">LBFGS</a><a id="LBFGS-1"></a><a class="docs-heading-anchor-permalink" href="#LBFGS" title="Permalink"></a></h3><p>LBFGS is a limited-memory version of BFGS, making it suitable for large-scale problems where storing the full Hessian approximation is impractical. It is the default optimizer in many scientific computing packages due to its efficiency and reliability.</p><pre><code class="language-julia hljs">M_lbfgs = PolynomialMap(2, 2)
+    f(x) calls:    34
+    ∇f(x) calls:   34</code></pre><h3 id="LBFGS"><a class="docs-heading-anchor" href="#LBFGS">LBFGS</a><a id="LBFGS-1"></a><a class="docs-heading-anchor-permalink" href="#LBFGS" title="Permalink"></a></h3><p>LBFGS is a limited-memory version of BFGS, making it suitable for large-scale problems where storing the full Hessian approximation is impractical. It is the default optimizer in many scientific computing packages due to its efficiency and reliability.</p><pre><code class="language-julia hljs">M_lbfgs = PolynomialMap(2, 2)
 res_lbfgs = optimize!(M_lbfgs, target, quadrature; optimizer=LBFGS(), options=opts_trace)
 println(res_lbfgs)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter     Function value   Gradient norm
-     0     3.397270e+00     4.787106e-01
- * time: 2.4080276489257812e-5
+     0     3.397609e+00     4.804530e-01
+ * time: 3.910064697265625e-5
  * Status: success
 
  * Candidate solution
-    Final objective value:     2.839682e+00
+    Final objective value:     2.839693e+00
 
  * Found with
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 8.41e-08 ≰ 0.0e+00
-    |x - x&#39;|/|x&#39;|          = 3.40e-08 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 4.22e-13 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 1.49e-13 ≰ 0.0e+00
-    |g(x)|                 = 7.26e-09 ≤ 1.0e-08
+    |x - x&#39;|               = 1.15e-08 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 4.66e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 4.44e-16 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 1.56e-16 ≰ 0.0e+00
+    |g(x)|                 = 2.84e-09 ≤ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
@@ -204,11 +202,11 @@ println(&quot;Variance diagnostic GradientDescent:   &quot;, v_gd)
 println(&quot;Variance diagnostic ConjugateGradient: &quot;, v_cg)
 println(&quot;Variance diagnostic NelderMead:        &quot;, v_nm)
 println(&quot;Variance diagnostic BFGS:              &quot;, v_bfgs)
-println(&quot;Variance diagnostic LBFGS:             &quot;, v_lbfgs)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance diagnostic GradientDescent:   0.00047034138404250205
-Variance diagnostic ConjugateGradient: 0.0003765002629917078
-Variance diagnostic NelderMead:        0.10616271745190523
-Variance diagnostic BFGS:              0.0003765002380926317
-Variance diagnostic LBFGS:             0.0003765002867070812</code></pre><p>We can visualize the convergence of all optimizers:</p><pre><code class="language-julia hljs">plot([res_gd.trace[i].iteration for i in 1:length(res_gd.trace)], lw=2,
+println(&quot;Variance diagnostic LBFGS:             &quot;, v_lbfgs)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Variance diagnostic GradientDescent:   0.00043956407609914693
+Variance diagnostic ConjugateGradient: 0.00037902368968830525
+Variance diagnostic NelderMead:        0.10626452172420726
+Variance diagnostic BFGS:              0.0003790236351507774
+Variance diagnostic LBFGS:             0.000379023643287971</code></pre><p>We can visualize the convergence of all optimizers:</p><pre><code class="language-julia hljs">plot([res_gd.trace[i].iteration for i in 1:length(res_gd.trace)], lw=2,
     [res_gd.trace[i].g_norm for i in 1:length(res_gd.trace)], label=&quot;GradientDescent&quot;)
 plot!([res_cg.trace[i].iteration for i in 1:length(res_cg.trace)], lw=2,
     [res_cg.trace[i].g_norm for i in 1:length(res_cg.trace)], label=&quot;ConjugateGradient&quot;)
@@ -221,4 +219,4 @@ plot!([res_lbfgs.trace[i].iteration for i in 1:length(res_lbfgs.trace)], lw=2,
 plot!(xaxis=:log, yaxis=:log, xlabel=&quot;Iteration&quot;, ylabel=&quot;Gradient norm&quot;,
     title=&quot;Convergence of different optimizers&quot;, xlims=(1, 200),
     legend=:bottomleft)</code></pre><p><img src="../optimization-conv.svg" alt="Optimization Convergence"/></p><p>It becomes clear, that LBFGS and BFGS are the most efficient optimizers in this case, while Nelder-Mead struggles to keep up.</p><h2 id="Map-from-samples"><a class="docs-heading-anchor" href="#Map-from-samples">Map-from-samples</a><a id="Map-from-samples-1"></a><a class="docs-heading-anchor-permalink" href="#Map-from-samples" title="Permalink"></a></h2><p>Another strategy of constructing a transport map is to use samples of the target density, as seen in <a href="../../Examples/banana_mapfromsamples/#Banana:-Map-from-Samples">Banana: Map from Samples</a>. The formulation of transport map estimation in this way has the benefit to transform the problem into a convex optimization problem, when reference density is log-concave [<a href="../../references/#marzouk2016">1</a>]. Since we can choose the reference density, we can leverage this property to simplify the optimization process.</p><p>When the map is constructed from samples, the optimization problem is formulated by minimizing the Kullback-Leibler divergence between the pushforward of the reference density and the empirical distribution of the samples. We denote the transport map by <span>$S$</span>, which pushes forward the target distribution to the reference distribution. This leads to the following optimization problem:</p><p class="math-container">\[\min_{\boldsymbol{a}} -\frac{1}{M} \sum_{i=1}^{M} \log \rho\left(S(\boldsymbol{a}, \boldsymbol{x}_i)\right) - \log \left|\det \nabla S(\boldsymbol{a}, \boldsymbol{x}_i)\right|\]</p><p>where <span>$\{\boldsymbol{x}_i\}_{i=1}^M$</span> are samples from the target distribution, and <span>$\rho(\cdot)$</span> is the density of the reference distribution.</p><p>To perform the optimization, we can use the same <code>optimize!</code> function as before, but now we pass samples instead of a target density and quadrature scheme. Similarly, we can specify the optimizer and options:</p><pre><code class="language-julia hljs">optimize!(M::PolynomialMap, samples::AbstractArray{&lt;:Real};
-  optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../quadrature_methods/">« Quadrature Methods</a><a class="docs-footer-nextpage" href="../conditional_densities/">Conditional Densities and Samples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 24 November 2025 19:36">Monday 24 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../quadrature_methods/">« Quadrature Methods</a><a class="docs-footer-nextpage" href="../conditional_densities/">Conditional Densities and Samples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 6 January 2026 08:08">Tuesday 6 January 2026</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
