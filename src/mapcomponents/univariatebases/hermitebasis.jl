@@ -6,7 +6,7 @@ Probabilist Hermite polynomial basis.
 struct HermiteBasis <: AbstractPolynomialBasis end
 
 # Univariate probabilist's Hermite polynomials
-@inline function hermite_polynomial(n::Int64, z::Float64)
+@inline function hermite_polynomial(n::Int64, z::Real)
     if n == 0
         return 1.0
     elseif n == 1
@@ -23,7 +23,7 @@ struct HermiteBasis <: AbstractPolynomialBasis end
 end
 
 # Derivative of univariate Hermite polynomial
-@inline function hermite_derivative(n::Int64, z::Float64)
+@inline function hermite_derivative(n::Int64, z::Real)
     n == 0 ? 0.0 : n * hermite_polynomial(n - 1, z)
 end
 

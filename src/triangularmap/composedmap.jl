@@ -29,36 +29,71 @@ struct ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
     end
 end
 
-function evaluate(C::ComposedMap{T}, x::Vector{Float64}) where T<:AbstractLinearMap
+"""
+    evaluate(C::ComposedMap, x::AbstractVector{<:Real})
+
+Evaluate the composed map: S(x) = M(L(x)).
+"""
+function evaluate(C::ComposedMap{T}, x::AbstractVector{<:Real}) where T<:AbstractLinearMap
     y = evaluate(C.linearmap, x)
     return evaluate(C.polynomialmap, y)
 end
 
-function evaluate(C::ComposedMap{T}, X::Matrix{Float64}) where T<:AbstractLinearMap
+"""
+    evaluate(C::ComposedMap, X::AbstractMatrix{<:Real})
+
+Evaluate the composed map for multiple points (row-wise).
+"""
+function evaluate(C::ComposedMap{T}, X::AbstractMatrix{<:Real}) where T<:AbstractLinearMap
     Y = evaluate(C.linearmap, X)
     return evaluate(C.polynomialmap, Y)
 end
 
-function inverse(C::ComposedMap{T}, z::Vector{Float64}) where T<:AbstractLinearMap
+"""
+    inverse(C::ComposedMap, z::AbstractVector{<:Real})
+
+Invert the composed map: S⁻¹(z) = L⁻¹(M⁻¹(z)).
+"""
+function inverse(C::ComposedMap{T}, z::AbstractVector{<:Real}) where T<:AbstractLinearMap
     y = inverse(C.polynomialmap, z)
     return inverse(C.linearmap, y)
 end
 
-function inverse(C::ComposedMap{T}, Z::Matrix{Float64}) where T<:AbstractLinearMap
+"""
+    inverse(C::ComposedMap, Z::AbstractMatrix{<:Real})
+
+Invert the composed map for multiple points (row-wise).
+"""
+function inverse(C::ComposedMap{T}, Z::AbstractMatrix{<:Real}) where T<:AbstractLinearMap
     Y = inverse(C.polynomialmap, Z)
     return inverse(C.linearmap, Y)
 end
 
-function pullback(C::ComposedMap{T}, x::Vector{Float64}) where T<:AbstractLinearMap
+"""
+    pullback(C::ComposedMap, x::AbstractVector{<:Real})
+
+Compute the pullback density: π(S(x)) * |det(∇S(x))|.
+"""
+function pullback(C::ComposedMap{T}, x::AbstractVector{<:Real}) where T<:AbstractLinearMap
     y = evaluate(C.linearmap, x)
     return pullback(C.polynomialmap, y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
 
-function pullback(C::ComposedMap{T}, X::Matrix{Float64}) where T<:AbstractLinearMap
+"""
+    pullback(C::ComposedMap, X::AbstractMatrix{<:Real})
+
+Compute the pullback density for multiple points (row-wise).
+"""
+function pullback(C::ComposedMap{T}, X::AbstractMatrix{<:Real}) where T<:AbstractLinearMap
     Y = evaluate(C.linearmap, X)
     return pullback(C.polynomialmap, Y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
 
+"""
+    numberdimensions(C::ComposedMap)
+
+Return the number of dimensions of the composed map.
+"""
 numberdimensions(C::ComposedMap{T}) where T<:AbstractLinearMap = numberdimensions(C.linearmap)
 
 function Base.show(io::IO, C::ComposedMap{T}) where T<:AbstractLinearMap

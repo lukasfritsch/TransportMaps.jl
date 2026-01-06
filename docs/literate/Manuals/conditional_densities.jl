@@ -151,4 +151,4 @@ plot!(p)
 
 # !!! note "Note"
 #     For a more comprehensive example with real-world applications,
-#     see the [Biochemical Oxygen Demand (BOD) Example](@ref).
+#     see the [Bayesian Inference: Biochemical Oxygen Demand (BOD) Example](@ref).

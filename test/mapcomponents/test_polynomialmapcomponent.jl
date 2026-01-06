@@ -340,7 +340,7 @@ using Test
         # Matrix{Float32}
         Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
         result_matrix_f32 = pmc(Z_f32)
-        @test result_matrix_f32 ≈ pmc(Float64.(Z_f32))
+        @test isapprox(result_matrix_f32, pmc(Float64.(Z_f32)), atol=1e-6)
         @test typeof(result_matrix_f32) == Vector{Float64}
         @test length(result_matrix_f32) == size(Z_f32, 1)
 
@@ -353,7 +353,7 @@ using Test
     @testset "Multiindexset" begin
         pmc = PolynomialMapComponent(2, 2)
         mi_pmc = getmultiindexsets(pmc)
-        mis = permutedims(hcat(multivariate_indices(2,2)...))
+        mis = permutedims(hcat(multivariate_indices(2, 2)...))
 
         @test maximum(mi_pmc, dims=1) ≈ [2 2]
         @test mi_pmc ≈ mis

@@ -1,7 +1,11 @@
 # Conditional densities for triangular maps making use of the Knothe-Rosenblatt transform
 
-# Conditional density: π(xₖ | x₁, ..., xₖ₋₁) for triangular maps (single value)
-function conditional_density(M::PolynomialMap, x_range::Float64, x_given::Vector{Float64})
+"""
+    conditional_density(M::PolynomialMap, x_range::Real, x_given::AbstractVector{<:Real})
+
+Compute the conditional density π(xₖ | x₁, ..., xₖ₋₁) at x_range given x_given.
+"""
+function conditional_density(M::PolynomialMap, x_range::Real, x_given::AbstractVector{<:Real})
     k = length(x_given) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
@@ -15,16 +19,14 @@ function conditional_density(M::PolynomialMap, x_range::Float64, x_given::Vector
 end
 
 # For convenience when x_given is a single value
-function conditional_density(M::PolynomialMap, x_range::Float64, x_given::Float64)
-    return conditional_density(M, x_range, [x_given])
-end
+conditional_density(M::PolynomialMap, x_range::Real, x_given::Real) = conditional_density(M, x_range, [x_given])
 
-function conditional_density(M::PolynomialMap, x_range::Float64, x_given::AbstractArray{<:Real})
-    return conditional_density(M, x_range, Vector{Float64}(x_given))
-end
+"""
+    conditional_density(M::PolynomialMap, x_range::AbstractVector{<:Real}, x_given::AbstractVector{<:Real})
 
-# Conditional density: π(xₖ | x₁, ..., xₖ₋₁) for triangular maps (multiple values)
-function conditional_density(M::PolynomialMap, x_range::Vector{Float64}, x_given::Vector{Float64})
+Compute conditional densities at multiple x_range values using multithreading.
+"""
+function conditional_density(M::PolynomialMap, x_range::AbstractVector{<:Real}, x_given::AbstractVector{<:Real})
     k = length(x_given) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
@@ -39,16 +41,14 @@ function conditional_density(M::PolynomialMap, x_range::Vector{Float64}, x_given
     return cond_densities
 end
 
-function conditional_density(M::PolynomialMap, x_range::AbstractArray{<:Real}, x_given::AbstractArray{<:Real})
-    return conditional_density(M, Vector{Float64}(x_range), Vector{Float64}(x_given))
-end
+conditional_density(M::PolynomialMap, x_range::AbstractVector{<:Real}, x_given::Real) = conditional_density(M, x_range, [x_given])
 
-function conditional_density(M::PolynomialMap, x_range::AbstractArray{<:Real}, x_given::Float64)
-    return conditional_density(M, Vector{Float64}(x_range), [x_given])
-end
+"""
+    conditional_sample(M::PolynomialMap, x_given::AbstractVector{<:Real}, z_range::Real)
 
-# Generate samples from the conditional distribution π(xₖ | x₁, ..., xₖ₋₁) by pushing forward z_range ~ ρ(z_range)
-function conditional_sample(M::PolynomialMap, x_given::Vector{Float64}, z_range::Float64)
+Generate a sample from π(xₖ | x₁, ..., xₖ₋₁) by pushing forward z_range ~ ρ(z_range).
+"""
+function conditional_sample(M::PolynomialMap, x_given::AbstractVector{<:Real}, z_range::Real)
 
     k = length(x_given) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
@@ -60,16 +60,14 @@ function conditional_sample(M::PolynomialMap, x_given::Vector{Float64}, z_range:
 end
 
 # For convenience when x_given is a single value
-function conditional_sample(M::PolynomialMap, x_given::Float64, z_range::Float64)
-    return conditional_sample(M, [x_given], z_range)
-end
+conditional_sample(M::PolynomialMap, x_given::Real, z_range::Real) = conditional_sample(M, [x_given], z_range)
 
-function conditional_sample(M::PolynomialMap, x_given::AbstractArray{<:Real}, z_range::Float64)
-    return conditional_sample(M, Vector{Float64}(x_given), z_range)
-end
+"""
+    conditional_sample(M::PolynomialMap, x_given::AbstractVector{<:Real}, z_range::AbstractVector{<:Real})
 
-# Generate samples from the conditional distribution π(xₖ | x₁, ..., xₖ₋₁) by pushing forward z_range ~ ρ(z_range) (multiple values)
-function conditional_sample(M::PolynomialMap, x_given::Vector{Float64}, z_range::Vector{Float64})
+Generate multiple samples from π(xₖ | x₁, ..., xₖ₋₁) using multithreading.
+"""
+function conditional_sample(M::PolynomialMap, x_given::AbstractVector{<:Real}, z_range::AbstractVector{<:Real})
     k = length(x_given) + 1
     @assert 1 <= k <= numberdimensions(M) "k must be between 1 and the dimension of the map"
 
@@ -82,18 +80,14 @@ function conditional_sample(M::PolynomialMap, x_given::Vector{Float64}, z_range:
     return samples
 end
 
-# For convenience when x_given is a single value
-function conditional_sample(M::PolynomialMap, x_given::Float64, z_range::AbstractArray{<:Real})
-    return conditional_sample(M, [x_given], Vector{Float64}(z_range))
-end
+conditional_sample(M::PolynomialMap, x_given::Real, z_range::AbstractVector{<:Real}) = conditional_sample(M, [x_given], z_range)
 
-function conditional_sample(M::PolynomialMap, x_given::AbstractArray{<:Real}, z_range::AbstractArray{<:Real})
-    return conditional_sample(M, Vector{Float64}(x_given), Vector{Float64}(z_range))
-end
+"""
+    multivariate_conditional_density(M::PolynomialMap, x::AbstractVector{<:Real})
 
-# Multivariate conditional density: π(xⱼ, xⱼ₊₁, ..., xₖ | x₁, ..., xⱼ₋₁)
-# Computed as the product: ∏ᵢ₌ⱼᵏ π(xᵢ | x₁, ..., xᵢ₋₁)
-function multivariate_conditional_density(M::PolynomialMap, x::Vector{Float64})
+Compute the multivariate conditional density π(xⱼ, xⱼ₊₁, ..., xₖ | x₁, ..., xⱼ₋₁) as ∏ᵢ₌ⱼᵏ π(xᵢ | x₁, ..., xᵢ₋₁).
+"""
+function multivariate_conditional_density(M::PolynomialMap, x::AbstractVector{<:Real})
     d = length(x)
     @assert d <= numberdimensions(M) "Length of x cannot exceed the dimension of the map"
 
@@ -117,8 +111,12 @@ function multivariate_conditional_density(M::PolynomialMap, x::Vector{Float64})
     return density
 end
 
-# Multivariate conditional density for a specific range: π(xⱼ, ..., xₖ | x₁, ..., xⱼ₋₁)
-function multivariate_conditional_density(M::PolynomialMap, x_range::Vector{Float64}, x_given::Vector{Float64})
+"""
+    multivariate_conditional_density(M::PolynomialMap, x_range::AbstractVector{<:Real}, x_given::AbstractVector{<:Real})
+
+Compute the conditional density π(xⱼ, ..., xₖ | x₁, ..., xⱼ₋₁) where x_range = [xⱼ, ..., xₖ].
+"""
+function multivariate_conditional_density(M::PolynomialMap, x_range::AbstractVector{<:Real}, x_given::AbstractVector{<:Real})
     j = length(x_given) + 1  # Starting index for the range
     k = j + length(x_range) - 1  # Ending index for the range
 
@@ -142,26 +140,15 @@ function multivariate_conditional_density(M::PolynomialMap, x_range::Vector{Floa
     return density
 end
 
-# Convenience function for single given value
-function multivariate_conditional_density(M::PolynomialMap, x_range::Vector{Float64}, x_given::Float64)
-    return multivariate_conditional_density(M, x_range, [x_given])
-end
+# Convenience functions
+multivariate_conditional_density(M::PolynomialMap, x_range::AbstractVector{<:Real}, x_given::Real) = multivariate_conditional_density(M, x_range, [x_given])
 
-# Convenience function for AbstractArray inputs
-function multivariate_conditional_density(M::PolynomialMap, x_range::AbstractArray{<:Real}, x_given::AbstractArray{<:Real})
-    return multivariate_conditional_density(M, Vector{Float64}(x_range), Vector{Float64}(x_given))
-end
+"""
+    multivariate_conditional_sample(M::PolynomialMap, x_given::AbstractVector{<:Real}, z_range::AbstractVector{<:Real})
 
-function multivariate_conditional_density(M::PolynomialMap, x_range::AbstractArray{<:Real}, x_given::Float64)
-    return multivariate_conditional_density(M, Vector{Float64}(x_range), [x_given])
-end
-
-function multivariate_conditional_density(M::PolynomialMap, x::AbstractArray{<:Real})
-    return multivariate_conditional_density(M, Vector{Float64}(x))
-end
-
-# Multivariate conditional sampling: Generate samples from π(xⱼ, ..., xₖ | x₁, ..., xⱼ₋₁)
-function multivariate_conditional_sample(M::PolynomialMap, x_given::Vector{Float64}, z_range::Vector{Float64})
+Generate samples from π(xⱼ, ..., xₖ | x₁, ..., xⱼ₋₁) by sequentially pushing forward z_range values.
+"""
+function multivariate_conditional_sample(M::PolynomialMap, x_given::AbstractVector{<:Real}, z_range::AbstractVector{<:Real})
     j = length(x_given) + 1  # Starting index for sampling
     k = j + length(z_range) - 1  # Ending index for sampling
 
@@ -182,16 +169,5 @@ function multivariate_conditional_sample(M::PolynomialMap, x_given::Vector{Float
     return x_samples
 end
 
-# Convenience function for single given value
-function multivariate_conditional_sample(M::PolynomialMap, x_given::Float64, z_range::Vector{Float64})
-    return multivariate_conditional_sample(M, [x_given], z_range)
-end
-
-# Convenience function for AbstractArray inputs
-function multivariate_conditional_sample(M::PolynomialMap, x_given::AbstractArray{<:Real}, z_range::AbstractArray{<:Real})
-    return multivariate_conditional_sample(M, Vector{Float64}(x_given), Vector{Float64}(z_range))
-end
-
-function multivariate_conditional_sample(M::PolynomialMap, x_given::Float64, z_range::AbstractArray{<:Real})
-    return multivariate_conditional_sample(M, [x_given], Vector{Float64}(z_range))
-end
+# Convenience functions
+multivariate_conditional_sample(M::PolynomialMap, x_given::Real, z_range::AbstractVector{<:Real}) = multivariate_conditional_sample(M, [x_given], z_range)

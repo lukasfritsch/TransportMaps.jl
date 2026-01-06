@@ -1,3 +1,21 @@
+"""
+    PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent
+
+A single component Mᵏ of a triangular transport map with polynomial basis.
+
+# Fields
+- `basisfunctions::Vector{MultivariateBasis{T}}`: Vector of multivariate basis functions
+- `coefficients::Vector{Float64}`: Coefficients for the basis functions
+- `rectifier::AbstractRectifierFunction`: Rectifier function applied to partial derivatives
+- `index::Int`: Index k indicating the component dimension
+
+# Constructors
+- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=HermiteBasis(), map_type::Symbol=:total)`: Initialize component with specified degree and basis type.
+- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, density::Distributions.UnivariateDistribution, map_type::Symbol=:total)`: Initialize component using analytical reference density.
+- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, samples::AbstractMatrix{Float64}, map_type::Symbol=:total)`: Initialize component using sample data.
+- `PolynomialMapComponent(multi_indices::Vector{Vector{Int}}, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, samples::AbstractMatrix{Float64})`: Initialize component with custom multi-index sets from samples.
+- `PolynomialMapComponent(multi_indices::Vector{Vector{Int}}, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, reference_density::Distributions.UnivariateDistribution)`: Initialize component with custom multi-index sets from density.
+"""
 struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent # mutable due to coefficients that are optimized
     basisfunctions::Vector{MultivariateBasis{T}}  # Vector of MultivariateBasis objects
     coefficients::Vector{Float64}  # Coefficients for the basis functions
@@ -164,8 +182,14 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
     end
 end
 
-# Compute Mᵏ according to Eq. (4.13) for a single input vector
-function evaluate(map_component::PolynomialMapComponent, z::Vector{Float64})
+"""
+    evaluate(map_component::PolynomialMapComponent, z::AbstractVector{<:Real})
+
+Evaluate the polynomial map component Mᵏ(z) at point z.
+
+Computes Mᵏ(z) = f(z₁,...,zₖ₋₁,0) + ∫₀^{zₖ} g(∂f/∂xₖ) dxₖ, where g is the rectifier.
+"""
+function evaluate(map_component::PolynomialMapComponent, z::AbstractVector{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
     @assert map_component.index <= length(z) "index must not exceed the dimension of z"
@@ -178,7 +202,7 @@ function evaluate(map_component::PolynomialMapComponent, z::Vector{Float64})
 
     # Integrand for the integral over z̄
     integrand(z̄) = begin
-        z_temp = copy(z)
+        z_temp = copy(z) |> float
         z_temp[map_component.index] = z̄
         ∂f = partial_derivative_z(map_component.basisfunctions, map_component.coefficients, z_temp, map_component.index)
         return map_component.rectifier(∂f)
@@ -190,10 +214,14 @@ function evaluate(map_component::PolynomialMapComponent, z::Vector{Float64})
     return f₀ + ∫g∂f
 end
 
-evaluate(map_component::PolynomialMapComponent, z::AbstractVector{<:Real}) = evaluate(map_component, Vector{Float64}(z))
+"""
+    evaluate(map_component::PolynomialMapComponent, Z::AbstractMatrix{<:Real})
 
-# Compute Mᵏ according to Eq. (4.13) for multiple input vectors using multithreading
-function evaluate(map_component::PolynomialMapComponent, Z::Matrix{Float64})
+Evaluate the map component at multiple points (row-wise) using multithreading.
+
+Returns a vector where element i is Mᵏ(Z[i,:]).
+"""
+function evaluate(map_component::PolynomialMapComponent, Z::AbstractMatrix{<:Real})
     @assert length(map_component.basisfunctions) == length(map_component.coefficients) "Number of basis functions must equal number of coefficients"
     @assert map_component.index > 0 "index must be a positive integer"
     @assert size(Z, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: Z columns and multiindexset must have same length"
@@ -213,10 +241,12 @@ function evaluate(map_component::PolynomialMapComponent, Z::Matrix{Float64})
     return results
 end
 
-evaluate(map_component::PolynomialMapComponent, Z::AbstractMatrix{<:Real}) = evaluate(map_component, Matrix{Float64}(Z))
+"""
+    partial_derivative_zk(map_component::PolynomialMapComponent, z::AbstractVector{<:Real})
 
-# Partial derivative ∂Mᵏ/∂zₖ = g(∂ₖ f(x₁, ..., x_{k-1}, zₖ)) = g(∂f/∂zₖ) for a single input vector
-function partial_derivative_zk(map_component::PolynomialMapComponent, z::Vector{Float64})
+Compute the partial derivative ∂Mᵏ/∂zₖ = g(∂f/∂zₖ) at point z.
+"""
+function partial_derivative_zk(map_component::PolynomialMapComponent, z::AbstractVector{<:Real})
     @assert length(z) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: z and multiindexset must have same length"
 
     # Define the integrand for the partial derivative
@@ -233,8 +263,14 @@ function partial_derivative_zk(map_component::PolynomialMapComponent, z::Vector{
     return ∂Mᵏ
 end
 
-# Partial derivative ∂Mᵏ/∂zₖ for multiple input vectors using multithreading
-function partial_derivative_zk(map_component::PolynomialMapComponent, Z::Matrix{Float64})
+"""
+    partial_derivative_zk(map_component::PolynomialMapComponent, Z::AbstractMatrix{<:Real})
+
+Compute partial derivatives at multiple points using multithreading.
+
+Returns a vector where element i is ∂Mᵏ/∂zₖ at Z[i,:].
+"""
+function partial_derivative_zk(map_component::PolynomialMapComponent, Z::AbstractMatrix{<:Real})
     @assert size(Z, 2) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: Z columns and multiindexset must have same length"
 
     n_points = size(Z, 1)
@@ -251,8 +287,14 @@ function partial_derivative_zk(map_component::PolynomialMapComponent, Z::Matrix{
     return results
 end
 
-# Compute gradient of ∂Mᵏ/∂zₖ with respect to coefficients
-function partial_derivative_zk_gradient_coefficients(component::PolynomialMapComponent, z::Vector{Float64})
+"""
+    partial_derivative_zk_gradient_coefficients(component::PolynomialMapComponent, z::AbstractVector{<:Real})
+
+Compute the gradient of ∂Mᵏ/∂zₖ with respect to coefficients.
+
+Returns ∂²Mᵏ/(∂zₖ∂c) = g'(∂f/∂zₖ) * ∂²f/(∂zₖ∂c).
+"""
+function partial_derivative_zk_gradient_coefficients(component::PolynomialMapComponent, z::AbstractVector{<:Real})
     # ∂Mᵏ/∂zₖ = g(∂f/∂zₖ), where g is the rectifier
     # So ∂²Mᵏ/(∂zₖ∂c) = g'(∂f/∂zₖ) * ∂²f/(∂zₖ∂c)
 
@@ -274,37 +316,12 @@ function partial_derivative_zk_gradient_coefficients(component::PolynomialMapCom
 end
 
 
-# Gradient of the map component with respect to the coefficients at z
 """
-    gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{Float64})
+    gradient_coefficients(map_component::PolynomialMapComponent, z::AbstractVector{<:Real})
 
-Compute the gradient of the polynomial map component with respect to its coefficients at point z.
-
-For a polynomial map component Mᵏ(z) defined as:
-Mᵏ(z) = f(z₁, ..., z_{k-1}, 0) + ∫₀^{z_k} g(∂f/∂x_k) dx_k
-
-where f(z) = Σᵢ cᵢ ψᵢ(z) and g is the rectifier function, the gradient is:
-∂Mᵏ/∂cⱼ = ψⱼ(z₁, ..., z_{k-1}, 0) + ∫₀^{z_k} g'(∂f/∂x_k) ∂ψⱼ/∂x_k dx_k
-
-# Arguments
-- `map_component::PolynomialMapComponent`: The polynomial map component
-- `z::Vector{Float64}`: Point at which to evaluate the gradient (must match dimension of basis functions)
-
-# Returns
-- `Vector{Float64}`: Gradient vector with respect to coefficients, same length as `map_component.coefficients`
-
-# Examples
-```julia
-# Create a 2D polynomial map component for the 2nd coordinate
-pmc = PolynomialMapComponent(2, 2, Softplus())
-setcoefficients!(pmc, randn(length(pmc.coefficients)))
-
-# Evaluate gradient at point z = [0.5, 1.2]
-z = [0.5, 1.2]
-grad = gradient_coefficients(pmc, z)
-```
+Compute the gradient ∂Mᵏ/∂c of the map component with respect to its coefficients at point z.
 """
-function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{Float64})
+function gradient_coefficients(map_component::PolynomialMapComponent, z::AbstractVector{<:Real})
     @assert length(z) == length(map_component.basisfunctions[1].multiindexset) "Dimension mismatch: z and basis functions must have same length"
 
     # First part: gradient of f₀ = f(x₁, ..., x_{k-1}, 0) w.r.t. coefficients
@@ -344,14 +361,25 @@ function gradient_coefficients(map_component::PolynomialMapComponent, z::Vector{
     return ∇f₀ + ∇integral
 end
 
+"""
+    degree(map_component::PolynomialMapComponent)
+
+Return the maximum polynomial degree of the map component.
+"""
 function degree(map_component::PolynomialMapComponent)
     return maximum(sum(basis.multiindexset) for basis in map_component.basisfunctions)
 end
 
-# Inverse map for the polynomial map component using one-dimensional root finding
+"""
+    inverse(map_component::PolynomialMapComponent, zₖ₋₁::AbstractVector{<:Real}, xₖ::Real)
+
+Compute the inverse of the map component using one-dimensional root finding.
+
+Given z[1:k-1] and the target value xₖ, finds zₖ such that Mᵏ(z) = xₖ.
+"""
 function inverse(
     map_component::PolynomialMapComponent,
-    zₖ₋₁::Vector{Float64},
+    zₖ₋₁::AbstractVector{<:Real},
     xₖ::Real,
 )
     @assert length(zₖ₋₁) == map_component.index - 1 "Length of zₖ₋₁ must be equal to index - 1"
@@ -369,33 +397,62 @@ function inverse(
     return z⁺
 end
 
-function setcoefficients!(map_component::PolynomialMapComponent, coefficients::Vector{Float64})
+"""
+    setcoefficients!(map_component::PolynomialMapComponent, coefficients::AbstractVector{<:Real})
+
+Set the coefficients of the map component.
+"""
+function setcoefficients!(map_component::PolynomialMapComponent, coefficients::AbstractVector{<:Real})
     @assert length(coefficients) == length(map_component.coefficients) "Length of coefficients must match the number of basis functions."
     map_component.coefficients .= coefficients
 end
 
-# Allow setting coefficients with any real-valued vector (converts to Float64)
-setcoefficients!(map_component::PolynomialMapComponent, coefficients::AbstractVector{<:Real}) =
-    setcoefficients!(map_component, Vector{Float64}(coefficients))
+"""
+    getcoefficients(map_component::PolynomialMapComponent)
 
-# Get coefficients from a single PolynomialMapComponent
+Get a copy of the coefficients from the map component.
+"""
 function getcoefficients(map_component::PolynomialMapComponent)
     return copy(map_component.coefficients)
 end
 
+"""
+    getmultiindexsets(map_component::PolynomialMapComponent)
+
+Return the multi-indices as a matrix (one per row).
+"""
 function getmultiindexsets(map_component::PolynomialMapComponent)
     # Stack each basis.multiindexset as a row in a matrix
     multiindices = [basis.multiindexset for basis in map_component.basisfunctions]
     return permutedims(hcat(multiindices...))
 end
 
+"""
+    getmultivariateindices(map_component::PolynomialMapComponent)
+
+Return the multi-indices as a vector of vectors.
+"""
 getmultivariateindices(map_component::PolynomialMapComponent) = [basis.multiindexset for basis in map_component.basisfunctions]
 
+"""
+    getbasis(map_component::PolynomialMapComponent)
+
+Return the univariate basis type used in the map component.
+"""
 getbasis(map_component::PolynomialMapComponent) = map_component.basisfunctions[1].univariatebases[1]
 
+"""
+    numbercoefficients(map_component::PolynomialMapComponent)
+
+Return the number of coefficients in the map component.
+"""
 numbercoefficients(map_component::PolynomialMapComponent) = length(map_component.coefficients)
 
-# Make PolynomialMapComponent callable: component(z) instead of evaluate(component, z)
+"""
+    (component::PolynomialMapComponent)(z)
+
+Make PolynomialMapComponent callable. Equivalent to `evaluate(component, z)`.
+"""
 Base.@propagate_inbounds (component::PolynomialMapComponent)(z::AbstractVector{<:Real}) = evaluate(component, z)
 Base.@propagate_inbounds (component::PolynomialMapComponent)(Z::AbstractMatrix{<:Real}) = evaluate(component, Z)
 

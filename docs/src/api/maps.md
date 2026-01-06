@@ -10,6 +10,7 @@ Pages = ["maps.md"]
 
 ```@docs
 PolynomialMap
+PolynomialMapComponent
 LinearMap
 LaplaceMap
 ComposedMap
@@ -17,4 +18,19 @@ ComposedMap
 
 ## Functions
 
-tbd
+```@docs
+evaluate
+inverse
+pushforward
+pullback
+setcoefficients!
+getcoefficients
+setparameters!
+numbercoefficients
+numberdimensions
+getmultiindexsets
+conditional_density
+conditional_sample
+multivariate_conditional_density
+multivariate_conditional_sample
+```

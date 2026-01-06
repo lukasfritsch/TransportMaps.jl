@@ -35,32 +35,22 @@ Pkg.add("https://github.com/lukasfritsch/TransportMaps.jl")
 
 ## Quick Start Example
 
-Here's a simple example showing how to construct a transport map for a "banana" distribution:
+For a comprehensive introduction, see the page [Getting Started with TransportMaps.jl](@ref), which demonstrates:
+- Creating polynomial transport maps
+- Setting up quadrature schemes
+- Optimizing map parameters
+- Generating samples from the learned map
 
-```julia
-using TransportMaps
-using Distributions
+Additional examples are available in the Examples section:
+```@contents
+Pages = ["Examples/banana_mapfromdensity.md", "Examples/banana_mapfromsamples.md", "Examples/banana_adaptive.md", "Examples/cubic_adaptive_fromdensity.md", "Examples/bod_bayesianinference.md"]
+Depth = 1
+```
 
-# Create a 2D polynomial map with degree 2 and Softplus rectifier
-M = PolynomialMap(2, 2, Normal(), Softplus())
-
-# Set up quadrature for optimization
-quadrature = GaussHermiteWeights(3, 2)
-
-# Define target density (banana distribution)
-target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-target = MapTargetDensity(target_density, :auto_diff)
-
-# Optimize the map coefficients
-result = optimize!(M, target, quadrature)
-
-# Generate samples by mapping standard Gaussian samples
-samples_z = randn(1000, 2)
-# Matrix input automatically uses multithreading for better performance
-mapped_samples = evaluate(M, samples_z)
-
-# Evaluate map quality
-variance_diag = variance_diagnostic(M, target, samples_z)
+Further, the following manuals discuss the technical details of the implementation:
+```@contents
+Pages = ["Manuals/basis_functions.md", "Manuals/map_parameterization.md", "Manuals/quadrature_methods.md", "Manuals/optimization.md", "Manuals/conditional_densities.md", "Manuals/adaptive_transport_map.md"]
+Depth = 1
 ```
 
 ## Package Architecture
@@ -70,29 +60,53 @@ The package is organized around several key components:
 ### Map Components
 
 - **`PolynomialMapComponent`**: Individual polynomial components of triangular maps
-- **`HermiteBasis`**: Hermite polynomial basis functions
-- **`MultivariateBasis`**: Multivariate polynomial basis construction
+- with different polynomial bases:
+  - **`HermiteBasis`**: Probabilists' Hermite polynomial basis
+  - **`LinearizedHermiteBasis`**: Linearized Hermite basis for improved conditioning
+  - **`CubicSplineHermiteBasis`**: Cubic spline basis with Hermite support
+  - **`GaussianWeightedHermiteBasis`**: Hermite basis with Gaussian weighting
 
 ### Transport Maps
 
-- **`PolynomialMap`**: Main triangular polynomial transport map implementation
+- **`PolynomialMap`**: Main triangular polynomial transport map
+- **`DiagonalMap`**: Convenience constructor for diagonal maps (no cross-terms)
+- **`NoMixedMap`**: Maps without mixed polynomial terms
+- **`LinearMap`**: Linear standardization map (mean/std)
+- **`LaplaceMap`**: Laplace approximation-based map
+- **`ComposedMap`**: Composition of linear and polynomial maps
 
 ### Rectifier Functions
 
 - **`IdentityRectifier`**: No transformation (linear)
-- **`Softplus`**: Smooth positive transformation
+- **`Softplus`**: Smooth positive transformation (log-sum-exp)
 - **`ShiftedELU`**: Exponential linear unit variant
+- **`Exponential`**: Pure exponential transformation
 
-### Quadrature and Optimization
+### Quadrature Schemes
 
 - **`GaussHermiteWeights`**: Gauss-Hermite quadrature points and weights
 - **`MonteCarloWeights`**: Monte Carlo integration
 - **`LatinHypercubeWeights`**: Latin hypercube sampling
+- **`SparseSmolyakWeights`**: Sparse grid quadrature for higher dimensions
+
+### Map Optimization 
+
+- **`optimize!`**: Optimize map coefficients to minimize KL divergence
+- **`optimize_adaptive_transportmap`**: Adaptive refinement for map from samples
+- **`optimize_adaptive_transportmapcomponent`**: Adaptive refinement for map from density
+
+### Conditional Densities
+
+- **`conditional_density`**: Compute conditional densities π(xₖ | x₁, ..., xₖ₋₁)
+- **`conditional_sample`**: Sample from conditional distributions
+- **`multivariate_conditional_density`**: Multivariate conditional densities
+- **`multivariate_conditional_sample`**: Multivariate conditional sampling
 
 ## API Reference
 
 ```@contents
-Pages = ["api.md"]
+Pages = ["api/bases.md", "api/rectifiers.md", "api/densities.md", "api/quadrature.md", "api/maps.md", "api/optimization.md"]
+Depth = 1
 ```
 
 ## Authors
