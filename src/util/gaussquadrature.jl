@@ -1,15 +1,15 @@
 # Gauss-Legendre quadrature to evaluate integral of rectifier
 
 """
-    gaussquadrature(fun::Function, n::Int, a::Float64, b::Float64)
+    gaussquadrature(fun::Function, n::Int, a::Real, b::Real)
 
 Numerically integrates the function `fun` over the interval `[a, b]` using the Gauss-Legendre quadrature rule with `n` points.
 
 # Arguments
 - `fun::Function`: The function to integrate. Should accept a single `Float64` argument.
 - `n::Int`: The number of quadrature points to use.
-- `a::Float64`: The lower bound of the integration interval.
-- `b::Float64`: The upper bound of the integration interval.
+- `a::Real`: The lower bound of the integration interval.
+- `b::Real`: The upper bound of the integration interval.
 
 # Returns
 - `Float64`: The approximate value of the integral of `fun` over `[a, b]`.
@@ -18,8 +18,8 @@ Numerically integrates the function `fun` over the interval `[a, b]` using the G
 function gaussquadrature(
     fun::Function,
     n::Int,
-    a::Float64,
-    b::Float64
+    a::Real,
+    b::Real
 )
     # Get Gauss-Legendre points and weights for the interval [-1, 1]
     (points, weights) = gausslegendre(n)

@@ -31,12 +31,12 @@ function CubicSplineHermiteBasis(density::Distributions.UnivariateDistribution)
     return CubicSplineHermiteBasis(r)
 end
 
-function _cubic_weight(z::Float64, r::Float64)
+function _cubic_weight(z::Real, r::Float64)
     m = min(1.0, abs(z) / r)
     return 2 * m^3 - 3 * m^2 + 1
 end
 
-function _cubic_weight_derivative(z::Float64, r::Float64)
+function _cubic_weight_derivative(z::Real, r::Float64)
     if abs(z) < r
         m = abs(z) / r
         return (6 * abs(z)^2 / r^3 - 6 * abs(z) / r^2) * sign(z)

@@ -38,12 +38,22 @@ struct LinearMap <: AbstractLinearMap
     end
 end
 
-function setparameters!(map::LinearMap, μ::Vector{Float64}, σ::Vector{Float64})
+"""
+    setparameters!(map::LinearMap, μ::AbstractVector{<:Real}, σ::AbstractVector{<:Real})
+
+Set the mean and standard deviation parameters of the linear map.
+"""
+function setparameters!(map::LinearMap, μ::AbstractVector{<:Real}, σ::AbstractVector{<:Real})
     map.μ .= μ
     map.σ .= σ
 end
 
-function evaluate(L::LinearMap, x::Vector{Float64})
+"""
+    evaluate(L::LinearMap, x::AbstractVector{<:Real})
+
+Apply the linear transformation (x - μ) / σ to standardize the input.
+"""
+function evaluate(L::LinearMap, x::AbstractVector{<:Real})
     if numberdimensions(L) == 0
         return x  # Identity map if no dimensions are defined
     else
@@ -52,8 +62,12 @@ function evaluate(L::LinearMap, x::Vector{Float64})
     end
 end
 
-# Scale and shift input data
-function evaluate(L::LinearMap, X::Matrix{Float64})
+"""
+    evaluate(L::LinearMap, X::AbstractMatrix{<:Real})
+
+Apply the linear transformation to multiple points (row-wise).
+"""
+function evaluate(L::LinearMap, X::AbstractMatrix{<:Real})
     if numberdimensions(L) == 0
         return X  # Identity map if no dimensions are defined
     else
@@ -62,7 +76,12 @@ function evaluate(L::LinearMap, X::Matrix{Float64})
     end
 end
 
-function inverse(L::LinearMap, y::Vector{Float64})
+"""
+    inverse(L::LinearMap, y::AbstractVector{<:Real})
+
+Invert the linear transformation: y * σ + μ to recover the original scale.
+"""
+function inverse(L::LinearMap, y::AbstractVector{<:Real})
     if numberdimensions(L) == 0
         return y # Identity map if no dimensions are defined
     else
@@ -71,8 +90,12 @@ function inverse(L::LinearMap, y::Vector{Float64})
     end
 end
 
-# Inverse operation: scale back to original space
-function inverse(L::LinearMap, Y::Matrix{Float64})
+"""
+    inverse(L::LinearMap, Y::AbstractMatrix{<:Real})
+
+Invert the transformation for multiple points (row-wise).
+"""
+function inverse(L::LinearMap, Y::AbstractMatrix{<:Real})
     if numberdimensions(L) == 0
         return Y  # Identity map if no dimensions are defined
     else
@@ -81,10 +104,20 @@ function inverse(L::LinearMap, Y::Matrix{Float64})
     end
 end
 
+"""
+    jacobian(L::LinearMap)
+
+Compute the Jacobian determinant of the linear map (product of standard deviations).
+"""
 function jacobian(L::LinearMap)
     return prod(L.σ)
 end
 
+"""
+    numberdimensions(L::LinearMap)
+
+Return the number of dimensions of the linear map.
+"""
 numberdimensions(L::LinearMap) = length(L.μ)
 
 function Base.show(io::IO, L::LinearMap)

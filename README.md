@@ -31,7 +31,7 @@ M = PolynomialMap(2, 2, Normal(), Softplus())
 quadrature = GaussHermiteWeights(3, 2)
 
 # Define target density (banana distribution)
-target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+target_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
 target = MapTargetDensity(target_density, :auto_diff)
 
 # Optimize the map coefficients
@@ -39,12 +39,12 @@ result = optimize!(M, target, quadrature)
 
 # Generate samples by mapping standard Gaussian samples
 samples_z = randn(1000, 2)
+
 # Matrix input automatically uses multithreading for better performance
 mapped_samples = evaluate(M, samples_z)
 
 # Evaluate map quality
 variance_diag = variance_diagnostic(M, target, samples_z)
-
 ```
 
 ## Features

@@ -1,4 +1,4 @@
-# # Biochemical Oxygen Demand (BOD) Example
+# # Bayesian Inference: Biochemical Oxygen Demand (BOD) Example
 #
 # This example demonstrates Bayesian parameter estimation for a biochemical oxygen
 # demand model using transport maps. The problem comes from environmental engineering

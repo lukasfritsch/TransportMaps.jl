@@ -73,39 +73,88 @@ struct LaplaceMap <: AbstractLinearMap
     end
 end
 
-function evaluate(L::LaplaceMap, x::Vector{Float64})
+"""
+    evaluate(L::LaplaceMap, x::AbstractVector{<:Real})
+
+Apply the Laplace map transformation: L⁻¹(x - mode).
+"""
+function evaluate(L::LaplaceMap, x::AbstractVector{<:Real})
     @assert length(x) == length(L.mode) "Input vector must have the same length as dimensions in the map"
     return L.chol \ (x .- L.mode)
 end
 
+"""
+    evaluate(L::LaplaceMap, X::AbstractMatrix{<:Real})
 
-function evaluate(L::LaplaceMap, X::Matrix{Float64})
+Apply the Laplace map transformation to multiple points (row-wise).
+"""
+function evaluate(L::LaplaceMap, X::AbstractMatrix{<:Real})
     @assert size(X, 2) == length(L.mode) "Input data must have the same number of columns as dimensions in the map"
     return (X .- L.mode') * inv(L.chol)'
 end
 
-function inverse(L::LaplaceMap, y::Vector{Float64})
+"""
+    inverse(L::LaplaceMap, y::AbstractVector{<:Real})
+
+Invert the Laplace map: L * y + mode.
+"""
+function inverse(L::LaplaceMap, y::AbstractVector{<:Real})
     @assert length(y) == length(L.mode) "Input vector must have the same length as dimensions in the map"
     return L.chol * y .+ L.mode
 end
 
-function inverse(L::LaplaceMap, Y::Matrix{Float64})
+"""
+    inverse(L::LaplaceMap, Y::AbstractMatrix{<:Real})
+
+Invert the transformation for multiple points (row-wise).
+"""
+function inverse(L::LaplaceMap, Y::AbstractMatrix{<:Real})
     @assert size(Y, 2) == length(L.mode) "Input data must have the same number of columns as dimensions in the map"
     return Y * L.chol' .+ L.mode'
 end
 
+"""
+    jacobian(L::LaplaceMap)
+
+Compute the Jacobian determinant of the Laplace map (|det(L)|).
+"""
 function jacobian(L::LaplaceMap)
     return abs(det(L.chol))
 end
 
+"""
+    numberdimensions(L::LaplaceMap)
+
+Return the number of dimensions of the Laplace map.
+"""
 numberdimensions(L::LaplaceMap) = length(L.mode)
 
+"""
+    cov(L::LaplaceMap)
+
+Return the covariance matrix Σ = L * L' of the Laplace approximation.
+"""
 cov(L::LaplaceMap) = L.chol * L.chol'
 
+"""
+    mean(L::LaplaceMap)
+
+Return the mean (mode) of the Laplace approximation.
+"""
 mean(L::LaplaceMap) = L.mode
 
+"""
+    mode(L::LaplaceMap)
+
+Return the mode of the Laplace approximation.
+"""
 mode(L::LaplaceMap) = L.mode
 
+"""
+    MvNormal(L::LaplaceMap)
+
+Construct a multivariate normal distribution from the Laplace approximation.
+"""
 MvNormal(L::LaplaceMap) = Distributions.MvNormal(mean(L), cov(L))
 
 # Make LaplaceMap callable: L(x) instead of evaluate(L, x)
