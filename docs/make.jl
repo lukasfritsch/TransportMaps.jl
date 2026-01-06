@@ -6,6 +6,9 @@ using TransportMaps
 # Setup bibliography
 bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"))
 
+# Configure Plots to not display interactively
+ENV["GKSwstype"] = "100"  # Set GR to non-interactive mode
+
 # Process Literate.jl files
 const LITERATE_DIR = joinpath(@__DIR__, "literate")
 const OUTPUT_DIR = joinpath(@__DIR__, "src")
@@ -54,13 +57,21 @@ makedocs(
             "Banana: Map from Density" => "Examples/banana_mapfromdensity.md",
             "Banana: Map from Samples" => "Examples/banana_mapfromsamples.md",
             "Banana: Adaptive Transport Map from Samples" => "Examples/banana_adaptive.md",
+            "Cubic: Adaptive Transport Map from Density" => "Examples/cubic_adaptive_fromdensity.md",
             "Bayesian Inference: BOD" => "Examples/bod_bayesianinference.md",
         ],
-        "API" => "api.md",
+        "API" => [
+            "Bases" => "api/bases.md",
+            "Rectifiers" => "api/rectifiers.md",
+            "Reference and Target Densities" => "api/densities.md",
+            "Quadrature" => "api/quadrature.md",
+            "Maps" => "api/maps.md",
+            "Optimization" => "api/optimization.md"
+        ],
         "References" => "references.md"
     ],
     repo = "https://github.com/lukasfritsch/TransportMaps.jl/blob/{commit}{path}#{line}",
-    checkdocs = :none,  # Changed from :exports to :none since we don't have docstrings yet
+    checkdocs = :export,
     doctestfilters = [r"Ptr{0x[0-9a-f]+}"],
 )
 

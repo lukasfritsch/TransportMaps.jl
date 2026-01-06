@@ -1,4 +1,18 @@
-# Map composed of linear and polynomial map
+"""
+    ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
+
+A composed transport map consisting of a linear map followed by a polynomial map.
+
+The composition is defined as `S(x) = M(L(x))` where `L` is the linear map of type `T` and `M` is the
+polynomial map. The linear map can be a `LinearMap` or `LaplaceMap`.
+
+# Fields
+- `linearmap<:T`: The linear map component
+- `polynomialmap::PolynomialMap`: The polynomial map component
+
+# Constructors
+- `ComposedMap(lm::AbstractLinearMap, pm::PolynomialMap)`
+"""
 struct ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
     linearmap::T
     polynomialmap::PolynomialMap

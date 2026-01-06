@@ -1,7 +1,8 @@
 """
     OptimizationHistory
 
-A data structure to store the iteration history of adaptive transport map optimization.
+A data structure to store the iteration history of adaptive transport map optimization from
+samples.
 
 # Fields
 - `terms::Vector{Matrix{Int64}}`: Multi-index sets at each iteration
@@ -56,7 +57,13 @@ end
 """
     OptimizationResult
 
-A data structure to store the optimization results for each component of a transport map.
+A data structure to store the optimization results for each component of a transport map
+when optimizing the map from samples.
+
+# Fields
+- `train_objectives::Vector{Float64}`: Train objective for each component
+- `test_objectives::Vector{Float64}`: Test objective for each component
+- `optimization_results::Vector{Optim.MultivariateOptimizationResults}`: Result from optimization with `Optim.jl`
 """
 struct OptimizationResult
     train_objectives::Vector{Float64}
@@ -84,6 +91,63 @@ function update_optimization_result!(
 end
 
 function Base.show(io::IO, result::OptimizationResult)
+    dim = length(result.train_objectives)
+    println(io, "OptimizationResult for $dim components:")
+    for i in 1:dim
+        println(io, " Component $i:")
+        println(io, "  Train : ", result.train_objectives[i])
+        println(io, "  Test  : ", result.test_objectives[i])
+    end
+end
+
+"""
+    MapOptimizationResult
+
+A data struct to store the iteration history of adaptive transport map optimization from
+density.
+
+# Fields
+- `maps::Vector{PolynomialMap}`: Maps for each iteration
+- `train_objectives::Vector{Float64}`: Train objectives for each iteration
+- `test_objectives::Vector{Float64}`: Test objectives for each iteration
+- `gradients::Vector{Vector{Float64}}`: Gradients of train objectives
+- `optimization_results::Vector{Optim.MultivariateOptimizationResults}`: Results of optimization with `Optim.jl`
+
+"""
+struct MapOptimizationResult
+    maps::Vector{PolynomialMap}
+    train_objectives::Vector{Float64}
+    test_objectives::Vector{Float64}
+    gradients::Vector{Vector{Float64}}
+    optimization_results::Vector{Optim.MultivariateOptimizationResults}
+
+    function MapOptimizationResult(maxiterations::Int)
+        maps = Vector{PolynomialMap}(undef, maxiterations)
+        train_objectives = Vector{Float64}(undef, maxiterations)
+        test_objectives = Vector{Float64}(undef, maxiterations)
+        gradients = [Float64[] for _ in 1:maxiterations]
+        optimization_results = Vector{Optim.MultivariateOptimizationResults}(undef, maxiterations)
+        return new(maps, train_objectives, test_objectives, gradients, optimization_results)
+    end
+end
+
+function update_optimization_history!(
+    result::MapOptimizationResult,
+    map::PolynomialMap,
+    train_objective::Float64,
+    test_objective::Float64,
+    gradient::Vector{Float64},
+    optimization_result::Optim.MultivariateOptimizationResults,
+    iteration::Int
+)
+    result.maps[iteration] = map
+    result.train_objectives[iteration] = train_objective
+    result.test_objectives[iteration] = test_objective
+    result.gradients[iteration] = gradient
+    result.optimization_results[iteration] = optimization_result
+end
+
+function Base.show(io::IO, result::MapOptimizationResult)
     dim = length(result.train_objectives)
     println(io, "OptimizationResult for $dim components:")
     for i in 1:dim

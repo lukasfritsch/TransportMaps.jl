@@ -32,6 +32,7 @@ using Test
         include("optimization/test_mapfromsamples.jl")
         include("optimization/test_optimizationhistory.jl")
         include("optimization/test_adaptivetransportmap.jl")
+        include("optimization/test_adaptivetransportmap_fromdensity.jl")
     end
 
     # Test Utilities

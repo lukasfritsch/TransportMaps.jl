@@ -10,6 +10,8 @@ using Random
 using StatsFuns
 using Statistics
 
+import Distributions: mean, mode, cov, MvNormal, pdf, logpdf
+
 # Abstract type definitions
 abstract type AbstractBasisFunction end
 abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
@@ -40,6 +42,7 @@ export AbstractLinearMap
 export Psi
 export basisfunction
 export basisfunction_derivative
+export basisfunction_second_derivative
 export basistype
 export evaluate
 export edge_controlled_hermite_polynomial
@@ -47,12 +50,12 @@ export edge_controlled_hermite_derivative
 export f
 export hermite_polynomial
 export hermite_derivative
+export hermite_second_derivative
 export multivariate_indices
 
 # Map operations
 export DiagonalMap
 export NoMixedMap
-export gradient
 export gradient_coefficients
 export gradient_z
 export gradient_zk
@@ -60,6 +63,7 @@ export jacobian
 export inverse
 export inverse_jacobian
 export partial_derivative_z
+export partial_derivative_zj
 export partial_derivative_zk
 export pullback
 export pushforward
@@ -83,6 +87,7 @@ export optimize_adaptive_transportmap
 export optimize_adaptive_transportmapcomponent
 export OptimizationHistory
 export OptimizationResult
+export MapOptimizationResult
 
 # Conditional densities and samples
 export conditional_density
@@ -99,7 +104,6 @@ export HermiteBasis
 export LinearizedHermiteBasis
 export CubicSplineHermiteBasis
 export GaussianWeightedHermiteBasis
-export RadialBasis
 
 export MultivariateBasis
 export LinearMap
@@ -117,6 +121,18 @@ export MapReferenceDensity
 export SparseSmolyakWeights
 export PrecomputedBasis
 export PrecomputedMapBasis
+export Exponential
+
+# Laplace Map
+export mean
+export cov
+export mode
+export MvNormal
+
+# Map Density
+export pdf
+export logpdf
+export grad_logpdf
 
 # Include files
 include("util/mapdensity.jl")
@@ -143,6 +159,7 @@ include("optimization/mapfromdensity.jl")
 include("optimization/mapfromsamples.jl")
 include("optimization/optimizationhistory.jl")
 include("optimization/adaptivetransportmap.jl")
+include("optimization/adaptivetransportmap_density.jl")
 
 include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")

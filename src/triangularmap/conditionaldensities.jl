@@ -9,7 +9,7 @@ function conditional_density(M::PolynomialMap, x_range::Float64, x_given::Vector
     z_range = inverse(M, [x_given..., x_range], k)
 
     # conditional density: π(xₖ | x₁, ..., xₖ₋₁) = ρ(zₖ) * |∂Tₖ/∂zₖ|^{-1}
-    cond_density = M.reference.density(z_range[k]) * abs(1 / partial_derivative_zk(M.components[k], z_range))
+    cond_density = pdf(M.reference, z_range[k]) * abs(1 / partial_derivative_zk(M.components[k], z_range))
 
     return cond_density
 end
@@ -100,12 +100,12 @@ function multivariate_conditional_density(M::PolynomialMap, x::Vector{Float64})
     if d == 1
         # For single dimension, this is just the marginal density of x₁
         z = inverse(M, x, 1)
-        return M.reference.density(z[1]) * abs(1 / partial_derivative_zk(M.components[1], z))
+        return pdf(M.reference, z[1]) * abs(1 / partial_derivative_zk(M.components[1], z))
     end
 
     # Start with the first variable (marginal density)
     z₁ = inverse(M, x[1:1], 1)
-    density = M.reference.density(z₁[1]) * abs(1 / partial_derivative_zk(M.components[1], z₁))
+    density = pdf(M.reference, z₁[1]) * abs(1 / partial_derivative_zk(M.components[1], z₁))
 
     # Multiply by conditional densities for subsequent variables
     for k in 2:d

@@ -1,3 +1,18 @@
+"""
+    PolynomialMap <: AbstractTriangularMap
+
+Triangular transport map with polynomial basis.
+
+# Fields
+- `components::Vector{PolynomialMapComponent{<:AbstractPolynomialBasis}}`: Vector of map components
+- `reference::MapReferenceDensity`: Reference density of the map
+- `forwarddirection::Symbol`: `:target` for map from density, `:reference` for map from samples
+
+# Constructors
+- `PolynomialMap(dimension::Int,degree::Int, referencetype::Symbol=:normal, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=LinearizedHermiteBasis(), map_type::Symbol=:total)`: Initialize polynomial map for map from density.
+- `DiagonalMap(dimension::Int, degree::Int, referencetype::Symbol=:normal, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=LinearizedHermiteBasis())`: Initialize diagonal map with diagonal structure.
+- `NoMixedMap(dimension::Int, degree::Int, referencetype::Symbol=:normal, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=LinearizedHermiteBasis())`: Initialize diagonal map without mixed terms.
+"""
 mutable struct PolynomialMap <: AbstractTriangularMap
     components::Vector{PolynomialMapComponent{<:AbstractPolynomialBasis}}  # Vector of map components
     reference::MapReferenceDensity
@@ -38,7 +53,7 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         components::Vector{PolynomialMapComponent{T}},
         reference::Distributions.UnivariateDistribution=Normal();
         forwarddirection::Symbol=:target
-        ) where T<:AbstractPolynomialBasis
+    ) where T<:AbstractPolynomialBasis
         return new(components, MapReferenceDensity(reference), forwarddirection)
     end
 end
@@ -63,6 +78,24 @@ function NoMixedMap(
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
 )
     return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :no_mixed)
+end
+
+# Construct PolynomialMap from multi-index sets Λ and given density
+function PolynomialMap(
+    Λ::Vector{Vector{Vector{Int}}},
+    rectifier::AbstractRectifierFunction,
+    basis::AbstractPolynomialBasis,
+    reference_density::Distributions.UnivariateDistribution=Normal()
+)
+    d = length(Λ)
+    T = typeof(basis)
+    components = Vector{PolynomialMapComponent{T}}(undef, d)
+
+    for k in 1:d
+        components[k] = PolynomialMapComponent(Λ[k], rectifier, basis, reference_density)
+    end
+
+    return PolynomialMap(components; forwarddirection=:target)
 end
 
 # Evaluate the polynomial map at z (single vector)
@@ -195,6 +228,26 @@ end
 
 gradient_coefficients(M::PolynomialMap, z::AbstractVector{<:Real}) = gradient_coefficients(M, Vector{Float64}(z))
 
+# Gradient of the map with respect to the coefficients at multiple points (matrix input) using multithreading
+function gradient_coefficients(M::PolynomialMap, Z::Matrix{Float64})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+    n_dims = length(M.components)
+    n_coeffs = numbercoefficients(M)
+
+    # Preallocate result: 3D array (n_points × n_dims × n_coeffs)
+    results = Array{Float64,3}(undef, n_points, n_dims, n_coeffs)
+
+    # Use multithreading to compute gradient for each point
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i, :, :] = gradient_coefficients(M, Vector{Float64}(z_point))
+    end
+
+    return results
+end
+
 # Compute the Jacobian determinant of the polynomial map at z (single vector)
 function jacobian(M::PolynomialMap, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
@@ -256,6 +309,23 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::Vector{Float64})
 end
 
 jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{<:Real}) = jacobian_logdet_gradient(M, Vector{Float64}(z))
+
+# Compute the gradient of log|det J_M| with respect to coefficients at multiple points (matrix input)
+function jacobian_logdet_gradient(M::PolynomialMap, Z::Matrix{Float64})
+    @assert size(Z, 2) == length(M.components) "Number of columns must match the dimension of the map"
+
+    n_points = size(Z, 1)
+    n_coeffs = numbercoefficients(M)
+
+    results = Matrix{Float64}(undef, n_points, n_coeffs)
+
+    Threads.@threads for i in 1:n_points
+        z_point = Z[i, :]
+        results[i, :] = jacobian_logdet_gradient(M, Vector{Float64}(z_point))
+    end
+
+    return results
+end
 
 # Compute the inverse of the first k components of the polynomial map at z (single vector)
 function inverse(M::PolynomialMap, x::Vector{Float64}, k::Int=numberdimensions(M))
@@ -327,8 +397,8 @@ inverse_jacobian(M::PolynomialMap, X::AbstractMatrix{<:Real}) = inverse_jacobian
 function pullback(M::PolynomialMap, x::Vector{Float64})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
-    value = M.forwarddirection == :target ? M.reference.density(inverse(M, x)) * abs(inverse_jacobian(M, x)) :
-            M.reference.density(evaluate(M, x)) * abs(jacobian(M, x))
+    value = M.forwarddirection == :target ? pdf(M.reference, inverse(M, x)) * abs(inverse_jacobian(M, x)) :
+            pdf(M.reference, evaluate(M, x)) * abs(jacobian(M, x))
 
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
     return value
@@ -361,7 +431,7 @@ pullback(M::PolynomialMap, X::AbstractMatrix{<:Real}) = pullback(M, Matrix{Float
 function pushforward(M::PolynomialMap, target::MapTargetDensity, z::Vector{Float64})
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
-    value = M.forwarddirection == :target ? target.density(evaluate(M, z)) * abs(jacobian(M, z)) :
+    value = M.forwarddirection == :target ? pdf(target, evaluate(M, z)) * abs(jacobian(M, z)) :
             error("Can't evaluate pushforward for a map from samples!")
 
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|

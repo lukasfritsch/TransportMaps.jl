@@ -542,7 +542,7 @@ using LinearAlgebra
 
     @testset "Pushforward Density" begin
         # Test with simple target density
-        target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
+        target_density(x) = logpdf(MvNormal(zeros(length(x)), I(length(x))), x)
         target = MapTargetDensity(target_density, :auto_diff)
 
         # Test 1D case
@@ -552,7 +552,7 @@ using LinearAlgebra
         z_1d = [0.5]
         pf_1d = pushforward(pm_1d, target, z_1d)
         # For identity map with standard normal target, pushforward should equal target at z
-        @test pf_1d ≈ target_density(z_1d) atol = 1e-10
+        @test pf_1d ≈ pdf(target, z_1d) atol = 1e-10
 
         # Test 2D case
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -561,7 +561,7 @@ using LinearAlgebra
 
         z_2d = [0.3, 0.7]
         pf_2d = pushforward(pm_2d, target, z_2d)
-        @test pf_2d ≈ target.density(z_2d) atol = 1e-10
+        @test pf_2d ≈ pdf(target, z_2d) atol = 1e-10
 
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())

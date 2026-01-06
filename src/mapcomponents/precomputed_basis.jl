@@ -175,23 +175,16 @@ function evaluate_integral(precomp::PrecomputedBasis, coefficients::Vector{Float
     n_samples = precomp.n_samples
     n_quad = precomp.n_quad
     integrals = Vector{Float64}(undef, n_samples)
-
-    # For each sample, compute the integral using quadrature
+    # Vectorized computation over quadrature points for each sample
     @inbounds for i in 1:n_samples
-        integral_val = 0.0
-        scale = precomp.quad_scales[i]
+        # Compute ∂f for all quadrature points at once: (n_quad,)
+        ∂f_quad = vec(precomp.∂Ψ_quad[i, :, :] * coefficients)
 
-        # Sum over quadrature points
-        for q in 1:n_quad
-            # Vectorized computation of ∂f/∂x_k at this quadrature point
-            ∂f = dot(view(precomp.∂Ψ_quad, i, q, :), coefficients)
+        # Apply rectifier and compute weighted sum
+        integral_val = dot(precomp.quad_weights, rectifier.(∂f_quad))
 
-            # Apply rectifier and add weighted contribution
-            integral_val += precomp.quad_weights[q] * rectifier(∂f)
-        end
-
-        # Scale by integration domain (0.5 * z_k for mapping from [-1,1] to [0, z_k])
-        integrals[i] = integral_val * scale
+        # Scale by integration domain
+        integrals[i] = integral_val * precomp.quad_scales[i]
     end
 
     return integrals
@@ -353,70 +346,51 @@ function Base.show(io::IO, ::MIME"text/plain", pmb::PrecomputedMapBasis)
     println(io, "  Memory usage: $(round(memory_mb, digits=2)) MB")
 end
 
-"""
-    evaluate_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
-
-Evaluate the polynomial map at a specific quadrature point using precomputed basis.
-
-# Arguments
-- `M::PolynomialMap`: The polynomial map with current coefficients
-- `precomp::PrecomputedMapBasis`: Precomputed basis evaluations
-- `quad_idx::Int`: Index of the quadrature point to evaluate at
-
-# Returns
-- `Vector{Float64}`: Map evaluation [M¹(z), M²(z), ..., Mᵈ(z)]
-"""
-function evaluate_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
+function evaluate(M::PolynomialMap, precomp::PrecomputedMapBasis)
     dimension = precomp.dimension
-    result = Vector{Float64}(undef, dimension)
+    n_quad = precomp.n_quad
+    result = Matrix{Float64}(undef, n_quad, dimension)
+
+    # Preallocate temporary arrays for batch computation
+    f₀_all = Matrix{Float64}(undef, n_quad, dimension)
+    integral_all = Matrix{Float64}(undef, n_quad, dimension)
 
     @inbounds for k in 1:dimension
         component = M[k]
         comp_precomp = precomp.component_data[k]
-
-        # Get coefficients for this component
         c = component.coefficients
 
-        # Evaluate Mᵏ using precomputed basis
-        # M^k(z) = f₀ + ∫₀^{z_k} g(∂f/∂x_k) dx_k
+        # Vectorized f₀ computation: matrix-vector multiplication
+        # f₀_all[:, k] = comp_precomp.Ψ₀ * c
+        mul!(view(f₀_all, :, k), comp_precomp.Ψ₀, c)
 
-        # f₀ term: vectorized dot product
-        f₀ = dot(view(comp_precomp.Ψ₀, quad_idx, :), c)
+        # Integral term computation
+        Threads.@threads for i in 1:n_quad
+            scale = comp_precomp.quad_scales[i]
+            integral_val = 0.0
 
-        # Integral term using precomputed quadrature evaluations
-        scale = comp_precomp.quad_scales[quad_idx]
-        integral_val = 0.0
-        for q in 1:comp_precomp.n_quad
-            # Vectorized computation of ∂f at quadrature point q
-            ∂f = dot(view(comp_precomp.∂Ψ_quad, quad_idx, q, :), c)
-            integral_val += comp_precomp.quad_weights[q] * component.rectifier(∂f)
+            # Vectorized computation over quadrature points
+            for q in 1:comp_precomp.n_quad
+                ∂f = dot(view(comp_precomp.∂Ψ_quad, i, q, :), c)
+                integral_val += comp_precomp.quad_weights[q] * component.rectifier(∂f)
+            end
+
+            integral_all[i, k] = integral_val * scale
         end
-        integral_val *= scale
 
-        result[k] = f₀ + integral_val
+        # Combine f₀ and integral terms
+        result[:, k] .= f₀_all[:, k] .+ integral_all[:, k]
     end
 
     return result
 end
 
-"""
-    gradient_coefficients_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
-
-Compute the gradient of the map w.r.t. all coefficients at a quadrature point.
-
-# Arguments
-- `M::PolynomialMap`: The polynomial map with current coefficients
-- `precomp::PrecomputedMapBasis`: Precomputed basis evaluations
-- `quad_idx::Int`: Index of the quadrature point
-
-# Returns
-- `Matrix{Float64}`: Gradient matrix (dimension × total_coefficients)
-"""
-function gradient_coefficients_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
+function gradient_coefficients(M::PolynomialMap, precomp::PrecomputedMapBasis)
     dimension = precomp.dimension
+    n_quad = precomp.n_quad
     n_total_coeffs = numbercoefficients(M)
 
-    grad_matrix = zeros(Float64, dimension, n_total_coeffs)
+    grad_matrix = zeros(Float64, n_quad, dimension, n_total_coeffs)
 
     coeff_offset = 1
     @inbounds for k in 1:dimension
@@ -427,24 +401,26 @@ function gradient_coefficients_map(M::PolynomialMap, precomp::PrecomputedMapBasi
 
         # For each coefficient of this component
         for j in 1:n_comp_coeffs
-            # ∂M^k/∂c_j = ∂f₀/∂c_j + ∂(integral)/∂c_j
+            Threads.@threads for i in 1:n_quad
+                # ∂M^k/∂c_j = ∂f₀/∂c_j + ∂(integral)/∂c_j
 
-            # f₀ term contribution
-            grad_val = comp_precomp.Ψ₀[quad_idx, j]
+                # f₀ term contribution
+                grad_val = comp_precomp.Ψ₀[i, j]
 
-            # Integral term contribution
-            # ∂(integral)/∂c_j = ∫₀^{z_k} g'(∂f/∂x_k) * ∂²f/(∂x_k ∂c_j) dx_k
-            #                  = ∫₀^{z_k} g'(∂f/∂x_k) * ∂ψ_j/∂x_k dx_k
-            scale = comp_precomp.quad_scales[quad_idx]
-            for q in 1:comp_precomp.n_quad
-                # Vectorized computation of ∂f/∂x_k at this quadrature point
-                ∂f = dot(view(comp_precomp.∂Ψ_quad, quad_idx, q, :), c)
+                # Integral term contribution
+                # ∂(integral)/∂c_j = ∫₀^{z_k} g'(∂f/∂x_k) * ∂²f/(∂x_k ∂c_j) dx_k
+                #                  = ∫₀^{z_k} g'(∂f/∂x_k) * ∂ψ_j/∂x_k dx_k
+                scale = comp_precomp.quad_scales[i]
+                for q in 1:comp_precomp.n_quad
+                    # Vectorized computation of ∂f/∂x_k at this quadrature point
+                    ∂f = dot(view(comp_precomp.∂Ψ_quad, i, q, :), c)
 
-                g_prime = derivative(component.rectifier, ∂f)
-                grad_val += comp_precomp.quad_weights[q] * g_prime * comp_precomp.∂Ψ_quad[quad_idx, q, j] * scale
+                    g_prime = derivative(component.rectifier, ∂f)
+                    grad_val += comp_precomp.quad_weights[q] * g_prime * comp_precomp.∂Ψ_quad[i, q, j] * scale
+                end
+
+                grad_matrix[i, k, coeff_offset + j - 1] = grad_val
             end
-
-            grad_matrix[k, coeff_offset + j - 1] = grad_val
         end
 
         coeff_offset += n_comp_coeffs
@@ -453,58 +429,34 @@ function gradient_coefficients_map(M::PolynomialMap, precomp::PrecomputedMapBasi
     return grad_matrix
 end
 
-"""
-    jacobian_diagonal_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
-
-Compute the diagonal of the Jacobian (∂M^k/∂z_k for each k) at a quadrature point.
-
-# Arguments
-- `M::PolynomialMap`: The polynomial map with current coefficients
-- `precomp::PrecomputedMapBasis`: Precomputed basis evaluations
-- `quad_idx::Int`: Index of the quadrature point
-
-# Returns
-- `Vector{Float64}`: Diagonal elements [∂M¹/∂z₁, ∂M²/∂z₂, ..., ∂Mᵈ/∂zᵈ]
-"""
-function jacobian_diagonal_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
+function jacobian(M::PolynomialMap, precomp::PrecomputedMapBasis)
     dimension = precomp.dimension
-    diag = Vector{Float64}(undef, dimension)
+    n_quad = precomp.n_quad
+    diag = Matrix{Float64}(undef, n_quad, dimension)
 
     @inbounds for k in 1:dimension
         component = M[k]
         comp_precomp = precomp.component_data[k]
         c = component.coefficients
 
-        # ∂M^k/∂z_k = g(∂f/∂z_k)
-        # Vectorized computation of ∂f/∂z_k at the quadrature point
-        ∂f = dot(view(comp_precomp.∂Ψ_z, quad_idx, :), c)
+        Threads.@threads for i in 1:n_quad
+            # ∂M^k/∂z_k = g(∂f/∂z_k)
+            # Vectorized computation of ∂f/∂z_k at the quadrature point
+            ∂f = dot(view(comp_precomp.∂Ψ_z, i, :), c)
 
-        diag[k] = component.rectifier(∂f)
+            diag[i, k] = component.rectifier(∂f)
+        end
     end
 
-    return diag
+    return prod.(eachrow(diag))
 end
 
-"""
-    jacobian_logdet_gradient_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
-
-Compute the gradient of log|det(J_M)| w.r.t. all coefficients at a quadrature point.
-
-For triangular maps: log|det J_M| = Σᵢ log(∂Mⁱ/∂zᵢ)
-
-# Arguments
-- `M::PolynomialMap`: The polynomial map with current coefficients
-- `precomp::PrecomputedMapBasis`: Precomputed basis evaluations
-- `quad_idx::Int`: Index of the quadrature point
-
-# Returns
-- `Vector{Float64}`: Gradient vector w.r.t. all coefficients
-"""
-function jacobian_logdet_gradient_map(M::PolynomialMap, precomp::PrecomputedMapBasis, quad_idx::Int)
+function jacobian_logdet_gradient(M::PolynomialMap, precomp::PrecomputedMapBasis)
     dimension = precomp.dimension
+    n_quad = precomp.n_quad
     n_total_coeffs = numbercoefficients(M)
 
-    gradient = zeros(Float64, n_total_coeffs)
+    gradient = zeros(Float64, n_quad, n_total_coeffs)
 
     coeff_offset = 1
     @inbounds for k in 1:dimension
@@ -513,15 +465,17 @@ function jacobian_logdet_gradient_map(M::PolynomialMap, precomp::PrecomputedMapB
         c = component.coefficients
         n_comp_coeffs = length(c)
 
-        # Vectorized computation of ∂M^k/∂z_k (diagonal element)
-        ∂f = dot(view(comp_precomp.∂Ψ_z, quad_idx, :), c)
+        Threads.@threads for i in 1:n_quad
+            # Vectorized computation of ∂M^k/∂z_k (diagonal element)
+            ∂f = dot(view(comp_precomp.∂Ψ_z, i, :), c)
 
-        diagonal_deriv = component.rectifier(∂f)
-        g_prime = derivative(component.rectifier, ∂f)
+            diagonal_deriv = component.rectifier(∂f)
+            g_prime = derivative(component.rectifier, ∂f)
 
-        # ∂(log|∂M^k/∂z_k|)/∂c_j = (1/∂M^k/∂z_k) * g'(∂f/∂z_k) * ∂ψ_j/∂z_k
-        # Vectorized assignment of gradient components
-        gradient[coeff_offset:coeff_offset + n_comp_coeffs - 1] .= (g_prime / diagonal_deriv) .* view(comp_precomp.∂Ψ_z, quad_idx, :)
+            # ∂(log|∂M^k/∂z_k|)/∂c_j = (1/∂M^k/∂z_k) * g'(∂f/∂z_k) * ∂ψ_j/∂z_k
+            # Vectorized assignment of gradient components
+            gradient[i, coeff_offset:coeff_offset + n_comp_coeffs - 1] .= (g_prime / diagonal_deriv) .* view(comp_precomp.∂Ψ_z, i, :)
+        end
 
         coeff_offset += n_comp_coeffs
     end

@@ -6,7 +6,7 @@ M = PolynomialMap(2, 2, Normal(), Softplus())
 
 quadrature = SparseSmolyakWeights(2, 2)
 
-target_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+target_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
 
 target = MapTargetDensity(target_density, :auto_diff)
 

@@ -1,4 +1,17 @@
-# Implement a linear transport map (scaling by mean and stddev)
+
+"""
+    LinearMap <: AbstractLinearMap
+
+A linear transformation map that standardizes data using mean and standard deviation.
+
+# Fields
+- `μ::Vector{Float64}`: Mean vector for each dimension
+- `σ::Vector{Float64}`: Standard deviation vector for each dimension
+
+# Constructors
+- `LinearMap(samples::Matrix{Float64})`: Compute empirical mean and standard deviation from samples.
+- `LinearMap(μ::Vector{Float64}, σ::Vector{Float64})`: Construct linear map with explicit mean and standard deviation.
+"""
 struct LinearMap <: AbstractLinearMap
     μ::Vector{Float64}
     σ::Vector{Float64}

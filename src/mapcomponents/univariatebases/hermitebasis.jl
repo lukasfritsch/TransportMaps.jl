@@ -1,10 +1,9 @@
-# Standard Hermite basis (probabilist's Hermite polynomials)
-struct HermiteBasis <: AbstractPolynomialBasis
+"""
+    HermiteBasis
 
-    function HermiteBasis()
-        return new()
-    end
-end
+Probabilist Hermite polynomial basis.
+"""
+struct HermiteBasis <: AbstractPolynomialBasis end
 
 # Univariate probabilist's Hermite polynomials
 @inline function hermite_polynomial(n::Int64, z::Float64)
@@ -28,12 +27,20 @@ end
     n == 0 ? 0.0 : n * hermite_polynomial(n - 1, z)
 end
 
-# Basis function for standard Hermite
+"""
+    basisfunction(basis::HermiteBasis, αᵢ::Real, zᵢ::Real)
+
+Evaluate `HermiteBasis` with degree `αᵢ` at `zᵢ`.
+"""
 @inline function basisfunction(basis::HermiteBasis, αᵢ::Real, zᵢ::Real)
     return hermite_polynomial(Int(αᵢ), zᵢ)
 end
 
-# Derivative for standard Hermite
+"""
+    basisfunction_derivative(basis::HermiteBasis, αᵢ::Real, zᵢ::Real)
+
+Evaluate derivative of `HermiteBasis` with degree `αᵢ` at `zᵢ`.
+"""
 @inline function basisfunction_derivative(basis::HermiteBasis, αᵢ::Real, zᵢ::Real)
     return hermite_derivative(Int(αᵢ), zᵢ)
 end
