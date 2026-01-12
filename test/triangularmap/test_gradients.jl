@@ -16,7 +16,7 @@ using Optim
         setcoefficients!(M, initial_coeffs)
 
         # Simple target density
-        target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
+        target_density_func(x) = logpdf(Normal(), x[1].^2) + logpdf(Normal(), x[2])
         target_density = MapTargetDensity(target_density_func, :auto_diff)
 
         # Small quadrature for testing
@@ -61,7 +61,7 @@ using Optim
             (2, 2, :normal, Softplus(), HermiteBasis())  # Higher degree
         ]
 
-        target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
+        target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1])
         target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(30, 2)
 
@@ -89,7 +89,7 @@ using Optim
 
         # Test at multiple random starting points
         M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
-        target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
+        target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2])
         target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(25, 2)
 
@@ -201,7 +201,7 @@ using Optim
         initial_coeffs = 0.2 * randn(numbercoefficients(M))
         setcoefficients!(M, initial_coeffs)
 
-        target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
+        target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2])
         target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(30, 2)
 
@@ -338,7 +338,7 @@ using Optim
         Random.seed!(161718)
 
         M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
-        target_density_func(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2])
+        target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2])
         target_density = MapTargetDensity(target_density_func, :auto_diff)
         quadrature = LatinHypercubeWeights(20, 2)
 
@@ -358,7 +358,7 @@ using Optim
 
         # Test with different target densities
         # Banana-shaped distribution
-        banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
+        banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
         target_density_banana = MapTargetDensity(banana_density, :auto_diff)
         setcoefficients!(M, 0.1 * randn(numbercoefficients(M)))
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_banana, quadrature)
