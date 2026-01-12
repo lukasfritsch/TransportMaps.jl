@@ -64,7 +64,7 @@ struct LaplaceMap <: AbstractLinearMap
             hessian_backend = density.ad_backend
         end
 
-        H = DifferentiationInterface.hessian(obj, density.ad_backend, mode)
+        H = DifferentiationInterface.hessian(obj, hessian_backend, mode)
 
         # Make matrix Hermitian to avoid numerical issues
         Σ = Hermitian(inv(H))

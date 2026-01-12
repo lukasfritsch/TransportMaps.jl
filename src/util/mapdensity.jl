@@ -185,18 +185,16 @@ function grad_logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
     n, d = size(X)
     log_gradients = zeros(Float64, n, d)
 
-    if isa(density.ad_backend, ADTypes.AutoMooncake)
+    threaded = !(density.ad_backend isa ADTypes.AutoMooncake)
 
+    if threaded
+        Threads.@threads for i in 1:n
+            log_gradients[i, :] = density.grad_logdensity(X[i, :])
+        end
+    else
         for i in 1:n
             log_gradients[i, :] = density.grad_logdensity(X[i, :])
         end
-
-        return log_gradients
-
-    end
-
-    Threads.@threads for i in 1:n
-        log_gradients[i, :] = density.grad_logdensity(X[i, :])
     end
 
     return log_gradients

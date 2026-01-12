@@ -61,7 +61,7 @@ function correlated_gaussian(x; ρ=0.8)
 end
 #md nothing #hide
 
-# Then, we construct the `MapTargetDensity` object with. In the default case, automatic differentiation is used with [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/stable/)
+# Then, we construct the `MapTargetDensity` object. In the default case, automatic differentiation is used with [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/stable/)
 # AD is implemented with [`DifferentiationInterface.jl`](https://juliadiff.org/DifferentiationInterface.jl/DifferentiationInterface/stable/).
 # This allows for the use of other packages supported by the interface, e.g., `Mooncake.jl`, `Zygote.jl` or `FiniteDiff.jl` for finite difference approximations.
 # For more information, we also refer to [dalle2025](@cite).

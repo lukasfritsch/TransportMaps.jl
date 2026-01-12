@@ -1,7 +1,7 @@
 using TransportMaps
 using Test
 
-import DifferentiationInterface: AutoFiniteDiff, AutoForwardDiff
+import DifferentiationInterface: AutoFiniteDiff, AutoForwardDiff, AutoMooncake, GradientPrep
 
 @testset "TransportMaps.jl" begin
     # Test Map Components

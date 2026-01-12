@@ -65,6 +65,13 @@ end
     @test isapprox(mean(L_fd), [0.0, 0.0]; atol=1e-6)
     @test isapprox(cov(L_fd), cov(L_map); atol=1e-6)
 
+    # Finite Difference approximation of Hessian (analytical gradient)
+    target_fd2 = MapTargetDensity(density, x -> [x[2] - 2 * x[1], x[1] - x[2]])
+    L_fd2 = LaplaceMap(target_fd2, x0)
+
+    @test isapprox(mean(L_fd2), [0.0, 0.0]; atol=1e-6)
+    @test isapprox(cov(L_fd2), cov(L_map); atol=1e-6)
+
     # Error handling
     options = Optim.Options(iterations=1)
     @test_throws "LaplaceMap optimization did not converge." LaplaceMap(target, x0; options=options)

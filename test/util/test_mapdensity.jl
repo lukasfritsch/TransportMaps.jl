@@ -43,20 +43,23 @@ using Distributions
         @test length(g_analytical) == 1
         @test isfinite(g_analytical[1])
 
-        target_analytical = MapTargetDensity(x -> logpdf(Normal(), x[1]), x -> [-x[1] * pdf(Normal(), x[1])])
-        g_analytical = grad_logpdf(target_analytical, x)
-        @test length(g_analytical) == 1
-        @test isfinite(g_analytical[1])
-
         @testset "Gradient Types" begin
             # Test different gradient types
             gradient_types_ad = [AutoForwardDiff(), AutoFiniteDiff()]
 
+            X = rand(5, 1)
+
             for type in gradient_types_ad
-                t = MapTargetDensity(x -> logpdf(Normal(), x[1]), type)
+                t = MapTargetDensity(x -> logpdf(Normal(), x[1]), type, 1)
                 @test t.ad_backend == type
+                @test_nowarn grad_logpdf(t, X)
             end
 
+        end
+
+        @testset "Target Density with pre-computed gradient" begin
+            target = MapTargetDensity(x -> logpdf(Normal(), x[1]), AutoFiniteDiff(), 1)
+            @test isa(target.prepared_gradient, GradientPrep)
         end
 
     end
@@ -70,6 +73,11 @@ using Distributions
         @test isfinite(g[1])
 
         @test_throws ErrorException MapReferenceDensity(Uniform())
+
+        @testset "Reference Density with pre-computed gradient" begin
+            reference = MapReferenceDensity(Normal(), AutoFiniteDiff(), 1)
+            @test isa(reference.prepared_gradient, GradientPrep)
+        end
 
     end
 
