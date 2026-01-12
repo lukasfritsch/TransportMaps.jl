@@ -20,61 +20,61 @@ Term 3 / 10
    Evaluating 3 candidates...
    Best candidate: Component 1, adding term
    Gradient magnitude: 255.03292359035316
-   KL divergence (train): 24.916202549808624
-   KL divergence (valid): 21.15561406738053
+   KL divergence (train): 24.91620254980863
+   KL divergence (valid): 21.155614067380508
 
 Term 4 / 10
    Evaluating 3 candidates...
    Best candidate: Component 2, adding term
-   Gradient magnitude: 33.93601155755287
+   Gradient magnitude: 33.93601155755286
    KL divergence (train): 3.329623966996172
-   KL divergence (valid): 3.266929403133024
+   KL divergence (valid): 3.2669294031330285
 
 Term 5 / 10
    Evaluating 3 candidates...
    Best candidate: Component 2, adding term
-   Gradient magnitude: 3.9426851026819945
+   Gradient magnitude: 3.9426851026820113
    KL divergence (train): 3.2160766301156856
-   KL divergence (valid): 3.0705041053294364
+   KL divergence (valid): 3.0705041053295257
 
 Term 6 / 10
    Evaluating 4 candidates...
    Best candidate: Component 2, adding term
-   Gradient magnitude: 9.190091216834806e-10
+   Gradient magnitude: 9.226702321032485e-10
    KL divergence (train): 3.2160766301156856
-   KL divergence (valid): 3.0705041053294364
+   KL divergence (valid): 3.0705041053295257
 
 Term 7 / 10
    Evaluating 4 candidates...
    Best candidate: Component 2, adding term
-   Gradient magnitude: 4.091440465170177
-   KL divergence (train): 2.913553432115592
-   KL divergence (valid): 2.879447871962648
+   Gradient magnitude: 4.09144046516957
+   KL divergence (train): 2.913553432115593
+   KL divergence (valid): 2.87944787196269
 
 Term 8 / 10
    Evaluating 4 candidates...
    Best candidate: Component 2, adding term
-   Gradient magnitude: 2.8244284199826606e-10
-   KL divergence (train): 2.913553432115592
-   KL divergence (valid): 2.879447871962648
+   Gradient magnitude: 2.8357364153180063e-10
+   KL divergence (train): 2.913553432115593
+   KL divergence (valid): 2.87944787196269
 
 Term 9 / 10
    Evaluating 4 candidates...
    Best candidate: Component 2, adding term
-   Gradient magnitude: 0.9447513910864436
-   KL divergence (train): 2.8626416695459453
-   KL divergence (valid): 2.9319080639921093
+   Gradient magnitude: 0.9447513910864037
+   KL divergence (train): 2.8626416695459476
+   KL divergence (valid): 2.9319080639924033
 
 Term 10 / 10
    Evaluating 4 candidates...
    Best candidate: Component 1, adding term
-   Gradient magnitude: 8.067433894882248e-9
-   KL divergence (train): 2.8626416695459453
-   KL divergence (valid): 2.9319080639921093
+   Gradient magnitude: 8.11761312797575e-9
+   KL divergence (train): 2.8626416695459476
+   KL divergence (valid): 2.9319080639924033
 
 Best iteration: 6
-Final KL divergence (train): 2.913553432115592
-Final KL divergence (valid): 2.879447871962648</code></pre><p>The function uses default parameters:</p><ul><li><code>rectifier = Softplus()</code>: Monotonicity-enforcing function</li><li><code>basis = LinearizedHermiteBasis()</code>: Polynomial basis (Hermite polynomials with linearization)</li><li><code>reference_density = Normal()</code>: Reference distribution (standard normal)</li></ul><h3 id="Convergence-Analysis"><a class="docs-heading-anchor" href="#Convergence-Analysis">Convergence Analysis</a><a id="Convergence-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Convergence-Analysis" title="Permalink"></a></h3><p>The optimization history allows us to analyze the convergence behavior and model selection. We can plot both the training and validation KL divergence over iterations, as well as the maximum gradient magnitude among all candidate terms at each iteration. The gradient plot shows the maximum absolute gradient value among all candidate terms at each iteration. This indicates how much improvement we expect from adding the best term.</p><pre><code class="language-julia hljs">convergence_kl = plot(hist.train_objectives, label=&quot;Train Objective&quot;, xlabel=&quot;Iteration&quot;,
+Final KL divergence (train): 2.913553432115593
+Final KL divergence (valid): 2.87944787196269</code></pre><p>The function uses default parameters:</p><ul><li><code>rectifier = Softplus()</code>: Monotonicity-enforcing function</li><li><code>basis = LinearizedHermiteBasis()</code>: Polynomial basis (Hermite polynomials with linearization)</li><li><code>reference_density = Normal()</code>: Reference distribution (standard normal)</li></ul><h3 id="Convergence-Analysis"><a class="docs-heading-anchor" href="#Convergence-Analysis">Convergence Analysis</a><a id="Convergence-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Convergence-Analysis" title="Permalink"></a></h3><p>The optimization history allows us to analyze the convergence behavior and model selection. We can plot both the training and validation KL divergence over iterations, as well as the maximum gradient magnitude among all candidate terms at each iteration. The gradient plot shows the maximum absolute gradient value among all candidate terms at each iteration. This indicates how much improvement we expect from adding the best term.</p><pre><code class="language-julia hljs">convergence_kl = plot(hist.train_objectives, label=&quot;Train Objective&quot;, xlabel=&quot;Iteration&quot;,
     ylabel=&quot;KL divergence&quot;, title=&quot;Objective Value vs Iteration&quot;, marker=:o)
 plot!(convergence_kl, hist.test_objectives, label=&quot;Test Objective&quot;, marker=:o)
 yaxis!(:log10)
@@ -111,4 +111,4 @@ plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, maximum(ind_atm[:
 xticks!(0:maximum(ind_atm[:, 1]))
 yticks!(0:maximum(ind_atm[:, 2]))
 
-plot(MIS1, MIS2, layout=(2, 1))</code></pre><p><img src="../cubic-density-terms.svg" alt="Cubic density: Terms in the multi-index sets of the two map components"/></p><p>The selected terms reveal the structure the algorithm discovered:</p><ul><li>Component 1 only contains univariate terms due to the triangular structure, i.e., <span>$T^1(z_1)$</span></li><li>Component 2 also only contains terms with no-mixed multivariate polynomials. This means, <span>$T^2$</span> does depend on both <span>$z_1$</span> and <span>$z_2$</span>, but there are no non-linear interaction terms.</li><li>The adaptive approach avoids unnecessary terms, resulting in a sparse representation. This is shown by the final form which contains 7 terms instead of the maximum possible 10 terms.</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_adaptive/">« Banana: Adaptive Transport Map from Samples</a><a class="docs-footer-nextpage" href="../bod_bayesianinference/">Bayesian Inference: BOD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 6 January 2026 10:25">Tuesday 6 January 2026</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+plot(MIS1, MIS2, layout=(2, 1))</code></pre><p><img src="../cubic-density-terms.svg" alt="Cubic density: Terms in the multi-index sets of the two map components"/></p><p>The selected terms reveal the structure the algorithm discovered:</p><ul><li>Component 1 only contains univariate terms due to the triangular structure, i.e., <span>$T^1(z_1)$</span></li><li>Component 2 also only contains terms with no-mixed multivariate polynomials. This means, <span>$T^2$</span> does depend on both <span>$z_1$</span> and <span>$z_2$</span>, but there are no non-linear interaction terms.</li><li>The adaptive approach avoids unnecessary terms, resulting in a sparse representation. This is shown by the final form which contains 7 terms instead of the maximum possible 10 terms.</li></ul><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../banana_adaptive/">« Banana: Adaptive Transport Map from Samples</a><a class="docs-footer-nextpage" href="../bod_bayesianinference/">Bayesian Inference: BOD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 12 January 2026 09:51">Monday 12 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
