@@ -90,7 +90,7 @@ function posterior(θ)
     return prior * likelihood
 end
 
-target = MapTargetDensity(x -> log(posterior(x)), :auto_diff)
+target = MapTargetDensity(x -> log(posterior(x)))
 
 # ### Creating and Optimizing the Transport Map
 #

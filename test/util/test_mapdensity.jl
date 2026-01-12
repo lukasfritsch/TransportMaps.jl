@@ -6,7 +6,7 @@ using Distributions
 
     @testset "MapTargetDensity" begin
         # Analytical gradient constructor
-        target = MapTargetDensity(x -> logpdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> logpdf(Normal(), x[1]))
         x = [0.0]
         g = grad_logpdf(target, x)
         @test length(g) == 1
@@ -33,10 +33,7 @@ using Distributions
         @test pdfs[2] ≈ pdf(Normal(), 0.0)
         @test pdfs[3] ≈ pdf(Normal(), 1.0)
 
-        @test_throws ArgumentError MapTargetDensity(x -> pdf(Normal(), x[1]), :finite_difference, x -> zeros(length(x)))
-        @test_throws ArgumentError MapTargetDensity(x -> pdf(Normal(), x[1]), :analytical)
-
-        target_fd = MapTargetDensity(x -> logpdf(Normal(), x[1]), :finite_difference)
+        target_fd = MapTargetDensity(x -> logpdf(Normal(), x[1]), AutoFiniteDiff())
         g_fd = grad_logpdf(target_fd, x)
         @test length(g_fd) == 1
         @test isfinite(g_fd[1])
@@ -46,25 +43,18 @@ using Distributions
         @test length(g_analytical) == 1
         @test isfinite(g_analytical[1])
 
-        target_analytical = MapTargetDensity(x -> logpdf(Normal(), x[1]), :analytical, x -> [-x[1] * pdf(Normal(), x[1])])
+        target_analytical = MapTargetDensity(x -> logpdf(Normal(), x[1]), x -> [-x[1] * pdf(Normal(), x[1])])
         g_analytical = grad_logpdf(target_analytical, x)
         @test length(g_analytical) == 1
         @test isfinite(g_analytical[1])
 
         @testset "Gradient Types" begin
             # Test different gradient types
-            gradient_types_ad = [:auto_diff, :autodiff, :ad, :automatic, :forward_diff, :forwarddiff]
+            gradient_types_ad = [AutoForwardDiff(), AutoFiniteDiff()]
 
             for type in gradient_types_ad
                 t = MapTargetDensity(x -> logpdf(Normal(), x[1]), type)
-                @test t.gradient_type == :auto_diff
-            end
-
-            gradient_types_fd = [:finite_difference, :finitedifference, :finite_diff, :finitediff, :fd, :numerical, :numeric]
-
-            for type in gradient_types_fd
-                t = MapTargetDensity(x -> logpdf(Normal(), x[1]), type)
-                @test t.gradient_type == :finite_difference
+                @test t.ad_backend == type
             end
 
         end
@@ -84,7 +74,7 @@ using Distributions
     end
 
     @testset "Show Methods" begin
-        target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> pdf(Normal(), x[1]))
         ref = MapReferenceDensity(Normal())
 
         @test_nowarn display(target)

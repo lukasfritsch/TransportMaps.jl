@@ -13,7 +13,7 @@ using Optim
         setcoefficients!(M.components[1], [0.0, 1.0])  # Near identity map through softplus
 
         # Standard normal target
-        target = MapTargetDensity(x -> logpdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> logpdf(Normal(), x[1]))
         quadrature = GaussHermiteWeights(3, 1)
 
         # KL divergence should be finite for near-identity map to standard normal
@@ -31,7 +31,7 @@ using Optim
         M = PolynomialMap(1, 2, :normal, Softplus())
         setcoefficients!(M.components[1], [1.0, 0.1, 0.05])
 
-        target = MapTargetDensity(x -> logpdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> logpdf(Normal(), x[1]))
         quadrature = GaussHermiteWeights(3, 1)
 
         grad = TransportMaps.kldivergence_gradient(M, target, quadrature)
@@ -75,7 +75,7 @@ using Optim
         setcoefficients!(M.components[2], [0.1, 0.1, 0.9]) # ≈ z₂ through softplus
 
         # Target: Standard bivariate normal
-        target = MapTargetDensity(x -> logpdf(MvNormal(I(2)), x), :auto_diff)
+        target = MapTargetDensity(x -> logpdf(MvNormal(I(2)), x))
         quadrature = GaussHermiteWeights(3, 2)
 
         # Optimize
@@ -97,7 +97,7 @@ using Optim
 
         # 1D map - simpler case
         M = PolynomialMap(1, 1, :normal, Softplus())
-        target = MapTargetDensity(x -> logpdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> logpdf(Normal(), x[1]))
         quadrature = GaussHermiteWeights(3, 1)
 
         # This should handle the zero initialization issue internally
@@ -118,7 +118,7 @@ using Optim
             return (-0.5 * x[1]^2) + (-0.5 * (x[2] - x[1]^2)^2)
         end
 
-        target = MapTargetDensity(banana_density, :auto_diff)
+        target = MapTargetDensity(banana_density)
         quadrature = GaussHermiteWeights(3, 2)
 
         # Optimize
@@ -144,7 +144,7 @@ using Optim
         M = PolynomialMap(1, 1, :normal, Softplus())
         setcoefficients!(M.components[1], [0.0, 1.0])  # Near identity through softplus
 
-        target = MapTargetDensity(x -> logpdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> logpdf(Normal(), x[1]))
 
         # Generate test samples
         Z = randn(10, 1)
@@ -158,7 +158,7 @@ using Optim
         setcoefficients!(M2.components[1], [0.0, 1.0])       # First component through softplus
         setcoefficients!(M2.components[2], [0.0, 0.0, 1.0])  # Second component through softplus
 
-        target2 = MapTargetDensity(x -> pdf(MvNormal(I(2)), x), :auto_diff)
+        target2 = MapTargetDensity(x -> pdf(MvNormal(I(2)), x))
         Z2 = randn(10, 2)
 
         var_diag2 = variance_diagnostic(M2, target2, Z2)
@@ -186,7 +186,7 @@ using Optim
                 return log.(w1 * p1 + w2 * p2)
             end
 
-            target = MapTargetDensity(mixture_target, :auto_diff)
+            target = MapTargetDensity(mixture_target)
             quadrature = GaussHermiteWeights(3, 2)
 
             result = optimize!(M, target, quadrature)
@@ -206,7 +206,7 @@ using Optim
         M = PolynomialMap(1, 1, :normal, Softplus())
         setcoefficients!(M.components[1], [0.0, 1.0])  # Near identity through softplus
 
-        target = MapTargetDensity(x -> pdf(Normal(), x[1]), :auto_diff)
+        target = MapTargetDensity(x -> pdf(Normal(), x[1]))
         quadrature_small = GaussHermiteWeights(2, 1)  # Very few points
 
         kl = TransportMaps.kldivergence(M, target, quadrature_small)

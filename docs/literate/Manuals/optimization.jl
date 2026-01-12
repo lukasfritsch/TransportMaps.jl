@@ -43,7 +43,7 @@ using Plots
 
 # Then, define the target density and quadrature scheme. Here, we use the same banana-shaped density as in [Banana: Map from Density](@ref):
 banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
-target = MapTargetDensity(banana_density, :auto_diff)
+target = MapTargetDensity(banana_density)
 quadrature = GaussHermiteWeights(10, 2)
 #md nothing #hide
 

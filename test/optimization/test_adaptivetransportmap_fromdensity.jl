@@ -7,7 +7,7 @@ using Optim
 
     # Define target and quadrature
     logtarget(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
-    target = MapTargetDensity(logtarget, :ad)
+    target = MapTargetDensity(logtarget)
     quadrature = GaussHermiteWeights(2, 2)
     maxterms = 5
 

@@ -17,7 +17,7 @@ using Optim
 
         # Simple target density
         target_density_func(x) = logpdf(Normal(), x[1].^2) + logpdf(Normal(), x[2])
-        target_density = MapTargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func)
 
         # Small quadrature for testing
         quadrature = LatinHypercubeWeights(50, 2)
@@ -62,7 +62,7 @@ using Optim
         ]
 
         target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1])
-        target_density = MapTargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func)
         quadrature = LatinHypercubeWeights(30, 2)
 
         for (dim, degree, reftype, rectifier, basis) in map_configs
@@ -90,7 +90,7 @@ using Optim
         # Test at multiple random starting points
         M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2])
-        target_density = MapTargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func)
         quadrature = LatinHypercubeWeights(25, 2)
 
         function objective(coeffs)
@@ -202,7 +202,7 @@ using Optim
         setcoefficients!(M, initial_coeffs)
 
         target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2])
-        target_density = MapTargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func)
         quadrature = LatinHypercubeWeights(30, 2)
 
         # Initial KL divergence
@@ -261,7 +261,7 @@ using Optim
         @test length(grad1) == numbercoefficients(M)
 
         # Compare with finite difference version (should be similar)
-        target_density_fd = MapTargetDensity(gaussian_density, :auto_diff)
+        target_density_fd = MapTargetDensity(gaussian_density)
         grad1_fd = TransportMaps.kldivergence_gradient(M, target_density_fd, quadrature)
         @test all(isfinite.(grad1_fd))
 
@@ -276,7 +276,7 @@ using Optim
             return exp(-abs(x[1]) - abs(x[2]))
         end
 
-        target_density_exp = MapTargetDensity(exponential_density, :auto_diff)
+        target_density_exp = MapTargetDensity(exponential_density)
 
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
         grad2 = TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
@@ -302,7 +302,7 @@ using Optim
         @test all(isfinite.(grad3))
 
         # Compare with finite difference version for the quadratic density
-        target_density_quad_fd = MapTargetDensity(quadratic_density, :auto_diff)
+        target_density_quad_fd = MapTargetDensity(quadratic_density)
         grad3_fd = TransportMaps.kldivergence_gradient(M, target_density_quad_fd, quadrature)
         for i in 1:length(grad3)
             rel_error = abs(grad3[i] - grad3_fd[i]) / (abs(grad3_fd[i]) + 1e-12)
@@ -339,7 +339,7 @@ using Optim
 
         M = PolynomialMap(2, 1, :normal, Softplus(), HermiteBasis())
         target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2])
-        target_density = MapTargetDensity(target_density_func, :auto_diff)
+        target_density = MapTargetDensity(target_density_func)
         quadrature = LatinHypercubeWeights(20, 2)
 
         # Test with very small coefficients
@@ -359,7 +359,7 @@ using Optim
         # Test with different target densities
         # Banana-shaped distribution
         banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
-        target_density_banana = MapTargetDensity(banana_density, :auto_diff)
+        target_density_banana = MapTargetDensity(banana_density)
         setcoefficients!(M, 0.1 * randn(numbercoefficients(M)))
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_banana, quadrature)
 

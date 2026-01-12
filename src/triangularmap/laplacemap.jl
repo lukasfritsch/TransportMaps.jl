@@ -14,7 +14,7 @@ The map is defined by a location parameter (mode) and a scale parameter (Cholesk
 
 - `LaplaceMap(samples::Matrix{Float64})`: Constructs a LaplaceMap from sample data by
 computing the empirical mean and covariance.
-- `LaplaceMap(density::MapTargetDensity, x0::Vector{Float64}; hessian_type::Symbol = :auto_diff, optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())`: Compute a Laplace approximation of a target density by finding the mode via optimization and computing the Hessian at the mode.
+- `LaplaceMap(density::MapTargetDensity, x0::Vector{Float64}; optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())`: Compute a Laplace approximation of a target density by finding the mode via optimization and computing the Hessian at the mode. If `hessian_backend` is `nothing`, uses the same backend as the density.
 """
 struct LaplaceMap <: AbstractLinearMap
     mode::Vector{Float64}  # Mode / mean vector
@@ -33,7 +33,6 @@ struct LaplaceMap <: AbstractLinearMap
     function LaplaceMap(
         density::MapTargetDensity,
         x0::Vector{Float64};
-        hessian_type::Symbol = :auto_diff,      # type of Hessian computation (:auto_diff or :finite_difference)
         optimizer::Optim.AbstractOptimizer = LBFGS(),
         options::Optim.Options = Optim.Options()
     )
@@ -59,11 +58,13 @@ struct LaplaceMap <: AbstractLinearMap
         end
 
         # Compute Hessian at mode
-        if density.gradient_type ∈ [:auto_diff, :analytical] && hessian_type ∈ [:auto_diff, :autodiff, :ad, :automatic, :forward_diff, :forwarddiff]
-            H = ForwardDiff.hessian(obj, mode)
+        if isnothing(density.ad_backend)
+            hessian_backend = AutoFiniteDiff()
         else
-            H = central_difference_hessian(obj, mode)
+            hessian_backend = density.ad_backend
         end
+
+        H = DifferentiationInterface.hessian(obj, density.ad_backend, mode)
 
         # Make matrix Hermitian to avoid numerical issues
         Σ = Hermitian(inv(H))

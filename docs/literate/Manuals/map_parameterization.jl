@@ -113,7 +113,7 @@ contour(x₁, x₂, true_density;
 # ![Cubic Density](cubic_contour.svg)
 
 # We create the `MapTargetDensity` and quadrature weights for optimization:
-target = MapTargetDensity(cubic_density, :auto_diff)
+target = MapTargetDensity(cubic_density)
 quadrature = SparseSmolyakWeights(3, 2)
 #md nothing #hide
 
