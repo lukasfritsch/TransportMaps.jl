@@ -23,15 +23,15 @@ for θ₁ in [-0.5, 0, 0.5]
     end
 end
 
-function posterior(θ)
+function logposterior(θ)
     # Calculate the likelihood
-    likelihood = prod([pdf(Normal(forward_model(t[k], θ), σ), D[k]) for k in 1:5])
+    likelihood = sum([logpdf(Normal(forward_model(t[k], θ), σ), D[k]) for k in 1:5])
     # Calculate the prior
-    prior = pdf(Normal(), θ[1]) * pdf(Normal(), θ[2])
-    return prior * likelihood
+    prior = logpdf(Normal(), θ[1]) + logpdf(Normal(), θ[2])
+    return prior + likelihood
 end
 
-target = MapTargetDensity(x -> log(posterior(x)))
+target = MapTargetDensity(x -> logposterior(x))
 
 M = PolynomialMap(2, 3, :normal, Softplus(), LinearizedHermiteBasis())
 
@@ -50,7 +50,7 @@ println("Variance Diagnostic: ", var_diag)
 θ₁ = range(-0.5, 1.5, length=100)
 θ₂ = range(-0.5, 3, length=100)
 
-posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
+posterior_values = [pdf(target, [θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
     label="Mapped Samples", alpha=0.5, color=1,
@@ -70,8 +70,8 @@ contour!(θ₁, θ₂, posterior_pullback ./ maximum(posterior_pullback);
 conditional_samples = conditional_sample(M, θ₁, randn(10_000))
 
 θ_range = 0:0.01:2
-int_analytical = gaussquadrature(ξ -> posterior([θ₁, ξ]), 1000, -10., 10.)
-posterior_conditional(θ₂) = posterior([θ₁, θ₂]) / int_analytical
+int_analytical = gaussquadrature(ξ -> pdf(target, [θ₁, ξ]), 1000, -10., 10.)
+posterior_conditional(θ₂) = pdf(target, [θ₁, θ₂]) / int_analytical
 conditional_analytical = posterior_conditional.(θ_range)
 
 conditional_mapped = conditional_density(M, θ_range, θ₁)

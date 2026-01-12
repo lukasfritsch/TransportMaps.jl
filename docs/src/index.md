@@ -25,6 +25,7 @@ They are particularly useful for:
 - **Quadrature Integration**: Multiple quadrature schemes for map optimization
 - **Optimization**: Built-in optimization routines for fitting maps to target densities
 - **Multithreaded evaluation** for processing multiple points efficiently
+- **Automatic Differentiation** of target densities with [`DifferentiationInterface.jl`](https://juliadiff.org/DifferentiationInterface.jl/DifferentiationInterface/stable/)
 
 ## Installation
 
