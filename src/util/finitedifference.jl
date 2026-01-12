@@ -1,4 +1,4 @@
-function central_difference_gradient(f::F, x::Vector{Float64}, ε::Float64=eps(Float64)^(1/3)) where {F<:Function}
+function central_difference_gradient(f::F, x::AbstractVector{Float64}, ε::Float64=eps(Float64)^(1/3)) where {F<:Function}
     n = length(x)
     g = similar(x, Float64)
 
@@ -17,7 +17,7 @@ function central_difference_gradient(f::F, x::Vector{Float64}, ε::Float64=eps(F
     return g
 end
 
-function central_difference_hessian(f::F, x::Vector{Float64}, ε::Float64=eps(Float64)^(1/4)) where {F<:Function}
+function central_difference_hessian(f::F, x::AbstractVector{Float64}, ε::Float64=eps(Float64)^(1/4)) where {F<:Function}
     n = length(x)
     H = zeros(Float64, n, n)
 
