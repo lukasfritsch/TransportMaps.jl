@@ -109,6 +109,8 @@ x₂ = range(-10, 20, length=1000)
 true_density = [exp(cubic_density([x1, x2])) for x2 in x₂, x1 in x₁]
 contour(x₁, x₂, true_density;
     label="x₁", ylabel="x₂", colormap=:viridis, levels=10)
+#md savefig("cubic_contour.svg"); nothing # hide
+# ![Cubic Density](cubic_contour.svg)
 
 # We create the `MapTargetDensity` and quadrature weights for optimization:
 target = MapTargetDensity(cubic_density, :auto_diff)

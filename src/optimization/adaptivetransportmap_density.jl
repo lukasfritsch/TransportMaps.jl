@@ -53,7 +53,7 @@ function optimize_adaptive_transportmap(
 
     # Optimize initial map
     res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
-    train_obj = minimum(res)
+    train_obj = Optim.minimum(res)
 
     println("Initial KL divergence (train): $train_obj")
 
