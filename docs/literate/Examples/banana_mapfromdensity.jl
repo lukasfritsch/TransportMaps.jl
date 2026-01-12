@@ -45,7 +45,7 @@ target_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
 #md nothing #hide
 
 # Create a MapTargetDensity object for optimization
-target = MapTargetDensity(target_density, :auto_diff)
+target = MapTargetDensity(target_density)
 
 # ### Optimizing the Map
 #

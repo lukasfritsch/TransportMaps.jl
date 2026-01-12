@@ -161,7 +161,7 @@ using LinearAlgebra
         banana_density = function(x)
             return exp(-0.5 * x[1]^2) * exp(-0.5 * (x[2] - x[1]^2)^2)
         end
-        target = TransportMaps.MapTargetDensity(banana_density, :auto_diff)
+        target = TransportMaps.MapTargetDensity(banana_density)
 
         quadrature = TransportMaps.GaussHermiteWeights(5, dimension)
 

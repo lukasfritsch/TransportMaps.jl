@@ -1,6 +1,8 @@
 using TransportMaps
 using Test
 
+import DifferentiationInterface: AutoFiniteDiff, AutoForwardDiff, AutoMooncake, GradientPrep
+
 @testset "TransportMaps.jl" begin
     # Test Map Components
     @testset "Map Components" begin
@@ -40,7 +42,6 @@ using Test
         include("util/test_gaussquadrature.jl")
         include("util/test_hybridrootfinder.jl")
         include("util/test_quadraturepoints.jl")
-        include("util/test_finitedifference.jl")
         include("util/test_mapdensity.jl")
         include("util/test_smolyak.jl")
     end

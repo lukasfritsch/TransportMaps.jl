@@ -49,7 +49,7 @@ end
 @testset "LaplaceMap from Density" begin
 
     density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1])
-    target = MapTargetDensity(density, :ad)
+    target = MapTargetDensity(density)
 
     x0 = [0.5, 1.0]
     L_map = LaplaceMap(target, x0)
@@ -59,11 +59,18 @@ end
     @test cov(L_map) ≈ [1.0 1.0; 1.0 2.0]
 
     # Finite Difference approximation of Hessian
-    target_fd = MapTargetDensity(density, :finite_difference)
+    target_fd = MapTargetDensity(density, AutoFiniteDiff())
     L_fd = LaplaceMap(target_fd, x0)
 
-    @test isapprox(mean(L_fd), [0.0, 0.0]; atol=1e-8)
-    @test isapprox(cov(L_fd), cov(L_map); atol=1e-8)
+    @test isapprox(mean(L_fd), [0.0, 0.0]; atol=1e-6)
+    @test isapprox(cov(L_fd), cov(L_map); atol=1e-6)
+
+    # Finite Difference approximation of Hessian (analytical gradient)
+    target_fd2 = MapTargetDensity(density, x -> [x[2] - 2 * x[1], x[1] - x[2]])
+    L_fd2 = LaplaceMap(target_fd2, x0)
+
+    @test isapprox(mean(L_fd2), [0.0, 0.0]; atol=1e-6)
+    @test isapprox(cov(L_fd2), cov(L_map); atol=1e-6)
 
     # Error handling
     options = Optim.Options(iterations=1)
@@ -76,7 +83,7 @@ end
     # Evaluate map
     x_test = [0.1, 0.2]
     @test L_map(x_test) ≈ evaluate(L_map, x_test)
-    
+
     X_test = randn(5, 2)
     @test L_map(X_test) ≈ evaluate(L_map, X_test)
 end

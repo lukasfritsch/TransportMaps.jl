@@ -55,15 +55,19 @@ println("Initial coefficients: ", getcoefficients(M))
 # For optimization, you need to define your target probability density.
 # Let's start with a simple correlated Gaussian:
 
-# Example: Correlated Gaussian
 function correlated_gaussian(x; ρ=0.8)
     Σ = [1.0 ρ; ρ 1.0]
     return logpdf(MvNormal(zeros(2), Σ), x)
 end
 #md nothing #hide
 
+# Then, we construct the `MapTargetDensity` object. In the default case, automatic differentiation is used with [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/stable/)
+# AD is implemented with [`DifferentiationInterface.jl`](https://juliadiff.org/DifferentiationInterface.jl/DifferentiationInterface/stable/).
+# This allows for the use of other packages supported by the interface, e.g., `Mooncake.jl`, `Zygote.jl` or `FiniteDiff.jl` for finite difference approximations.
+# For more information, we also refer to [dalle2025](@cite).
+
 # Create a MapTargetDensity object for optimization
-target_density = MapTargetDensity(correlated_gaussian, :auto_diff)
+target_density = MapTargetDensity(correlated_gaussian)
 
 # ### Setting up Quadrature
 #
@@ -142,7 +146,7 @@ println("  ShiftedELU: ", var_diag_elu)
 
 # Define banana density
 banana_density(x) = pdf(Normal(), x[1]) * pdf(Normal(), x[2] - x[1]^2)
-target_density_banana = MapTargetDensity(x -> log.(banana_density(x)), :auto_diff)
+target_density_banana = MapTargetDensity(x -> log.(banana_density(x)))
 
 # Create a new map for this target and optimize:
 M_banana = PolynomialMap(2, 2, Normal(), Softplus())

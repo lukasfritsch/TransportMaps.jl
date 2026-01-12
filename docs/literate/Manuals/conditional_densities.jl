@@ -38,7 +38,7 @@ using Plots
 using Distributions
 
 banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
-target = MapTargetDensity(banana_density, :auto_diff)
+target = MapTargetDensity(banana_density)
 #md nothing #hide
 
 # Define the map and quadrature; and optimize the map:

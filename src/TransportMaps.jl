@@ -1,8 +1,11 @@
 module TransportMaps
 
+using ADTypes
+using DifferentiationInterface
 using Distributions
 using FastGaussQuadrature
 using ForwardDiff
+using FiniteDiff
 using LinearAlgebra
 using Optim
 using QuasiMonteCarlo
@@ -161,7 +164,6 @@ include("optimization/optimizationhistory.jl")
 include("optimization/adaptivetransportmap.jl")
 include("optimization/adaptivetransportmap_density.jl")
 
-include("util/finitedifference.jl")
 include("util/gaussquadrature.jl")
 include("util/hybridrootfinder.jl")
 include("util/quadraturepoints.jl")

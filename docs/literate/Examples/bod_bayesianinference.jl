@@ -82,15 +82,15 @@ end
 # \pi(\mathbf{y}|\boldsymbol{\theta}) = \prod_{t=1}^{5} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{1}{2\sigma^2}(y_t - \mathcal{B}(t))^2\right)
 # ```
 
-function posterior(θ)
+function logposterior(θ)
     ## Calculate the likelihood
-    likelihood = prod([pdf(Normal(forward_model(t[k], θ), σ), D[k]) for k in 1:5])
+    likelihood = sum([logpdf(Normal(forward_model(t[k], θ), σ), D[k]) for k in 1:5])
     ## Calculate the prior
-    prior = pdf(Normal(), θ[1]) * pdf(Normal(), θ[2])
-    return prior * likelihood
+    prior = logpdf(Normal(), θ[1]) + logpdf(Normal(), θ[2])
+    return prior + likelihood
 end
 
-target = MapTargetDensity(x -> log(posterior(x)), :auto_diff)
+target = MapTargetDensity(x -> logposterior(x))
 
 # ### Creating and Optimizing the Transport Map
 #
@@ -128,7 +128,7 @@ println("Variance Diagnostic: ", var_diag)
 θ₁ = range(-0.5, 1.5, length=100)
 θ₂ = range(-0.5, 3, length=100)
 
-posterior_values = [posterior([θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
+posterior_values = [pdf(target, [θ₁, θ₂]) for θ₂ in θ₂, θ₁ in θ₁]
 
 scatter(mapped_samples[:, 1], mapped_samples[:, 2],
     label="Mapped Samples", alpha=0.5, color=1,
@@ -175,8 +175,8 @@ conditional_samples = conditional_sample(M, θ₁, randn(10_000))
 # by integrating out $\theta_1$ from the joint posterior.
 # We use numerical integration for this purpose and evaluate the conditional density on a grid.
 θ_range = 0:0.01:2
-int_analytical = gaussquadrature(ξ -> posterior([θ₁, ξ]), 1000, -10., 10.)
-posterior_conditional(θ₂) = posterior([θ₁, θ₂]) / int_analytical
+int_analytical = gaussquadrature(ξ -> pdf(target, [θ₁, ξ]), 1000, -10., 10.)
+posterior_conditional(θ₂) = pdf(target, [θ₁, θ₂]) / int_analytical
 conditional_analytical = posterior_conditional.(θ_range)
 #md nothing #hide
 

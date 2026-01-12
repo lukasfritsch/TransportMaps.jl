@@ -543,7 +543,7 @@ using LinearAlgebra
     @testset "Pushforward Density" begin
         # Test with simple target density
         target_density(x) = logpdf(MvNormal(zeros(length(x)), I(length(x))), x)
-        target = MapTargetDensity(target_density, :auto_diff)
+        target = MapTargetDensity(target_density)
 
         # Test 1D case
         pm_1d = PolynomialMap(1, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -588,8 +588,8 @@ using LinearAlgebra
         uniform_target_pdf(x) = all(0 ≤ xi ≤ 1 for xi in x) ? 1.0 : 0.0
         exponential_target_pdf(x) = prod(exp(-xi) for xi in x if xi ≥ 0)
 
-        uniform_target = MapTargetDensity(uniform_target_pdf, :auto_diff)
-        exponential_target = MapTargetDensity(exponential_target_pdf, :auto_diff)
+        uniform_target = MapTargetDensity(uniform_target_pdf)
+        exponential_target = MapTargetDensity(exponential_target_pdf)
 
         pm_simple = PolynomialMap(2, 1, :normal, Softplus())
         setcoefficients!(pm_simple, ones(numbercoefficients(pm_simple)) * 0.1)
@@ -618,7 +618,7 @@ using LinearAlgebra
 
         # Define a simple target density
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
-        target = MapTargetDensity(target_density, :auto_diff)
+        target = MapTargetDensity(target_density)
 
         # Test points
         z_point = [0.3, 0.4]
@@ -863,7 +863,7 @@ using LinearAlgebra
 
         # Pushforward: Vector{Int}
         target_density(x) = pdf(MvNormal(zeros(length(x)), I(length(x))), x)
-        target = MapTargetDensity(target_density, :auto_diff)
+        target = MapTargetDensity(target_density)
         result_pf_int = pushforward(pm, target, z_int)
         result_pf_float = pushforward(pm, target, Float64.(z_int))
         @test result_pf_int ≈ result_pf_float

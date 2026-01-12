@@ -94,7 +94,7 @@ using LinearAlgebra
 
         # Define a simple target density
         target_density(x) = exp(-0.5 * sum(x .^ 2))
-        target = MapTargetDensity(target_density, :auto_diff)
+        target = MapTargetDensity(target_density)
 
         n_points = 5
         Z_test = randn(n_points, 2) * 0.3
@@ -210,7 +210,7 @@ using LinearAlgebra
         @test_throws AssertionError pullback(M, randn(5, 1))   # Wrong number of columns
 
         target_density(x) = 1.0
-        target = MapTargetDensity(target_density, :auto_diff)
+        target = MapTargetDensity(target_density)
         @test_throws AssertionError pushforward(M, target, randn(5, 3))
     end
 end

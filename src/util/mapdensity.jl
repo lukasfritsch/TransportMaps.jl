@@ -3,51 +3,75 @@
 
 Wrapper for target density functions used in transport map optimization.
 Stores the log-density function and its gradient, with support for automatic
-differentiation, finite differences, or analytical gradients.
+differentiation backends via DifferentiationInterface.jl.
 
 # Fields
-- `logdensity::F`: Function computing log-density `log π(x)`
-- `gradient_type::Symbol`: Type of gradient computation (`:analytical`, `:auto_diff`, or `:finite_difference`)
-- `grad_logdensity::G`: Function computing gradient `∇ log π(x)`
+- `logdensity<:Function`: Function computing log-density `log π(x)`
+- `ad_backend<:Union{Nothing,ADTypes.AbstractADType}`: AD backend or `nothing` for analytical
+- `grad_logdensity<:Function`: Function computing gradient `∇ log π(x)`
+- `prepared_gradient`: Optional prepared gradient for performance (can be `nothing`)
 
 # Constructors
 - `MapTargetDensity(logdensity, grad_logdensity)`: Provide both log-density and analytical gradient.
-- `MapTargetDensity(logdensity, :analytical, grad_logdensity)`: Explicitly specify analytical gradient.
-- `MapTargetDensity(logdensity, :auto_diff)`: Use automatic differentiation for gradient.
-- `MapTargetDensity(logdensity, :finite_difference)`: Use finite differences for gradient.
+- `MapTargetDensity(logdensity, backend::ADTypes.AbstractADType, d::Int)`: Use AD backend with prepared gradient.
+- `MapTargetDensity(logdensity, backend::ADTypes.AbstractADType)`: Use AD backend without preparation.
+- `MapTargetDensity(logdensity)`: Use ForwardDiff.
+
+# Examples
+```julia
+# Use ForwardDiff (default, not prepared)
+density = MapTargetDensity(logπ)
+
+# Use ForwardDiff with prepared gradient (faster for repeated evaluations)
+density = MapTargetDensity(logπ, AutoForwardDiff(), d)
+
+# Use Mooncake with preparation
+density = MapTargetDensity(logπ, AutoMooncake(), d)
+
+# Use FiniteDiff
+density = MapTargetDensity(logπ, AutoFiniteDiff(), d)
+
+# Use analytical gradient
+density = MapTargetDensity(logπ, grad_logπ)
+```
 """
-struct MapTargetDensity{F,G} <: AbstractMapDensity
+struct MapTargetDensity{F<:Function,B<:Union{Nothing,ADTypes.AbstractADType},G<:Function,P<:Union{Nothing,DifferentiationInterface.GradientPrep}} <: AbstractMapDensity
     logdensity::F
-    gradient_type::Symbol
+    ad_backend::B
     grad_logdensity::G
+    prepared_gradient::P
 
-    function MapTargetDensity(logdensity::F, grad_logdensity::G) where {F,G}
-        return new{F,G}(logdensity, :analytical, grad_logdensity)
+    # Analytical gradient
+    function MapTargetDensity(logdensity::F, grad_logdensity::G) where {F<:Function,G<:Function}
+        return new{F,Nothing,G,Nothing}(logdensity, nothing, grad_logdensity, nothing)
     end
 
-    function MapTargetDensity(logdensity::F, gradient_type::Symbol, grad_logdensity::G) where {F,G}
+    # AD backend with prepared gradient
+    function MapTargetDensity(logdensity::F, backend::B, d::Int) where {F<:Function,B<:ADTypes.AbstractADType}
+        # Prepare gradient once for this input size
+        prep = DifferentiationInterface.prepare_gradient(logdensity, backend, zeros(d))
 
-        if gradient_type ∉ [:analytical, :analytic]
-            throw(ArgumentError("gradient_type must be :analytical (or :analytic) when providing a custom gradient function."))
+        grad_logdensity = function (x)
+            return DifferentiationInterface.gradient(logdensity, prep, backend, x)
         end
-
-        return new{F,G}(logdensity, :analytical, grad_logdensity)
+        return new{F,B,typeof(grad_logdensity),typeof(prep)}(logdensity, backend, grad_logdensity, prep)
     end
 
-    function MapTargetDensity(logdensity::F, gradient_type::Symbol) where {F}
-        # Check gradient type and set gradient function accordingly
-        if gradient_type ∈ [:auto_diff, :autodiff, :ad, :automatic, :forward_diff, :forwarddiff]
-            grad_logdensity = x -> ForwardDiff.gradient(logdensity, x)
-            gradient_type = :auto_diff
-        elseif gradient_type ∈ [:finite_difference, :finitedifference, :finite_diff, :finitediff, :fd, :numerical, :numeric]
-            grad_logdensity = x -> central_difference_gradient(logdensity, x)
-            gradient_type = :finite_difference
-        else
-            throw(ArgumentError("gradient_type must be either :auto_diff (or :autodiff, :ad,
-            :automatic, :forward_diff) or :finite_difference (or :fd, :finite_diff, :finitediff, :numerical)."))
+    # AD backend without preparation
+    function MapTargetDensity(logdensity::F, backend::B) where {F<:Function,B<:ADTypes.AbstractADType}
+        grad_logdensity = function (x)
+            return DifferentiationInterface.gradient(logdensity, backend, x)
         end
+        return new{F,B,typeof(grad_logdensity),Nothing}(logdensity, backend, grad_logdensity, nothing)
+    end
 
-        return new{F,typeof(grad_logdensity)}(logdensity, gradient_type, grad_logdensity)
+    # Default: ForwardDiff without preparation
+    function MapTargetDensity(logdensity::F) where {F<:Function}
+        backend = AutoForwardDiff()
+        grad_logdensity = function (x)
+            return DifferentiationInterface.gradient(logdensity, backend, x)
+        end
+        return new{F,typeof(backend),typeof(grad_logdensity),Nothing}(logdensity, backend, grad_logdensity, nothing)
     end
 end
 
@@ -59,26 +83,57 @@ The reference density defines the space from which samples are drawn and mapped
 to the target distribution.
 
 # Fields
-- `logdensity::F`: Function computing log-density `log ρ(z)`
-- `gradient_type::Symbol`: Type of gradient computation (always `:auto_diff`)
-- `grad_logdensity::G`: Function computing gradient `∇ log ρ(z)`
+- `logdensity<:Function`: Function computing log-density `log ρ(z)`
+- `ad_backend<:ADTypes.AbstractADType`: AD backend for gradient computation
+- `grad_logdensity<:Function`: Function computing gradient `∇ log ρ(z)`
 - `densitytype::Distributions.UnivariateDistribution`: Univariate density type (e.g., `Normal()`)
+- `prepared_gradient`: Prepared gradient for performance (can be `nothing`)
 
 # Constructors
-- `MapReferenceDensity()`: Use standard normal distribution (default).
-- `MapReferenceDensity(densitytype::Distributions.UnivariateDistribution)`: Specify reference distribution.
+- `MapReferenceDensity()`: Use standard normal with ForwardDiff (default, not prepared).
+- `MapReferenceDensity(densitytype)`: Specify distribution with ForwardDiff (not prepared).
+- `MapReferenceDensity(densitytype, backend)`: Specify distribution and AD backend (not prepared).
+- `MapReferenceDensity(densitytype, backend, d)`: Specify distribution, AD backend, and dimension (prepared, recommended for performance).
 """
-struct MapReferenceDensity{F,G} <: AbstractMapDensity
+struct MapReferenceDensity{F<:Function,B<:ADTypes.AbstractADType,G<:Function,P<:Union{Nothing,DifferentiationInterface.GradientPrep}} <: AbstractMapDensity
     logdensity::F
-    gradient_type::Symbol
+    ad_backend::B
     grad_logdensity::G
     densitytype::Distributions.UnivariateDistribution
+    prepared_gradient::P
 
-    # base constructor for reference density, directly using automatic differentiation
-    function MapReferenceDensity(densitytype::Distributions.UnivariateDistribution=Normal())
+    # Constructor with dimension specified for preparation (recommended for performance)
+    function MapReferenceDensity(
+        densitytype::Distributions.UnivariateDistribution,
+        backend::ADTypes.AbstractADType,
+        d::Int
+    )
         density = x -> sum(map(Base.Fix1(logpdf, densitytype), x))
-        gradient = x -> ForwardDiff.gradient(density, x)
-        return new{typeof(density),typeof(gradient)}(density, :auto_diff, gradient, densitytype)
+
+        # Prepare gradient for dimension d
+        x_example = zeros(d)
+        prep = DifferentiationInterface.prepare_gradient(density, backend, x_example)
+
+        grad_density = function (x)
+            return DifferentiationInterface.gradient(density, prep, backend, x)
+        end
+        return new{typeof(density),typeof(backend),typeof(grad_density),typeof(prep)}(
+            density, backend, grad_density, densitytype, prep
+        )
+    end
+
+    # base constructor for reference density, without preparation (convenience)
+    function MapReferenceDensity(
+        densitytype::Distributions.UnivariateDistribution=Normal(),
+        backend::ADTypes.AbstractADType=AutoForwardDiff()
+    )
+        density = x -> sum(map(Base.Fix1(logpdf, densitytype), x))
+        grad_density = function (x)
+            return DifferentiationInterface.gradient(density, backend, x)
+        end
+        return new{typeof(density),typeof(backend),typeof(grad_density),Nothing}(
+            density, backend, grad_density, densitytype, nothing
+        )
     end
 
     function MapReferenceDensity(densitytype::Distributions.Uniform)
@@ -130,9 +185,18 @@ function grad_logpdf(density::AbstractMapDensity, X::Matrix{<:Real})
     n, d = size(X)
     log_gradients = zeros(Float64, n, d)
 
-    Threads.@threads for i in 1:n
-        log_gradients[i, :] .= density.grad_logdensity(view(X, i, :))
+    threaded = !(density.ad_backend isa ADTypes.AutoMooncake)
+
+    if threaded
+        Threads.@threads for i in 1:n
+            log_gradients[i, :] = density.grad_logdensity(X[i, :])
+        end
+    else
+        for i in 1:n
+            log_gradients[i, :] = density.grad_logdensity(X[i, :])
+        end
     end
+
     return log_gradients
 end
 
@@ -166,9 +230,10 @@ function pdf(density::AbstractMapDensity, X::Matrix{<:Real})
 end
 
 function Base.show(io::IO, target::MapTargetDensity)
-    print(io, "MapTargetDensity(gradient_type=:$(target.gradient_type)) ")
+    backend_str = target.ad_backend === nothing ? "analytical" : string(target.ad_backend)
+    print(io, "MapTargetDensity(backend=$(backend_str))")
 end
 
 function Base.show(io::IO, ref::MapReferenceDensity)
-    print(io, "MapReferenceDensity(density=$(ref.densitytype)")
+    print(io, "MapReferenceDensity(density=$(ref.densitytype), backend=$(ref.ad_backend))")
 end
