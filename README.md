@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/JuliaUQ/TransportMaps.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaUQ/TransportMaps.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/github/JuliaUQ/TransportMaps.jl/graph/badge.svg?token=PQTR0PG87A)](https://codecov.io/github/JuliaUQ/TransportMaps.jl)
-[![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaUQ.github.io/TransportMaps.jl/dev/)
+[![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliauq.github.io/TransportMaps.jl/dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Julia implementation of triangular transport maps for variational inference.
@@ -56,7 +56,7 @@ variance_diag = variance_diagnostic(M, target, samples_z)
 - **Multithreaded evaluation** for processing multiple points efficiently
 - **Matrix input support** for all core functions (evaluate, inverse, jacobian, etc.)
 
-Please refer to the [documentation](https://JuliaUQ.github.io/TransportMaps.jl/dev/) for more extensive examples and explanations.
+Please refer to the [documentation](https://juliauq.github.io/TransportMaps.jl/dev/) for more extensive examples and explanations.
 
 ## Related Implementation
 
