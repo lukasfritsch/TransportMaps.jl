@@ -32,7 +32,7 @@ quadrature = GaussHermiteWeights(3, 2)
 
 # Define target density (banana distribution)
 target_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
-target = MapTargetDensity(target_density, :auto_diff)
+target = MapTargetDensity(target_density)
 
 # Optimize the map coefficients
 result = optimize!(M, target, quadrature)
