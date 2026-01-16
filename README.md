@@ -1,8 +1,8 @@
 # TransportMaps.jl
 
-[![Build Status](https://github.com/lukasfritsch/TransportMaps.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/lukasfritsch/TransportMaps.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/github/lukasfritsch/TransportMaps.jl/graph/badge.svg?token=PQTR0PG87A)](https://codecov.io/github/lukasfritsch/TransportMaps.jl)
-[![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://lukasfritsch.github.io/TransportMaps.jl/dev/)
+[![Build Status](https://github.com/JuliaUQ/TransportMaps.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaUQ/TransportMaps.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/github/JuliaUQ/TransportMaps.jl/graph/badge.svg?token=PQTR0PG87A)](https://codecov.io/github/JuliaUQ/TransportMaps.jl)
+[![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaUQ.github.io/TransportMaps.jl/dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Julia implementation of triangular transport maps for variational inference.
@@ -13,7 +13,7 @@ A Julia implementation of triangular transport maps for variational inference.
 
 ```julia
 # From Julia REPL
-pkg> add https://github.com/lukasfritsch/TransportMaps.jl
+pkg> add https://github.com/JuliaUQ/TransportMaps.jl
 ```
 
 ### Getting Started
@@ -56,7 +56,7 @@ variance_diag = variance_diagnostic(M, target, samples_z)
 - **Multithreaded evaluation** for processing multiple points efficiently
 - **Matrix input support** for all core functions (evaluate, inverse, jacobian, etc.)
 
-Please refer to the [documentation](https://lukasfritsch.github.io/TransportMaps.jl/dev/) for more extensive examples and explanations.
+Please refer to the [documentation](https://JuliaUQ.github.io/TransportMaps.jl/dev/) for more extensive examples and explanations.
 
 ## Related Implementation
 
@@ -88,6 +88,6 @@ If you use TransportMaps.jl in your research, please cite:
     title = {TransportMaps.jl: Triangular transport maps for variational inference},
     author = {Fritsch, Lukas and Grashorn, Jan},
     year = {2025},
-    url = {https://github.com/lukasfritsch/TransportMaps.jl}
+    url = {https://github.com/JuliaUQ/TransportMaps.jl}
 }
 ```
