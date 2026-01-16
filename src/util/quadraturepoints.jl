@@ -26,7 +26,7 @@ struct GaussHermiteWeights <: AbstractQuadratureWeights
     end
 
     function GaussHermiteWeights(numberpoints::Int64, map::AbstractTransportMap)
-        @warn "Using standard Gauss-Hermite quadrature with standard Gaussian reference density."
+        # @warn "Using standard Gauss-Hermite quadrature with standard Gaussian reference density."
         # Generate Gauss-Hermite points in the reference space
         points, weights = gausshermite_weights(numberpoints, numberdimensions(map))
         return new(points, weights)
@@ -160,7 +160,7 @@ struct SparseSmolyakWeights <: AbstractQuadratureWeights
     end
 
     function SparseSmolyakWeights(level::Int64, map::AbstractTransportMap)
-        @warn "Using Smolyak sparse Gauss-Hermite quadrature with standard Gaussian reference density."
+        # @warn "Using Smolyak sparse Gauss-Hermite quadrature with standard Gaussian reference density."
         points, weights = hermite_smolyak_points(numberdimensions(map), level)
         return new(points, weights)
     end

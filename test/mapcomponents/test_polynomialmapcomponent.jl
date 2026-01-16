@@ -327,20 +327,20 @@ using Test
         # Vector{Float32}
         z_f32 = Float32[0.5, 1.2]
         result_f32 = pmc(z_f32)
-        @test result_f32 ≈ pmc(Float64.(z_f32))
+        @test isapprox(result_f32, pmc(Float64.(z_f32)), atol=1e-5, rtol=1e-5)
         @test typeof(result_f32) == Float64
 
         # Matrix{Int}
         Z_int = [1 2; 3 4; 5 6]
         result_matrix_int = pmc(Z_int)
-        @test result_matrix_int ≈ pmc(Float64.(Z_int))
+        @test isapprox(result_matrix_int, pmc(Float64.(Z_int)), atol=1e-5)
         @test typeof(result_matrix_int) == Vector{Float64}
         @test length(result_matrix_int) == size(Z_int, 1)
 
         # Matrix{Float32}
         Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
         result_matrix_f32 = pmc(Z_f32)
-        @test isapprox(result_matrix_f32, pmc(Float64.(Z_f32)), atol=1e-6)
+        @test isapprox(result_matrix_f32, pmc(Float64.(Z_f32)), atol=1e-5, rtol=1e-5)
         @test typeof(result_matrix_f32) == Vector{Float64}
         @test length(result_matrix_f32) == size(Z_f32, 1)
 

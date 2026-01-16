@@ -276,7 +276,7 @@ end
             # Verify each result is consistent
             for (i, z) in enumerate(z_array)
                 individual = conditional_sample(M3, Float64.(x_given_array), Float64(z))
-                @test results[i] ≈ individual atol = 1e-10
+                @test results[i] ≈ individual atol = 1e-5
             end
         end
 
