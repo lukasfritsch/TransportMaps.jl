@@ -36,9 +36,9 @@ makedocs(
     authors="Lukas Fritsch and Jan Grashorn",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://lukasfritsch.github.io/TransportMaps.jl",
+        canonical = "https://juliauq.github.io/TransportMaps.jl",
         assets = String[],
-        repolink = "https://github.com/lukasfritsch/TransportMaps.jl",
+        repolink = "https://github.com/JuliaUQ/TransportMaps.jl",
     ),
     modules = [TransportMaps],
     plugins = [bib],
@@ -70,13 +70,13 @@ makedocs(
         ],
         "References" => "references.md"
     ],
-    repo = "https://github.com/lukasfritsch/TransportMaps.jl/blob/{commit}{path}#{line}",
+    repo = "https://github.com/JuliaUQ/TransportMaps.jl/blob/{commit}{path}#{line}",
     checkdocs = :export,
     doctestfilters = [r"Ptr{0x[0-9a-f]+}"],
 )
 
 deploydocs(
-    repo = "github.com/lukasfritsch/TransportMaps.jl.git",
+    repo = "github.com/JuliaUQ/TransportMaps.jl.git",
     target = "build",
     branch = "gh-pages",
     devbranch = "main",
