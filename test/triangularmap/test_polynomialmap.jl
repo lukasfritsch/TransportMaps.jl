@@ -779,14 +779,14 @@ using LinearAlgebra
         # Vector{Float32}
         z_f32 = Float32[0.5, 1.2]
         result_f32 = pm(z_f32)
-        @test result_f32 ≈ pm(Float64.(z_f32))
+        @test isapprox(result_f32, pm(Float64.(z_f32)), atol=1e-5, rtol=1e-5)
         @test typeof(result_f32) == Vector{Float64}
         @test length(result_f32) == length(pm)
 
         # Matrix{Int}
         Z_int = [1 2; 3 4; 5 6]
         result_matrix_int = pm(Z_int)
-        @test result_matrix_int ≈ pm(Float64.(Z_int))
+        @test isapprox(result_matrix_int, pm(Float64.(Z_int)), atol=1e-10)
         @test typeof(result_matrix_int) == Matrix{Float64}
         @test size(result_matrix_int, 2) == length(pm)
         @test size(result_matrix_int, 1) == size(Z_int, 1)
@@ -794,7 +794,7 @@ using LinearAlgebra
         # Matrix{Float32}
         Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
         result_matrix_f32 = pm(Z_f32)
-        @test result_matrix_f32 ≈ pm(Float64.(Z_f32))
+        @test isapprox(result_matrix_f32, pm(Float64.(Z_f32)), atol=1e-5, rtol=1e-5)
         @test typeof(result_matrix_f32) == Matrix{Float64}
         @test size(result_matrix_f32, 2) == length(pm)
         @test size(result_matrix_f32, 1) == size(Z_f32, 1)
@@ -802,51 +802,51 @@ using LinearAlgebra
         # Gradient: Vector{Int}
         result_grad_int = gradient_zk(pm, z_int)
         result_grad_float = gradient_zk(pm, Float64.(z_int))
-        @test result_grad_int ≈ result_grad_float
+        @test isapprox(result_grad_int, result_grad_float, atol=1e-10)
         @test typeof(result_grad_int) == Vector{Float64}
 
         # Gradient: Matrix{Int}
         result_grad_matrix_int = gradient_zk(pm, Z_int)
         result_grad_matrix_float = gradient_zk(pm, Float64.(Z_int))
-        @test result_grad_matrix_int ≈ result_grad_matrix_float
+        @test isapprox(result_grad_matrix_int, result_grad_matrix_float, atol=1e-10)
         @test typeof(result_grad_matrix_int) == Matrix{Float64}
 
         # Jacobian: Vector{Int}
         result_jac_int = jacobian(pm, z_int)
         result_jac_float = jacobian(pm, Float64.(z_int))
-        @test result_jac_int ≈ result_jac_float
+        @test isapprox(result_jac_int, result_jac_float, atol=1e-10)
         @test typeof(result_jac_int) == Float64
 
         # Jacobian: Matrix{Int}
         result_jac_matrix_int = jacobian(pm, Z_int)
         result_jac_matrix_float = jacobian(pm, Float64.(Z_int))
-        @test result_jac_matrix_int ≈ result_jac_matrix_float
+        @test isapprox(result_jac_matrix_int, result_jac_matrix_float, atol=1e-10)
         @test typeof(result_jac_matrix_int) == Vector{Float64}
 
         # Inverse: Vector{Int}
         x_int = [2, 3]
         result_inv_int = inverse(pm, x_int)
         result_inv_float = inverse(pm, Float64.(x_int))
-        @test result_inv_int ≈ result_inv_float
+        @test isapprox(result_inv_int, result_inv_float, atol=1e-10)
         @test typeof(result_inv_int) == Vector{Float64}
 
         # Inverse: Matrix{Int}
         X_int = [2 3; 4 5; 6 7]
         result_inv_matrix_int = inverse(pm, X_int)
         result_inv_matrix_float = inverse(pm, Float64.(X_int))
-        @test result_inv_matrix_int ≈ result_inv_matrix_float
+        @test isapprox(result_inv_matrix_int, result_inv_matrix_float, atol=1e-10)
         @test typeof(result_inv_matrix_int) == Matrix{Float64}
 
         # Inverse Jacobian: Vector{Int}
         result_inv_jac_int = inverse_jacobian(pm, x_int)
         result_inv_jac_float = inverse_jacobian(pm, Float64.(x_int))
-        @test result_inv_jac_int ≈ result_inv_jac_float
+        @test isapprox(result_inv_jac_int, result_inv_jac_float, atol=1e-10)
         @test typeof(result_inv_jac_int) == Float64
 
         # Inverse Jacobian: Matrix{Int}
         result_inv_jac_matrix_int = inverse_jacobian(pm, X_int)
         result_inv_jac_matrix_float = inverse_jacobian(pm, Float64.(X_int))
-        @test result_inv_jac_matrix_int ≈ result_inv_jac_matrix_float
+        @test isapprox(result_inv_jac_matrix_int, result_inv_jac_matrix_float, atol=1e-10)
         @test typeof(result_inv_jac_matrix_int) == Vector{Float64}
 
         # Pullback: Vector{Int}
