@@ -31,7 +31,7 @@ They are particularly useful for:
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/lukasfritsch/TransportMaps.jl")
+Pkg.add("https://github.com/JuliaUQ/TransportMaps.jl")
 ```
 
 ## Quick Start Example
