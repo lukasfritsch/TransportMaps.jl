@@ -13,7 +13,7 @@ A Julia implementation of triangular transport maps for variational inference.
 
 ```julia
 # From Julia REPL
-pkg> add https://github.com/JuliaUQ/TransportMaps.jl
+pkg> add TransportMaps
 ```
 
 ### Getting Started
