@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/github/JuliaUQ/TransportMaps.jl/graph/badge.svg?token=PQTR0PG87A)](https://codecov.io/github/JuliaUQ/TransportMaps.jl)
 [![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliauq.github.io/TransportMaps.jl/dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/885372338.svg)](https://doi.org/10.5281/zenodo.18309940)
 
 A Julia implementation of triangular transport maps for variational inference.
 
