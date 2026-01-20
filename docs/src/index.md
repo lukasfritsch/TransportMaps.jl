@@ -100,7 +100,7 @@ The package is organized around several key components:
 - **`IdentityRectifier`**: No transformation (linear)
 - **`Softplus`**: Smooth positive transformation (log-sum-exp)
 - **`ShiftedELU`**: Exponential linear unit variant
-- **`Exponential`**: Pure exponential transformation
+- **`ExpRectifier`**: Pure exponential transformation
 
 ### Quadrature Schemes
 

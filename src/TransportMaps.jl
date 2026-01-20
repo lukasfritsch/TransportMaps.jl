@@ -124,7 +124,7 @@ export MapReferenceDensity
 export SparseSmolyakWeights
 export PrecomputedBasis
 export PrecomputedMapBasis
-export Exponential
+export ExpRectifier
 
 # Laplace Map
 export mean
