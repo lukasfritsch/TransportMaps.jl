@@ -74,9 +74,9 @@ using Test
         @test identity_rect(1.0) isa Float64
     end
 
-    @testset "Exponential" begin
+    @testset "ExpRectifier" begin
 
-        exponential_rect = TransportMaps.Exponential()
+        exponential_rect = TransportMaps.ExpRectifier()
 
         # Test basic functionality
         @test exponential_rect(0.0) ≈ 1.0

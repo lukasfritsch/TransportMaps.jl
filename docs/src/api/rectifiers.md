@@ -12,5 +12,5 @@ Pages = ["rectifiers.md"]
 Softplus
 ShiftedELU
 IdentityRectifier
-Exponential
+ExpRectifier
 ```

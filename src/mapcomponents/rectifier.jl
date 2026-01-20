@@ -83,29 +83,29 @@ function derivative(r::IdentityRectifier, ξ)
 end
 
 """
-    Exponential()
+    ExpRectifier()
 
 Exponential rectifier: `g(ξ) = exp(ξ)`. Ensures strict positivity and monotonicity.
 Can lead to extreme values for large |ξ|.
 """
-struct Exponential <: AbstractRectifierFunction
+struct ExpRectifier <: AbstractRectifierFunction
 end
 
 """
-    (r::Exponential)(ξ)
+    (r::ExpRectifier)(ξ)
 
 Evaluate the exponential rectifier at `ξ`.
 """
-function (r::Exponential)(ξ)
+function (r::ExpRectifier)(ξ)
     return exp.(ξ)
 end
 
 """
-    derivative(r::Exponential, ξ)
+    derivative(r::ExpRectifier, ξ)
 
-Compute the derivative of Exponential: `g'(ξ) = exp(ξ)`.
+Compute the derivative of ExpRectifier: `g'(ξ) = exp(ξ)`.
 """
-function derivative(r::Exponential, ξ)
+function derivative(r::ExpRectifier, ξ)
     return exp.(ξ)
 end
 
