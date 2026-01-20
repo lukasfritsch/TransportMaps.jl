@@ -1,5 +1,6 @@
 using Documenter
 using DocumenterCitations
+using DocumenterVitepress
 using Literate
 using TransportMaps
 
@@ -34,14 +35,12 @@ end
 makedocs(
     sitename = "TransportMaps.jl",
     authors="Lukas Fritsch and Jan Grashorn",
-    format = Documenter.HTML(
-        prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://juliauq.github.io/TransportMaps.jl",
-        assets = String[],
-        repolink = "https://github.com/JuliaUQ/TransportMaps.jl",
+    format = DocumenterVitepress.MarkdownVitepress(
+        repo = "https://github.com/JuliaUQ/TransportMaps.jl",
     ),
     modules = [TransportMaps],
     plugins = [bib],
+    repo = Remotes.GitHub("JuliaUQ", "TransportMaps.jl"),
     pages = [
         "Home" => "index.md",
         "Manuals" => [
@@ -70,14 +69,14 @@ makedocs(
         ],
         "References" => "references.md"
     ],
-    repo = "https://github.com/JuliaUQ/TransportMaps.jl/blob/{commit}{path}#{line}",
     checkdocs = :export,
     doctestfilters = [r"Ptr{0x[0-9a-f]+}"],
 )
 
-deploydocs(
-    repo = "github.com/JuliaUQ/TransportMaps.jl.git",
+DocumenterVitepress.deploydocs(;
+    repo = "github.com/JuliaUQ/TransportMaps.jl",
     target = "build",
-    branch = "gh-pages",
     devbranch = "main",
+    branch = "gh-pages",
+    push_preview = true,
 )
