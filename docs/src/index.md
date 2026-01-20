@@ -1,3 +1,15 @@
+```@raw html
+---
+authors:
+  - name: Lukas Fritsch
+    platform: github
+    link: https://github.com/lukasfritsch
+  - name: Jan Grashorn
+    platform: github
+    link: https://github.com/jgrashorn
+---
+```
+
 # TransportMaps.jl
 
 ```@meta
@@ -6,6 +18,13 @@ CurrentModule = TransportMaps
 
 This is an implementation of triangular transport maps in Julia based on the description in [marzouk2016](@cite).
 For a comprehensive introduction to transport maps, see [ramgraber2025](@cite). The theoretical foundations for monotone triangular transport maps are detailed in [marzouk2016](@cite), [baptista2023](@cite). For practical applications in structural health monitoring and Bayesian inference, see [grashorn2024](@cite).
+
+## Authors
+
+```@raw html
+
+<Authors />
+```
 
 ## What are Transport Maps?
 
@@ -109,11 +128,6 @@ The package is organized around several key components:
 Pages = ["api/bases.md", "api/rectifiers.md", "api/densities.md", "api/quadrature.md", "api/maps.md", "api/optimization.md"]
 Depth = 1
 ```
-
-## Authors
-
-- **Lukas Fritsch**, Institute for Risk and Reliability, Leibniz University Hannover
-- **Jan Grashorn**, Chair for Engineering Materials and Building Preservation, Helmut-Schmidt-University Hamburg
 
 ## Related Implementation
 
