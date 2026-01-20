@@ -30,3 +30,7 @@ Manifest.toml
 # VSCode settings and workspace files
 .vscode/
 .DS_Store
+
+# Documentation
+docs/node_modules
+docs/package-lock.json
