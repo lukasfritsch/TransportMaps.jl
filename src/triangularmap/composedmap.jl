@@ -97,6 +97,13 @@ Return the number of dimensions of the composed map.
 numberdimensions(C::ComposedMap{T}) where T<:AbstractLinearMap = numberdimensions(C.linearmap)
 
 function Base.show(io::IO, C::ComposedMap{T}) where T<:AbstractLinearMap
+    print(io, "ComposedMap{$(T)}(")
+    print(io, "linearmap=$(C.linearmap), ")
+    print(io, "polynomialmap=$(C.polynomialmap)")
+    print(io, ")")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", C::ComposedMap{T}) where T<:AbstractLinearMap
     println(io, "ComposedMap{$(T)} with $(numberdimensions(C)) dimensions:")
     println(io, " linearmap: ", C.linearmap)
     println(io, " polynomialmap: ", C.polynomialmap)
