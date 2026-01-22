@@ -17,8 +17,8 @@
 # ```
 #
 # They satisfy the three-term recurrence
-# $\operatorname{He}_{n+1}(z)=z \operatorname{He}_n(z)-n \operatorname{He}_{n-1}(z) $
-# with $(\operatorname{He}_0(z)=1)$ and $(\operatorname{He}_1(z)=z)$.
+# $\operatorname{He}_{n+1}(z)=z \operatorname{He}_n(z)-n \operatorname{He}_{n-1}(z)$
+# with $\operatorname{He}_0(z)=1$ and $\operatorname{He}_1(z)=z$.
 #
 # Orthonormal polynomial bases such as the Hermite family are useful for several
 # reasons. Orthogonality with respect to a reference measure makes coefficient
