@@ -1,7 +1,7 @@
 # Multivariate index set generation and reduced margin of multi-index sets
 
 """
-    multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
+    multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
 
 Generate multi-index sets Λ for multivariate polynomial bases.
 
@@ -12,15 +12,20 @@ Generate multi-index sets Λ for multivariate polynomial bases.
     - `:total`: Total-order multi-indices (default).
     - `:diagonal`: Diagonal multi-indices for a fixed coordinate k.
     - `:no_mixed`: No-mixed multi-indices.
+    - `:hyperbolic`: Hyperbolic truncation scheme by `q`-norm.
+- `q::Real`: Norm for hyperbolic truncation. `q=1` corresponds to total-order map.
 
 # Returns
 - `Vector{Vector{Int}}`: A vector of multi-indices, where each multi-index is represented as a vector of integers.
 
+# References
+[marzouk2016](@cite), [blatman2011](@cite)
+
 """
-function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
+function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
-    @assert mode in [:total, :diagonal, :no_mixed] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed"
+    @assert mode in [:total, :diagonal, :no_mixed, :hyperbolic] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed, :qnorm"
 
     # Special-case p == 0: only the constant multi-index of zeros
     if p == 0
@@ -81,7 +86,25 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
             end
         end
         return inds
+
+    elseif mode == :hyperbolic
+        @assert 0 < q <= 1 "q must be in (0,1]"
+        inds = Vector{Vector{Int}}()
+        # simple generator over 0:p for each coordinate (ensures univariate degrees up to p)
+        ranges = ntuple(_ -> 0:p, k)
+        for tup in Iterators.product(ranges...)
+            # compute quasi-norm (use floats)
+            s = 0.0
+            for x in tup
+                s += float(x)^q
+            end
+            if s^(1.0 / q) <= p + 1e-12
+                push!(inds, collect(tup))
+            end
+        end
+        return inds
     end
+
 end
 
 """
@@ -146,4 +169,4 @@ function reduced_margin(Λ::Vector{<:Vector{Int}})
 end
 
 # Helper function to convert a matrix of indices to a vector of index vectors
- _multivariate_indices(indices::Matrix{Int64}) = collect.(eachrow(indices))
+_multivariate_indices(indices::Matrix{Int64}) = collect.(eachrow(indices))
