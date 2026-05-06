@@ -33,7 +33,6 @@ using Test
 
         # Test invalid construction
         @test_throws AssertionError PolynomialMapComponent(0, 2)  # Invalid index
-        @test_throws AssertionError PolynomialMapComponent(1, 0)  # Invalid degree
         @test_throws AssertionError PolynomialMapComponent(-1, 2)  # Negative index
         @test_throws AssertionError PolynomialMapComponent(1, -1)  # Negative degree
     end

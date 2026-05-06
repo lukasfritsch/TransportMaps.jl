@@ -10,98 +10,17 @@ A single component Mᵏ of a triangular transport map with polynomial basis.
 - `index::Int`: Index k indicating the component dimension
 
 # Constructors
-- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=HermiteBasis(), map_type::Symbol=:total)`: Initialize component with specified degree and basis type.
-- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, density::Distributions.UnivariateDistribution, map_type::Symbol=:total)`: Initialize component using analytical reference density.
-- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, samples::AbstractMatrix{Float64}, map_type::Symbol=:total)`: Initialize component using sample data.
+- `PolynomialMapComponent(index::Int, degree::Int, rectifier::AbstractRectifierFunction=Softplus(), basis::AbstractPolynomialBasis=HermiteBasis(), reference_density::Distributions.UnivariateDistribution=Normal(), map_type::Symbol=:total)`: Initialize component with specified degree and basis type.
 - `PolynomialMapComponent(multi_indices::Vector{Vector{Int}}, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, samples::AbstractMatrix{Float64})`: Initialize component with custom multi-index sets from samples.
 - `PolynomialMapComponent(multi_indices::Vector{Vector{Int}}, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, reference_density::Distributions.UnivariateDistribution)`: Initialize component with custom multi-index sets from density.
 """
-struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent # mutable due to coefficients that are optimized
+struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent
     basisfunctions::Vector{MultivariateBasis{T}}  # Vector of MultivariateBasis objects
     coefficients::Vector{Float64}  # Coefficients for the basis functions
     rectifier::AbstractRectifierFunction  # Rectifier function to apply to the partial derivatives
     index::Int  # Index k and dimension of the map component
 
-    function PolynomialMapComponent(
-        index::Int,
-        degree::Int,
-        rectifier::AbstractRectifierFunction=Softplus(),
-        basis::AbstractPolynomialBasis=HermiteBasis(),
-        map_type::Symbol=:total
-    )
-        @assert index > 0 "Index must be a positive integer"
-        @assert degree > 0 "Degree must be a positive integer"
-        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
-
-        multi_indices = multivariate_indices(degree, index, mode=map_type)
-        basisfunctions = [MultivariateBasis(multiindexset, typeof(basis)) for multiindexset in multi_indices]
-        coefficients = zeros(length(basisfunctions))
-        T = typeof(basis)
-
-        return new{T}(basisfunctions, coefficients, rectifier, index)
-    end
-
-    # Constructor that builds basis functions using an analytical reference density
-    function PolynomialMapComponent(
-        index::Int,
-        degree::Int,
-        rectifier::AbstractRectifierFunction,
-        basis::AbstractPolynomialBasis,
-        density::Distributions.UnivariateDistribution,
-        map_type::Symbol=:total
-    )
-        @assert index > 0 "Index must be a positive integer"
-        @assert degree > 0 "Degree must be a positive integer"
-        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
-
-        T = typeof(basis)
-        multi_indices = multivariate_indices(degree, index, mode=map_type)
-        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
-
-        for (i, multiindexset) in enumerate(multi_indices)
-            # Build per-dimension univariate bases with the correct degree
-            dim = length(multiindexset)
-            uni_bases = Vector{T}(undef, dim)
-
-            for j in 1:dim
-                deg_j = multiindexset[j]
-
-                if isa(basis, HermiteBasis)
-                    uni_bases[j] = HermiteBasis()
-                elseif isa(basis, LinearizedHermiteBasis)
-                    uni_bases[j] = LinearizedHermiteBasis(density, deg_j, index)
-                elseif isa(basis, GaussianWeightedHermiteBasis)
-                    uni_bases[j] = GaussianWeightedHermiteBasis()
-                elseif isa(basis, CubicSplineHermiteBasis)
-                    uni_bases[j] = CubicSplineHermiteBasis(density)
-                end
-            end
-
-            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
-        end
-
-        coefficients = zeros(length(basisfunctions))
-        return new{T}(basisfunctions, coefficients, rectifier, index)
-    end
-
-    # Constructor that builds basis functions using an analytical reference density
-    function PolynomialMapComponent(
-        index::Int,
-        degree::Int,
-        rectifier::AbstractRectifierFunction,
-        basis::AbstractPolynomialBasis,
-        samples::AbstractMatrix{Float64},
-        map_type::Symbol=:total
-    )
-        @assert index > 0 "Index must be a positive integer"
-        @assert degree > 0 "Degree must be a positive integer"
-        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
-
-        # Construct multi-indices for the polynomial basis
-        multi_indices = multivariate_indices(degree, index, mode=map_type)
-        return PolynomialMapComponent(multi_indices, rectifier, basis, samples)
-    end
-
+    # Constructor for map-from-samples
     function PolynomialMapComponent(
         multi_indices::Vector{Vector{Int}},
         rectifier::AbstractRectifierFunction,
@@ -111,33 +30,13 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         # Determine index from multi_indices and type of basis
         index = length(multi_indices[1])
         T = typeof(basis)
-        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
-
-        for (i, multiindexset) in enumerate(multi_indices)
-            # Build per-dimension univariate bases with the correct degree
-            dim = length(multiindexset)
-            uni_bases = Vector{typeof(basis)}(undef, dim)
-
-            for j in 1:dim
-                deg_j = multiindexset[j]
-                if isa(basis, HermiteBasis)
-                    uni_bases[j] = HermiteBasis()
-                elseif isa(basis, LinearizedHermiteBasis)
-                    uni_bases[j] = LinearizedHermiteBasis(samples[:, j], deg_j, index)
-                elseif isa(basis, GaussianWeightedHermiteBasis)
-                    uni_bases[j] = GaussianWeightedHermiteBasis()
-                elseif isa(basis, CubicSplineHermiteBasis)
-                    uni_bases[j] = CubicSplineHermiteBasis(samples[:, j])
-                end
-            end
-
-            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
-        end
+        basisfunctions = _initialize_multivariate_basis(multi_indices, basis, samples, index)
 
         coefficients = zeros(length(basisfunctions))
         return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
+    # Constructor for map-from-density
     function PolynomialMapComponent(
         multi_indices::Vector{Vector{Int}},
         rectifier::AbstractRectifierFunction,
@@ -147,39 +46,101 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
         # Determine index from multi_indices and type of basis
         index = length(multi_indices[1])
         T = typeof(basis)
-        basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
-
-        for (i, multiindexset) in enumerate(multi_indices)
-            # Build per-dimension univariate bases with the correct degree
-            dim = length(multiindexset)
-            uni_bases = Vector{typeof(basis)}(undef, dim)
-
-            for j in 1:dim
-                deg_j = multiindexset[j]
-                if isa(basis, HermiteBasis)
-                    uni_bases[j] = HermiteBasis()
-                elseif isa(basis, LinearizedHermiteBasis)
-                    uni_bases[j] = LinearizedHermiteBasis(reference_density, deg_j, index)
-                elseif isa(basis, GaussianWeightedHermiteBasis)
-                    uni_bases[j] = GaussianWeightedHermiteBasis()
-                elseif isa(basis, CubicSplineHermiteBasis)
-                    uni_bases[j] = CubicSplineHermiteBasis(reference_density)
-                end
-            end
-
-            basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
-        end
+        basisfunctions = _initialize_multivariate_basis(multi_indices, basis, reference_density, index)
 
         coefficients = zeros(length(basisfunctions))
         return new{T}(basisfunctions, coefficients, rectifier, index)
     end
 
-    function PolynomialMapComponent(basisfunctions::Vector{MultivariateBasis{T}}, coefficients::Vector{Float64}, rectifier::AbstractRectifierFunction, index::Int) where T<:AbstractPolynomialBasis
+    function PolynomialMapComponent(
+        index::Int,
+        degree::Int,
+        rectifier::AbstractRectifierFunction=Softplus(),
+        basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
+        reference_density::Distributions.UnivariateDistribution=Normal(),
+        map_type=:total
+    )
+        multi_indices = multivariate_indices(degree, index, mode=map_type)
+        return PolynomialMapComponent(multi_indices, rectifier, basis, reference_density)
+    end
+
+    function PolynomialMapComponent(
+        basisfunctions::Vector{MultivariateBasis{T}},
+        coefficients::Vector{Float64},
+        rectifier::AbstractRectifierFunction,
+        index::Int
+    ) where T<:AbstractPolynomialBasis
+
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
 
         return new{T}(basisfunctions, coefficients, rectifier, index)
     end
+end
+
+function _initialize_multivariate_basis(
+    multi_indices::Vector{Vector{Int}},
+    basis::AbstractPolynomialBasis,
+    density::Distributions.UnivariateDistribution,
+    index::Int
+)
+    T = typeof(basis)
+    basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
+
+    for (i, multiindexset) in enumerate(multi_indices)
+        # Build per-dimension univariate bases with the correct degree
+        dim = length(multiindexset)
+        uni_bases = Vector{T}(undef, dim)
+
+        for j in 1:dim
+            deg_j = multiindexset[j]
+
+            if isa(basis, LinearizedHermiteBasis)
+                uni_bases[j] = LinearizedHermiteBasis(density, deg_j, index)
+            elseif isa(basis, CubicSplineHermiteBasis)
+                uni_bases[j] = CubicSplineHermiteBasis(density)
+            else
+                uni_bases[j] = basis
+            end
+        end
+
+        basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
+    end
+
+    return basisfunctions
+end
+
+function _initialize_multivariate_basis(
+    multi_indices::Vector{Vector{Int}},
+    basis::AbstractPolynomialBasis,
+    samples::AbstractMatrix{Float64},
+    index::Int
+)
+    T = typeof(basis)
+    basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
+
+    for (i, multiindexset) in enumerate(multi_indices)
+        # Build per-dimension univariate bases with the correct degree
+        dim = length(multiindexset)
+        uni_bases = Vector{typeof(basis)}(undef, dim)
+
+        for j in 1:dim
+            deg_j = multiindexset[j]
+            if isa(basis, HermiteBasis)
+                uni_bases[j] = HermiteBasis()
+            elseif isa(basis, LinearizedHermiteBasis)
+                uni_bases[j] = LinearizedHermiteBasis(samples[:, j], deg_j, index)
+            elseif isa(basis, GaussianWeightedHermiteBasis)
+                uni_bases[j] = GaussianWeightedHermiteBasis()
+            elseif isa(basis, CubicSplineHermiteBasis)
+                uni_bases[j] = CubicSplineHermiteBasis(samples[:, j])
+            end
+        end
+
+        basisfunctions[i] = MultivariateBasis(multiindexset, uni_bases)
+    end
+
+    return basisfunctions
 end
 
 """

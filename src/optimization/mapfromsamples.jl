@@ -1,19 +1,19 @@
 
 # Objective for optimization of component coefficients from samples
-function objective(component::PolynomialMapComponent, samples::Matrix{Float64})
+function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64}) where {T<:AbstractPolynomialBasis}
 
     # Evaluate map component Mk and its partial derivative w.r.t. xk
     Mₖ = evaluate(component, samples)
     ∂M = partial_derivative_zk(component, samples)
 
     # Monte Carlo estimate of the objective
-    obj = sum(0.5 * Mₖ .^ 2 - log.(abs.(∂M)))
+    obj = sum(0.5 * Mₖ .^ 2 - log.(abs.(∂M))) #! only when reference is Normal(0, 1)
     return obj
 
 end
 
 # Objective for optimization using precomputed basis evaluations
-function objective(component::PolynomialMapComponent, precomp::PrecomputedBasis)
+function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:AbstractPolynomialBasis}
     # Get current coefficients
     c = component.coefficients
 
@@ -24,13 +24,12 @@ function objective(component::PolynomialMapComponent, precomp::PrecomputedBasis)
     ∂M_vals = evaluate_∂M(precomp, c, component.rectifier)
 
     # Monte Carlo estimate of the objective
-    obj = sum(0.5 * M_vals .^ 2 - log.(abs.(∂M_vals)))
+    obj = sum(0.5 * M_vals .^ 2 - log.(abs.(∂M_vals)))  #! only when reference is Normal(0, 1)
     return obj
 end
 
-#! vectorize?
 # Gradient of objective for optimization of component coefficients from samples
-function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
+function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) where {T<:AbstractPolynomialBasis}
     # Analytical gradient of objective w.r.t. coefficients c of component Mk
     # Objective per sample: J(z) = 0.5 * Mₖ(z)^2 - log|∂Mₖ/∂zₖ(z)|
     # ∂J/∂c = Mₖ * ∂Mₖ/∂c - (1 / (∂Mₖ/∂zₖ)) * ∂(∂Mₖ/∂zₖ)/∂c
@@ -63,7 +62,7 @@ function objective_gradient!(Mk::PolynomialMapComponent, X::Matrix{Float64})
 end
 
 # Gradient of objective using precomputed basis evaluations
-function objective_gradient!(Mk::PolynomialMapComponent, precomp::PrecomputedBasis)
+function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:AbstractPolynomialBasis}
     # Analytical gradient of objective w.r.t. coefficients c
     # Objective: J = Σᵢ [0.5 * Mᵏ(zⁱ)² - log|∂Mᵏ/∂zₖ(zⁱ)|]
     # where Mᵏ(z) = f₀(z) + ∫₀^{z_k} g(∂f/∂x_k) dx_k
@@ -116,6 +115,71 @@ function objective_gradient!(Mk::PolynomialMapComponent, precomp::PrecomputedBas
         denom = max(abs(∂M_vals[i]), eps())
 
         # Vectorized gradient update
+        grad .-= (g_prime_at_z / denom) .* view(precomp.∂Ψ_z, i, :)
+    end
+
+    return grad
+end
+
+# For uniform reference
+function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64}) where {T<:ShiftedLegendreBasis}
+    return -sum(log.(abs.(partial_derivative_zk(component, samples))))
+end
+
+function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:ShiftedLegendreBasis}
+    return -sum(log.(abs.(evaluate_∂M(precomp, component.coefficients, component.rectifier))))
+end
+
+function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) where {T<:ShiftedLegendreBasis}
+    # Analytical gradient of objective w.r.t. coefficients c of component Mk
+    # Objective per sample: J(z) = - log|∂Mₖ/∂zₖ(z)|
+    # ∂J/∂c = - (1 / (∂Mₖ/∂zₖ)) * ∂(∂Mₖ/∂zₖ)/∂c
+
+    n_coeffs = length(Mk.coefficients)
+    grad = zeros(Float64, n_coeffs)
+
+    n_points = size(X, 1)
+    @inbounds for i in 1:n_points
+        z = X[i, :]
+
+        # Evaluate scalar map value and its diagonal partial derivative
+        ∂M = partial_derivative_zk(Mk, z)
+
+        # Gradient of ∂M/∂zₖ w.r.t. coefficients: vector length n_coeffs
+        ∂∂M_∂c = partial_derivative_zk_gradient_coefficients(Mk, z)
+
+        # Accumulate gradient contribution from this sample
+        # Handle potential zero ∂M (should be unlikely with rectifier) by adding small eps
+        denom = max(abs(∂M), eps()) * sign(∂M)
+
+        grad .-= (1.0 ./ denom) .* ∂∂M_∂c
+    end
+
+    return grad
+end
+
+function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:ShiftedLegendreBasis}
+    # Objective: J = -Σᵢ log|∂Mᵏ/∂zₖ(zⁱ)|
+    # Gradient: ∂J/∂c = -Σᵢ (1 / ∂Mᵏ/∂zₖ(zⁱ)) * ∂(∂Mᵏ/∂zₖ(zⁱ))/∂c
+
+    c = Mk.coefficients
+    n_samples = precomp.n_samples
+    n_basis = precomp.n_basis
+
+    # Evaluate ∂M for all samples
+    ∂M_vals = evaluate_∂M(precomp, c, Mk.rectifier)
+
+    grad = zeros(Float64, n_basis)
+
+    @inbounds for i in 1:n_samples
+        # ∂M/∂zₖ = g(∂f/∂zₖ), so:
+        # ∂(∂M/∂zₖ)/∂cⱼ = g'(∂f/∂zₖ) * ∂ψⱼ/∂zₖ
+        ∂f_at_z = dot(view(precomp.∂Ψ_z, i, :), c)
+        g_prime_at_z = derivative(Mk.rectifier, ∂f_at_z)
+
+        # Keep sign so this matches d/dx log|x| = 1/x
+        denom = max(abs(∂M_vals[i]), eps()) * sign(∂M_vals[i])
+
         grad .-= (g_prime_at_z / denom) .* view(precomp.∂Ψ_z, i, :)
     end
 

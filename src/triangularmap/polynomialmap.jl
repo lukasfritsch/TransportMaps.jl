@@ -48,7 +48,13 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
         @assert validate_basis_reference_compatibility(basis, reference) "Invalid combination of reference density and basis. Support of $reference is $(support(reference)), while support of $basis is $(support(basis))."
 
-        components = [PolynomialMapComponent(k, degree, rectifier, basis, reference, map_type) for k in 1:dimension]
+        T = typeof(basis)
+        components = Vector{PolynomialMapComponent{T}}(undef, dimension)
+
+        for k in 1:dimension
+            multi_indices = multivariate_indices(degree, k, mode=map_type)
+            components[k] = PolynomialMapComponent(multi_indices, rectifier, basis, reference)
+        end
 
         return PolynomialMap(components, reference)
     end
@@ -643,7 +649,8 @@ function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
         rec = component.rectifier
         basis = component.basisfunctions[1].univariatebases[1]
 
-        new_components[i] = PolynomialMapComponent(k, d, rec, basis, samples)
+        multi_indices = multivariate_indices(d, k)
+        new_components[i] = PolynomialMapComponent(multi_indices, rec, basis, samples)
     end
 
     # Assign components
