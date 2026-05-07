@@ -3,7 +3,7 @@
 
 Probabilist Hermite polynomial basis with Gaussian weight for edge control.
 """
-struct GaussianWeightedHermiteBasis <: AbstractPolynomialBasis end
+struct GaussianWeightedHermiteBasis <: AbstractHermiteBasis end
 
 function _gaussian_weight_hermite(n::Int, z::Real)
     return hermite_polynomial(n, z) * exp(-0.25 * z^2)

@@ -18,6 +18,8 @@ import Distributions: mean, mode, cov, MvNormal, pdf, logpdf, gradlogpdf, suppor
 # Abstract type definitions
 abstract type AbstractBasisFunction end
 abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
+abstract type AbstractHermiteBasis <: AbstractPolynomialBasis end # abstract type with basis supported on (-∞, +∞)
+abstract type AbstractLegendreBasis <: AbstractPolynomialBasis end # abstract type with basis supported on [a, b]
 abstract type AbstractMapComponent end
 abstract type AbstractTransportMap end
 abstract type AbstractTriangularMap <: AbstractTransportMap end
@@ -32,6 +34,8 @@ abstract type AbstractQuadratureKnots end
 # Export abstract types
 export AbstractBasisFunction
 export AbstractPolynomialBasis
+export AbstractHermiteBasis
+export AbstractLegendreBasis
 export AbstractMapComponent
 export AbstractTransportMap
 export AbstractTriangularMap
