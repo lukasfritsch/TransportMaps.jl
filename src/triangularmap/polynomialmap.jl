@@ -24,7 +24,8 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         referencetype::Symbol=:normal,
         rectifier::AbstractRectifierFunction=Softplus(),
         basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-        map_type::Symbol=:total
+        map_type::Symbol=:total,
+        q::Real=1.
     )
         @assert referencetype in [:normal, :uniform, :uniform01] "Supported reference types: :normal, :uniform (U(-1,1)), :uniform01 (U(0,1))"
 
@@ -34,7 +35,7 @@ mutable struct PolynomialMap <: AbstractTriangularMap
             :uniform01 => Uniform(0, 1)
         )
 
-        return PolynomialMap(dimension, degree, reference[referencetype], rectifier, basis, map_type)
+        return PolynomialMap(dimension, degree, reference[referencetype], rectifier, basis, map_type, q)
     end
 
     function PolynomialMap(
@@ -43,16 +44,16 @@ mutable struct PolynomialMap <: AbstractTriangularMap
         reference::Distributions.UnivariateDistribution,
         rectifier::AbstractRectifierFunction=Softplus(),
         basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-        map_type::Symbol=:total
+        map_type::Symbol=:total,
+        q::Real=1.
     )
-        @assert map_type in [:total, :diagonal, :no_mixed] "Invalid map_type. Supported types are :total, :diagonal, :no_mixed"
         @assert validate_basis_reference_compatibility(basis, reference) "Invalid combination of reference density and basis. Support of $reference is $(support(reference)), while support of $basis is $(support(basis))."
 
         T = typeof(basis)
         components = Vector{PolynomialMapComponent{T}}(undef, dimension)
 
         for k in 1:dimension
-            multi_indices = multivariate_indices(degree, k, mode=map_type)
+            multi_indices = multivariate_indices(degree, k, mode=map_type, q=q)
             components[k] = PolynomialMapComponent(multi_indices, rectifier, basis, reference)
         end
 
@@ -79,17 +80,6 @@ function DiagonalMap(
     return PolynomialMap(dimension, degree, reference, rectifier, basis, :diagonal)
 end
 
-# Backward-compatible Symbol overload for DiagonalMap
-function DiagonalMap(
-    dimension::Int,
-    degree::Int,
-    referencetype::Symbol,
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
-)
-    return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :diagonal)
-end
-
 # Convenience constructor for NoMixedMap
 function NoMixedMap(
     dimension::Int,
@@ -101,15 +91,16 @@ function NoMixedMap(
     return PolynomialMap(dimension, degree, reference, rectifier, basis, :no_mixed)
 end
 
-# Backward-compatible Symbol overload for NoMixedMap
-function NoMixedMap(
+function HyperbolicMap(
     dimension::Int,
     degree::Int,
-    referencetype::Symbol,
+    q::Real,
+    reference::Distributions.UnivariateDistribution=Normal(),
     rectifier::AbstractRectifierFunction=Softplus(),
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
 )
-    return PolynomialMap(dimension, degree, referencetype, rectifier, basis, :no_mixed)
+
+    return PolynomialMap(dimension, degree, reference, rectifier, basis, :hyperbolic, q)
 end
 
 # Construct PolynomialMap from multi-index sets Λ and given density

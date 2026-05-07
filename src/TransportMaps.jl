@@ -66,6 +66,7 @@ export shifted_legendre_derivative
 # Map operations
 export DiagonalMap
 export NoMixedMap
+export HyperbolicMap
 export gradient_coefficients
 export gradient_z
 export gradient_zk
