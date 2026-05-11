@@ -29,6 +29,13 @@ using Test
     @test length(zero_idx) == 1
     @test zero_idx[1] == [0,0,0,0]
 
+    # hyperbolic truncation p=3, k=2, q=0.7:
+    qn = multivariate_indices(3, 2, mode=:hyperbolic, q=0.7)
+    @test length(qn) == 8
+    @test !any(x -> x == [1,2], qn)
+    @test !any(x -> x == [2,1], qn)
+    @test any(x -> x == [1,1], qn)
+
     # Unknown mode should throw error
     @test_throws AssertionError multivariate_indices(2, 2, mode=:unknown)
 end

@@ -13,7 +13,7 @@ Probabilist Hermite polynomial basis with linearization outside specified bounds
 - `LinearizedHermiteBasis(samples::Vector{<:Real}, max_degree::Int, k::Int)`: Construct bounds from 1st and 99th percentile of samples.
 - `LinearizedHermiteBasis(density::Distributions.UnivariateDistribution, max_degree::Int, k::Int)`: Construct bounds from 1st and 99th percentile of reference density.
 """
-struct LinearizedHermiteBasis <: AbstractPolynomialBasis
+struct LinearizedHermiteBasis <: AbstractHermiteBasis
     linearizationbounds::Vector{Float64}
     normalization::Vector{Float64}
 

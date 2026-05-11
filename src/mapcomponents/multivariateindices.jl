@@ -1,7 +1,7 @@
 # Multivariate index set generation and reduced margin of multi-index sets
 
 """
-    multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
+    multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
 
 Generate multi-index sets Λ for multivariate polynomial bases.
 
@@ -12,15 +12,20 @@ Generate multi-index sets Λ for multivariate polynomial bases.
     - `:total`: Total-order multi-indices (default).
     - `:diagonal`: Diagonal multi-indices for a fixed coordinate k.
     - `:no_mixed`: No-mixed multi-indices.
+    - `:hyperbolic`: Hyperbolic truncation scheme by `q`-norm.
+- `q::Real`: Norm for hyperbolic truncation. `q=1` corresponds to total-order map.
 
 # Returns
 - `Vector{Vector{Int}}`: A vector of multi-indices, where each multi-index is represented as a vector of integers.
 
+# References
+[marzouk2016](@cite), [blatman2011](@cite)
+
 """
-function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
+function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
-    @assert mode in [:total, :diagonal, :no_mixed] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed"
+    @assert mode in [:total, :diagonal, :no_mixed, :hyperbolic] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed, :hyperbolic"
 
     # Special-case p == 0: only the constant multi-index of zeros
     if p == 0
@@ -29,35 +34,14 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
 
     if mode == :total
         # total-order multi-indices
-        No = Int64(factorial(p + k) / factorial(p) / factorial(k))
-
-        idx = vcat(zeros(Int64, 1, k), Matrix(I, k, k), zeros(Int64, No - k - 1, k))
-
-        pᵢ = ones(Int64, k, No)
-
-        for kk in 2:No
-            for i in 1:k
-                pᵢ[i, kk] = sum(pᵢ[i:k, kk-1])
-            end
-        end
-
-        P = k + 1
-        for kk in 2:p
-            L = P
-            for j in 1:k, m in (L-pᵢ[j, kk]+1):L
-                P += 1
-                idx[P, :] = idx[m, :]
-                idx[P, j] = idx[P, j] + 1
-            end
-        end
-
-        return map(collect, eachrow(idx))
+        # A_k^{TO} = { α : ||α||_1 <= p and α_i = 0 for all i > k}
+        return hyperbolic_truncation(p, k, 1.)
 
     elseif mode == :diagonal
         # Diagonal multi-index set for a fixed coordinate k:
-        # J_k^D = { j : ||j||_1 <= p  and j_i = 0 for all i != k }
+        # A_k^D = { α : ||α||_1 <= p  and α_i = 0 for all i != k }
         # i.e., vectors with only the k-th entry possibly non-zero (0..p)
-        # diagonal for the fixed component k: only j_{k} may be non-zero
+        # diagonal for the fixed component k: only α_{k} may be non-zero
         inds = Vector{Vector{Int}}()
         for t in 0:p
             v = zeros(Int, k)
@@ -68,7 +52,7 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
 
     elseif mode == :no_mixed
         # No-mixed terms (possibly restricted to first k coordinates):
-        # J_k^{NM} = { j : ||j||_1 <= p, j_i * j_l = 0 for i != l, and j_i = 0 for i > k }
+        # A_k^{NM} = { α : ||α||_1 <= p, α_i * α_l = 0 for i != l, and α_i = 0 for i > k }
         inds = Vector{Vector{Int}}()
         # constant term
         push!(inds, zeros(Int, k))
@@ -81,7 +65,33 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total)
             end
         end
         return inds
+
+    elseif mode == :hyperbolic
+        # Hyperbolic truncation:
+        # A_k^{q} = { α : ||α||_q <= p and α_i = 0 for all i > k}
+        return hyperbolic_truncation(p, k, q)
     end
+
+end
+
+function hyperbolic_truncation(p::Int64, k::Int64, q::Real)
+    # Hyperbolic truncation:
+    # A_k^{q} = { α : ||α||_q <= p and α_i = 0 for all i > k}
+    @assert 0 <= q <= 1 "q must be in (0,1]"
+    inds = Vector{Vector{Int}}()
+    ranges = ntuple(_ -> 0:p, k)
+    for tup in Iterators.product(ranges...)
+        # compute quasi-norm
+        if q_norm(tup, q) <= p + 1e-12
+            push!(inds, collect(tup))
+        end
+    end
+    return inds
+end
+
+function q_norm(α::Tuple{Vararg{Int64}}, q::Float64)
+    s = sum(float.(α) .^ q)
+    return s^(1. / q)
 end
 
 """
@@ -146,4 +156,4 @@ function reduced_margin(Λ::Vector{<:Vector{Int}})
 end
 
 # Helper function to convert a matrix of indices to a vector of index vectors
- _multivariate_indices(indices::Matrix{Int64}) = collect.(eachrow(indices))
+_multivariate_indices(indices::Matrix{Int64}) = collect.(eachrow(indices))

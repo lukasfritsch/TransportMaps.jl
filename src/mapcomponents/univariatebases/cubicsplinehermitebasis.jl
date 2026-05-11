@@ -11,7 +11,7 @@ Probabilist Hermite polynomial basis with cubic spline edge control.
 - `CubicSplineHermiteBasis(samples::Vector{<:Real})`: Construct radius from from 1st and 99th percentile of samples.
 - `CubicSplineHermiteBasis(density::Distributions.UnivariateDistribution)`: Construct radius from 1st and 99th percentile of reference density.
 """
-struct CubicSplineHermiteBasis <: AbstractPolynomialBasis
+struct CubicSplineHermiteBasis <: AbstractHermiteBasis
     radius::Float64
 
     function CubicSplineHermiteBasis(radius::Float64=3.0)

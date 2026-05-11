@@ -18,6 +18,8 @@ import Distributions: mean, mode, cov, MvNormal, pdf, logpdf, gradlogpdf, suppor
 # Abstract type definitions
 abstract type AbstractBasisFunction end
 abstract type AbstractPolynomialBasis <: AbstractBasisFunction end
+abstract type AbstractHermiteBasis <: AbstractPolynomialBasis end # abstract type with basis supported on (-∞, +∞)
+abstract type AbstractLegendreBasis <: AbstractPolynomialBasis end # abstract type with basis supported on [a, b]
 abstract type AbstractMapComponent end
 abstract type AbstractTransportMap end
 abstract type AbstractTriangularMap <: AbstractTransportMap end
@@ -27,10 +29,13 @@ abstract type AbstractQuadratureWeights end
 abstract type AbstractMapDensity end
 abstract type AbstractComposedMap end
 abstract type AbstractLinearMap <: AbstractTriangularMap end
+abstract type AbstractQuadratureKnots end
 
 # Export abstract types
 export AbstractBasisFunction
 export AbstractPolynomialBasis
+export AbstractHermiteBasis
+export AbstractLegendreBasis
 export AbstractMapComponent
 export AbstractTransportMap
 export AbstractTriangularMap
@@ -39,6 +44,7 @@ export AbstractQuadratureWeights
 export AbstractMapDensity
 export AbstractComposedMap
 export AbstractLinearMap
+export AbstractQuadratureKnots
 
 # Export functions/methods
 # Basis functions and evaluation
@@ -64,6 +70,7 @@ export shifted_legendre_derivative
 # Map operations
 export DiagonalMap
 export NoMixedMap
+export HyperbolicMap
 export gradient_coefficients
 export gradient_z
 export gradient_zk
@@ -123,16 +130,24 @@ export PolynomialMapComponent
 export PolynomialMap
 export Softplus
 export ShiftedELU
-export GaussHermiteWeights
-export GaussLegendreWeights
-export MonteCarloWeights
-export LatinHypercubeWeights
 export MapTargetDensity
 export MapReferenceDensity
-export SparseSmolyakWeights
 export PrecomputedBasis
 export PrecomputedMapBasis
 export ExpRectifier
+
+# Quadrature
+export TensorProductWeights
+export GaussHermiteWeights
+export GaussLegendreWeights
+export ClenshawCurtisWeights
+export SparseSmolyakWeights
+export MonteCarloWeights
+export LatinHypercubeWeights
+
+export GaussHermiteKnots
+export GaussLegendreKnots
+export ClenshawCurtisKnots
 
 # Laplace Map
 export mean
@@ -173,9 +188,11 @@ include("optimization/optimizationhistory.jl")
 include("optimization/adaptivetransportmap.jl")
 include("optimization/adaptivetransportmap_density.jl")
 
+include("quadrature/grids.jl")
+include("quadrature/quadratureknots.jl")
+include("quadrature/quadratureweights.jl")
+
 include("util/gaussquadrature.jl")
 include("util/hybridrootfinder.jl")
-include("util/quadraturepoints.jl")
-include("util/smolyak.jl")
 
 end

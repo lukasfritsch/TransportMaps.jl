@@ -3,7 +3,7 @@
 
 Probabilist Hermite polynomial basis.
 """
-struct HermiteBasis <: AbstractPolynomialBasis end
+struct HermiteBasis <: AbstractHermiteBasis end
 
 # Univariate probabilist's Hermite polynomials
 @inline function hermite_polynomial(n::Int64, z::Real)

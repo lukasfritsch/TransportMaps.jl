@@ -686,6 +686,12 @@ using LinearAlgebra
         @test length(pm_no_mixed.components) == 2
         @test length(pm_no_mixed.components[1].basisfunctions) == 3
         @test length(pm_no_mixed.components[2].basisfunctions) == 5
+
+        # Test hyperbolic truncation
+        pm_qnorm = HyperbolicMap(2, 3, 0.8)
+        @test length(pm_qnorm.components) == 2
+        @test length(pm_qnorm.components[1].basisfunctions) == 4
+        @test length(pm_qnorm.components[2].basisfunctions) == 8
     end
 
     @testset "Callable Interface" begin

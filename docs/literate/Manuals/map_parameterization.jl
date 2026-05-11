@@ -22,9 +22,10 @@
 # By selecting an appropriate multi-index set $\mathcal{A}_k$, the structure of the map itself can be tailored to the problem at hand.
 # This includes the ability to create sparse maps, which can be particularly beneficial in high-dimensional settings
 # or when the underlying relationships are known to be simpler.
-# This feature is similar to the concept of sparse polynomial chaos expansions used in (forward) uncertainty propagation [luthen2021](@cite).
+# This feature is similar to the concept of sparse polynomial chaos expansions (PCE) used in (forward) uncertainty propagation [luthen2021](@cite).
 #
-# In `TransportMaps.jl`, three types of map structures outlined in [marzouk2016](@cite) are implemented:
+# In `TransportMaps.jl`, three types of map structures outlined in [marzouk2016](@cite) are implemented.
+# Further, we implement a hyperbolic truncation using the $q$-pseudo-norm introduced in sparse PCE [blatman2011](@cite).
 #
 # - **Total Order Map**: Includes all terms up to a specified total degree $p$ for $d$ dimensions. In order to maintain the triangular structure,
 #   the $k$-th component of the map only depends on the first $k$ variables. Thus, the multivariate basis for the $k$-th component
@@ -42,6 +43,17 @@
 # ```math
 # \mathcal{A}_k^{D} = \{\boldsymbol{\alpha}: ||\boldsymbol{\alpha}||_1  \leq p \ \wedge \ \alpha_i = 0, \ \forall \ i \neq k\}
 # ```
+#
+# - **Hyperbolic / q‑norm truncation**: Includes multi‑indices whose quasi‑norm
+#   is bounded by $p$. For $q \in (0,1]$ define
+# ```math
+# \mathcal{A}_k^{q}=\{\boldsymbol{\alpha}\in\mathbb{N}^d:\|\boldsymbol{\alpha}\|_q \le p\},
+# \qquad
+# \|\boldsymbol{\alpha}\|_q=\bigg(\sum_{i=1}^d \alpha_i^q\bigg)^{1/q}.
+# ```
+# ``q=1`` recovers the total‑degree basis, ``q<1`` penalizes high‑order interactions and
+# keeps low‑dimensional high‑degree (univariate) terms, producing a sparser interaction
+# structure [blatman2011](@cite).
 #
 # For an better overview, the multi-index sets for each map type will be visualized later.
 
@@ -70,6 +82,11 @@ M_nm = NoMixedMap(2, 3, Normal(), Softplus(), HermiteBasis())
 M_d = DiagonalMap(2, 3, Normal(), Softplus(), HermiteBasis())
 ## alternative: PolynomialMap(2, 3, Normal(), Softplus(), HermiteBasis(), :diagonal)
 
+# ### Hyperbolic Map
+# Finally, we also construct a map with hyperbolic truncation with $q = 0.7$:
+M_q = HyperbolicMap(2, 3, 0.7, Normal(), Softplus(), HermiteBasis())
+## alternative: PolynomialMap(2, 3, Normal(), Softplus(), HermiteBasis(), :hyperbolic, 0.5)
+
 # ### Visualizing Multi-Index Sets
 #
 # The multi-index set determines the terms included in the polynomial expansion. We extract the
@@ -83,7 +100,7 @@ ind_d = getmultiindexsets(M_d.components[2])
 
 # Finally, we plot the multi-index sets for each map type. This allows us to reproduce the
 # comparison of multi-index sets as shown in Figure 1 in [marzouk2016](@cite):
-scatter(ind_to[:, 1], ind_to[:, 2], ms=20, label="Total Order",)
+scatter(ind_to[:, 1], ind_to[:, 2], ms=20, label="Total Order")
 scatter!(ind_nm[:, 1], ind_nm[:, 2], ms=12, label="No Mixed")
 scatter!(ind_d[:, 1], ind_d[:, 2], ms=6, label="Diagonal")
 scatter!(xlim=(-0.5, 3.5), ylim=(-0.5, 3.5), aspect_ratio=1, legend=:topright,
@@ -91,6 +108,11 @@ scatter!(xlim=(-0.5, 3.5), ylim=(-0.5, 3.5), aspect_ratio=1, legend=:topright,
     title="Multi-index Set of Map Component M²")
 #md savefig("multi_indices.svg"); nothing # hide
 # ![Multi Index Sets](multi_indices.svg)
+
+# ### Visualize the Hyperbolic truncation
+
+# To show the effects of the truncation by ``q``-norm [blatman2011](@cite), we visualize the multi-index sets for a hyperbolic truncation with ``k=2`` dimensions, degree ``p=5`` and different ``q``.
+# ![q-norm Animation](../assets/qnorm_animation.gif)
 
 # ## Example: Comparing Map Parameterizations
 #

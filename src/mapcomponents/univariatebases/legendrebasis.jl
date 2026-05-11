@@ -3,7 +3,7 @@
 
 Legendre polynomial basis, orthogonal with respect to uniform measure on [-1, 1].
 """
-struct LegendreBasis <: AbstractPolynomialBasis end
+struct LegendreBasis <: AbstractLegendreBasis end
 
 # Univariate Legendre polynomials using recurrence relation
 @inline function legendre_polynomial(n::Int64, x::Real)
@@ -74,7 +74,7 @@ Shifted Legendre polynomial basis, orthogonal with respect to uniform measure on
 The shifted Legendre polynomials ``P_n^*([0,1])(x)`` are obtained by transforming the standard
 Legendre polynomials: ``P_n^*(x) = P_n(2x - 1)``.
 """
-struct ShiftedLegendreBasis <: AbstractPolynomialBasis end
+struct ShiftedLegendreBasis <: AbstractLegendreBasis end
 
 # Shifted Legendre polynomials on [0, 1]
 # P_n^*([0,1])(x) = P_n(2x - 1)
