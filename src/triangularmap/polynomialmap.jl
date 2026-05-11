@@ -640,7 +640,7 @@ function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
         rec = component.rectifier
         basis = component.basisfunctions[1].univariatebases[1]
 
-        multi_indices = multivariate_indices(d, k)
+        multi_indices = _multivariate_indices(getmultiindexsets(component))
         new_components[i] = PolynomialMapComponent(multi_indices, rec, basis, samples)
     end
 
