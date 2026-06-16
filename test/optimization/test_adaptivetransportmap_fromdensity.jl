@@ -37,7 +37,8 @@ using Optim
         @test T.forwarddirection == :target
 
         T_init_reference = DiagonalMap(2, 1)
-        TransportMaps.initializemapfromsamples!(T_init_reference, randn(10, 2))
+        rng = MersenneTwister(123)
+        TransportMaps.initializemapfromsamples!(T_init_reference, randn(rng, 10, 2))
         @test T_init_reference.forwarddirection == :reference
         T_reference, _ = optimize_adaptive_transportmap(target, quadrature, maxterms;
             initial_map=T_init_reference
