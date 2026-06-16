@@ -120,31 +120,47 @@ function optimize_adaptive_transportmap(
             gradient_metrics[i] = abs(grad[new_coeff_idx])
         end
 
-        # Select candidate with maximum gradient magnitude
-        best_idx = argmax(gradient_metrics)
-        k_best, α_best = candidates[best_idx]
+        # Try candidates in descending order of gradient magnitude and keep the first converged one
+        sorted_candidate_indices = sortperm(gradient_metrics, rev=true)
+        candidate_selected = false
 
-        println("   Best candidate: Component $k_best, adding term")
-        println("   Gradient magnitude: $(gradient_metrics[best_idx])")
+        for cand_idx in sorted_candidate_indices
+            k_cand, α_cand = candidates[cand_idx]
 
-        # Add best term to the map
-        update_multiindexset!(M, α_best, k_best)
+            println("   Trying candidate: Component $k_cand")
+            println("   Gradient magnitude: $(gradient_metrics[cand_idx])")
 
-        # Recompute precomputed basis
-        precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
+            M_trial = deepcopy(M)
+            update_multiindexset!(M_trial, α_cand, k_cand)
 
-        # Optimize map
-        res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
+            precomp_trial = PrecomputedMapBasis(M_trial, quadrature.points, quadrature.weights)
+            res_trial = optimize!(M_trial, target, precomp_trial, optimizer=optimizer, options=options)
 
-        # Compute objectives
-        train_obj = Optim.minimum(res)
-        println("   KL divergence (train): $train_obj")
+            if Optim.converged(res_trial)
+                M = M_trial
+                precomp = precomp_trial
+                res = res_trial
+                candidate_selected = true
+                break
+            else
+                println("   Candidate did not converge. Trying next-best candidate...")
+            end
+        end
 
-        if !isnothing(validation)
-            validation_obj = kldivergence(M, target, validation)
-            println("   KL divergence (valid): $validation_obj")
+        if candidate_selected
+            # Compute objectives for accepted candidate
+            train_obj = Optim.minimum(res)
+            println("   KL divergence (train): $train_obj")
+
+            if !isnothing(validation)
+                validation_obj = kldivergence(M, target, validation)
+                println("   KL divergence (valid): $validation_obj")
+            else
+                validation_obj = NaN
+            end
         else
-            validation_obj = NaN
+            println("   No converged candidate found. Map remains unchanged for this iteration.")
+            # Keep the previous objective values and optimization result in history.
         end
 
         # Store in history
