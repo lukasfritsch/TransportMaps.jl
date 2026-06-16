@@ -28,11 +28,21 @@ using Optim
 
     @testset "Warm start" begin
         T_init = DiagonalMap(2, 1)
+        maxterms_exact = numbercoefficients(T_init)
 
-        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms;
+        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms_exact;
             initial_map=T_init
         )
-        @test numbercoefficients(T) <= maxterms
+        @test numbercoefficients(T) == maxterms_exact
+        @test T.forwarddirection == :target
+
+        T_init_reference = DiagonalMap(2, 1)
+        TransportMaps.initializemapfromsamples!(T_init_reference, randn(10, 2))
+        @test T_init_reference.forwarddirection == :reference
+        T_reference, _ = optimize_adaptive_transportmap(target, quadrature, maxterms;
+            initial_map=T_init_reference
+        )
+        @test T_reference.forwarddirection == :target
 
         @test_throws AssertionError optimize_adaptive_transportmap(
             target, quadrature, maxterms; initial_map=PolynomialMap(2, 2))

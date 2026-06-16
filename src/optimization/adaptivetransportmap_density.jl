@@ -15,12 +15,12 @@ the multi-index set across all components simultaneously.
 - `maxterms::Int`: Maximum total number of terms to add across all components
 
 # Keyword Arguments
-- `initial_map::Union{Nothing,PolynomialMap}=nothing,`: Initial transport map structure
+- `initial_map::Union{Nothing,PolynomialMap}=nothing`: Initial transport map structure
 - `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
 - `options::Optim.Options=Optim.Options()`: Optimizer options
-- `validation_samples::Matrix{Float64}=Matrix{Float64}(undef,0,0)`: Samples for variance diagnostic validation
+- `validation::Union{AbstractQuadratureWeights,Nothing}=nothing`: Quadrature rule used for validation diagnostics
 
 # Returns
 - `M::PolynomialMap`: The optimized triangular transport map (with best validation variance diagnostic)
@@ -45,8 +45,9 @@ function optimize_adaptive_transportmap(
         Λ = [multivariate_indices(0, k) for k in 1:d]
         M = PolynomialMap(Λ, rectifier, basis, reference_density)
     else
-        @assert numbercoefficients(initial_map) < maxterms "Initial map has more coefficients than maxterms=$maxterms"
+        @assert numbercoefficients(initial_map) <= maxterms "Initial map has more coefficients than maxterms=$maxterms"
         M = deepcopy(initial_map)
+        setforwarddirection!(M, :target)
     end
 
     num_initial_coefficients = numbercoefficients(M)
