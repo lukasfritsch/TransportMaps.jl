@@ -15,6 +15,7 @@ the multi-index set across all components simultaneously.
 - `maxterms::Int`: Maximum total number of terms to add across all components
 
 # Keyword Arguments
+- `initial_map::Union{Nothing,PolynomialMap}=nothing,`: Initial transport map structure
 - `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
