@@ -29,6 +29,7 @@ function optimize_adaptive_transportmap(
     target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights,
     maxterms::Int;
+    initial_map::Union{Nothing,PolynomialMap}=nothing,
     rectifier::AbstractRectifierFunction=Softplus(),
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
     reference_density::Distributions.UnivariateDistribution=Normal(),
@@ -38,10 +39,15 @@ function optimize_adaptive_transportmap(
 )
     d = size(quadrature.points, 2)
 
-    # Initialize map with constant terms only
-    Λ = [multivariate_indices(0, k) for k in 1:d]
+    if isnothing(initial_map)
+        # Initialize map with constant terms only
+        Λ = [multivariate_indices(0, k) for k in 1:d]
+        M = PolynomialMap(Λ, rectifier, basis, reference_density)
+    else
+        @assert numbercoefficients(initial_map) < maxterms "Initial map has more coefficients than maxterms=$maxterms"
+        M = deepcopy(initial_map)
+    end
 
-    M = PolynomialMap(Λ, rectifier, basis, reference_density)
     num_initial_coefficients = numbercoefficients(M)
     println("Initialized map with $(num_initial_coefficients) initial coefficients.")
 

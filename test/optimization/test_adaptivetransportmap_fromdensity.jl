@@ -26,6 +26,18 @@ using Optim
         @test !iszero(hist.test_objectives[1])
     end
 
+    @testset "Warm start" begin
+        T_init = DiagonalMap(2, 1)
+
+        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms;
+            initial_map=T_init
+        )
+        @test numbercoefficients(T) <= maxterms
+
+        @test_throws AssertionError optimize_adaptive_transportmap(
+            target, quadrature, maxterms; initial_map=PolynomialMap(2, 2))
+    end
+
     @testset "Options" begin
         rectifier = ShiftedELU()
         basis = HermiteBasis()
