@@ -83,13 +83,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Citation
 
-If you use TransportMaps.jl in your research, please cite:
-
-```bibtex
-@software{transportmaps_jl,
-    title = {TransportMaps.jl: Triangular transport maps for variational inference},
-    author = {Fritsch, Lukas and Grashorn, Jan},
-    year = {2025},
-    url = {https://github.com/JuliaUQ/TransportMaps.jl}
-}
-```
+If you use TransportMaps.jl in your research, please cite using the information provided at `Cite this repository` (or see [`CITATION.cff`](CITATION.cff)).
