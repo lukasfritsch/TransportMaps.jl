@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+title: TransportMaps.jl
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Lukas
+    family-names: Fritsch
+    email: fritsch@irz.uni-hannover.de
+    affiliation: Leibniz University Hannover
+    orcid: 'https://orcid.org/0009-0000-0998-7479'
+  - given-names: Jan
+    family-names: Grashorn
+    email: grashorn@hsu-hh.de
+    affiliation: Helmut Schmidt University Hamburg
+    orcid: 'https://orcid.org/0000-0003-1820-1372'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18309940
+    description: Zenodo
+repository-code: 'https://github.com/JuliaUQ/TransportMaps.jl'
+url: 'https://transportmaps.de'
+keywords:
+  - transport maps
+  - measure transport
+  - Bayesian inference
+license: MIT
+commit: 5adcc33
+version: 0.1.5
+date-released: '2026-03-10'
