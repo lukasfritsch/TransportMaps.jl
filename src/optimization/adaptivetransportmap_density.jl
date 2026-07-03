@@ -15,11 +15,12 @@ the multi-index set across all components simultaneously.
 - `maxterms::Int`: Maximum total number of terms to add across all components
 
 # Keyword Arguments
+- `initial_map::Union{Nothing,PolynomialMap}=nothing`: Initial transport map structure
 - `rectifier::AbstractRectifierFunction=Softplus()`: Rectifier function to use
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
 - `options::Optim.Options=Optim.Options()`: Optimizer options
-- `validation_samples::Matrix{Float64}=Matrix{Float64}(undef,0,0)`: Samples for variance diagnostic validation
+- `validation::Union{AbstractQuadratureWeights,Nothing}=nothing`: Quadrature rule used for validation diagnostics
 
 # Returns
 - `M::PolynomialMap`: The optimized triangular transport map (with best validation variance diagnostic)
@@ -29,6 +30,7 @@ function optimize_adaptive_transportmap(
     target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights,
     maxterms::Int;
+    initial_map::Union{Nothing,PolynomialMap}=nothing,
     rectifier::AbstractRectifierFunction=Softplus(),
     basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
     reference_density::Distributions.UnivariateDistribution=Normal(),
@@ -38,10 +40,16 @@ function optimize_adaptive_transportmap(
 )
     d = size(quadrature.points, 2)
 
-    # Initialize map with constant terms only
-    Λ = [multivariate_indices(0, k) for k in 1:d]
+    if isnothing(initial_map)
+        # Initialize map with constant terms only
+        Λ = [multivariate_indices(0, k) for k in 1:d]
+        M = PolynomialMap(Λ, rectifier, basis, reference_density)
+    else
+        @assert numbercoefficients(initial_map) <= maxterms "Initial map has more coefficients than maxterms=$maxterms"
+        M = deepcopy(initial_map)
+        setforwarddirection!(M, :target)
+    end
 
-    M = PolynomialMap(Λ, rectifier, basis, reference_density)
     num_initial_coefficients = numbercoefficients(M)
     println("Initialized map with $(num_initial_coefficients) initial coefficients.")
 
@@ -112,31 +120,47 @@ function optimize_adaptive_transportmap(
             gradient_metrics[i] = abs(grad[new_coeff_idx])
         end
 
-        # Select candidate with maximum gradient magnitude
-        best_idx = argmax(gradient_metrics)
-        k_best, α_best = candidates[best_idx]
+        # Try candidates in descending order of gradient magnitude and keep the first converged one
+        sorted_candidate_indices = sortperm(gradient_metrics, rev=true)
+        candidate_selected = false
 
-        println("   Best candidate: Component $k_best, adding term")
-        println("   Gradient magnitude: $(gradient_metrics[best_idx])")
+        for cand_idx in sorted_candidate_indices
+            k_cand, α_cand = candidates[cand_idx]
 
-        # Add best term to the map
-        update_multiindexset!(M, α_best, k_best)
+            println("   Trying candidate: Component $k_cand")
+            println("   Gradient magnitude: $(gradient_metrics[cand_idx])")
 
-        # Recompute precomputed basis
-        precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
+            M_trial = deepcopy(M)
+            update_multiindexset!(M_trial, α_cand, k_cand)
 
-        # Optimize map
-        res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
+            precomp_trial = PrecomputedMapBasis(M_trial, quadrature.points, quadrature.weights)
+            res_trial = optimize!(M_trial, target, precomp_trial, optimizer=optimizer, options=options)
 
-        # Compute objectives
-        train_obj = Optim.minimum(res)
-        println("   KL divergence (train): $train_obj")
+            if Optim.converged(res_trial)
+                M = M_trial
+                precomp = precomp_trial
+                res = res_trial
+                candidate_selected = true
+                break
+            else
+                println("   Candidate did not converge. Trying next-best candidate...")
+            end
+        end
 
-        if !isnothing(validation)
-            validation_obj = kldivergence(M, target, validation)
-            println("   KL divergence (valid): $validation_obj")
+        if candidate_selected
+            # Compute objectives for accepted candidate
+            train_obj = Optim.minimum(res)
+            println("   KL divergence (train): $train_obj")
+
+            if !isnothing(validation)
+                validation_obj = kldivergence(M, target, validation)
+                println("   KL divergence (valid): $validation_obj")
+            else
+                validation_obj = NaN
+            end
         else
-            validation_obj = NaN
+            println("   No converged candidate found. Map remains unchanged for this iteration.")
+            # Keep the previous objective values and optimization result in history.
         end
 
         # Store in history
