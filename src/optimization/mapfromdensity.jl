@@ -123,13 +123,24 @@ function optimize!(
     target::AbstractMapDensity,
     quadrature::AbstractQuadratureWeights;
     optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options()
+    options::Optim.Options=Optim.Options(),
+    λ1::Real=0.0,
+    λ2::Real=0.0,
+    l1_eps::Real=1e-8,
+    interactions_only::Bool=false,
 )
     # Precompute basis evaluations at quadrature points
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
 
     # Call the optimized version
-    return optimize!(M, target, precomp, optimizer=optimizer, options=options)
+    return optimize!(
+        M, target, precomp;
+        optimizer=optimizer,
+        options=options,
+        λ1=λ1,
+        λ2=λ2,
+        l1_eps=l1_eps,
+    )
 end
 
 # Optimized version using precomputed basis
@@ -138,17 +149,37 @@ function optimize!(
     target::AbstractMapDensity,
     precomp::PrecomputedMapBasis;
     optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options()
+    options::Optim.Options=Optim.Options(),
+    λ1::Real=0.0,
+    λ2::Real=0.0,
+    l1_eps::Real=1e-8,
+    interactions_only::Bool=false,
 )
+    @assert λ1 >= 0.0 "λ1 must be non-negative."
+    @assert λ2 >= 0.0 "λ2 must be non-negative."
+    @assert l1_eps > 0.0 "l1_eps must be strictly positive."
+
+    pen = _nonlinear_penalty_mask(M; interactions_only=interactions_only)
 
     function objective_function(a)
         setcoefficients!(M, a)
-        return kldivergence(M, target, precomp)
+        loss = kldivergence(M, target, precomp)
+        a_pen = a[pen]
+        l1_penalty = λ1 == 0.0 ? 0.0 : λ1 * sum(sqrt.(abs2.(a_pen) .+ l1_eps^2))
+        l2_penalty = λ2 == 0.0 ? 0.0 : (λ2 / 2.0) * sum(abs2, a_pen)
+        return loss + l1_penalty + l2_penalty
     end
 
-    function gradient_function!(grad_storage, a)
+    function gradient_function!(g, a)
         setcoefficients!(M, a)
-        grad_storage .= kldivergence_gradient(M, target, precomp)
+        g .= kldivergence_gradient(M, target, precomp)
+        a_pen = a[pen]
+        if λ1 != 0.0
+            g[pen] .+= λ1 .* a_pen ./ sqrt.(a_pen .^ 2 .+ l1_eps^2)
+        end
+        if λ2 != 0.0
+            g[pen] .+= λ2 .* a_pen
+        end
     end
 
     initial_coefficients = getcoefficients(M)
@@ -169,6 +200,7 @@ function optimize!(
 
     return result
 end
+
 """
     variance_diagnostic(M::PolynomialMap, target::MapTargetDensity, Z::AbstractArray{<:Real})
 
@@ -197,4 +229,23 @@ function variance_diagnostic(
 
     log_pushforward = logpdf(target, evaluate(M, Z)) + log.(abs.(jacobian(M, Z)))
     return 0.5 * var(log_pushforward - logpdf(M.reference, Z))
+end
+
+function _nonlinear_penalty_mask(M::PolynomialMap; interactions_only::Bool=false)
+    mask = Bool[]
+    for component in M.components
+        for α in getmultivariateindices(component)
+            total_degree = sum(α)
+            active_dims = count(>(0), α)
+
+            penalize = if interactions_only
+                active_dims >= 2
+            else
+                total_degree >= 2
+            end
+
+            push!(mask, penalize)
+        end
+    end
+    return mask
 end
