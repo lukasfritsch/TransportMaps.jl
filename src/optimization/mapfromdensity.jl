@@ -140,6 +140,7 @@ function optimize!(
         λ1=λ1,
         λ2=λ2,
         l1_eps=l1_eps,
+        interactions_only=interactions_only,
     )
 end
 
