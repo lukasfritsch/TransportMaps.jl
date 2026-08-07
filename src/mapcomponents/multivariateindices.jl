@@ -74,24 +74,54 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
 
 end
 
-function hyperbolic_truncation(p::Int64, k::Int64, q::Real)
-    # Hyperbolic truncation:
-    # A_k^{q} = { α : ||α||_q <= p and α_i = 0 for all i > k}
-    @assert 0 <= q <= 1 "q must be in (0,1]"
+function total_order_indices(p::Int, k::Int)
     inds = Vector{Vector{Int}}()
-    ranges = ntuple(_ -> 0:p, k)
-    for tup in Iterators.product(ranges...)
-        # compute quasi-norm
-        if q_norm(tup, q) <= p + 1e-12
-            push!(inds, collect(tup))
+    current = zeros(Int, k)
+
+    for total_degree in 0:p
+        _fill_total_order_indices!(inds, current, 1, total_degree, k)
+    end
+
+    return inds
+end
+
+function _fill_total_order_indices!(
+    inds::Vector{Vector{Int}},
+    current::Vector{Int},
+    pos::Int,
+    remaining::Int,
+    k::Int
+)
+    if pos == k
+        current[pos] = remaining
+        push!(inds, copy(current))
+        return
+    end
+
+    for value in 0:remaining
+        current[pos] = value
+        _fill_total_order_indices!(inds, current, pos + 1, remaining - value, k)
+    end
+end
+
+function hyperbolic_truncation(p::Int, k::Int, q::Real)
+    @assert 0 <= q <= 1 "q must be in (0,1]"
+    if q == 1
+        return total_order_indices(p, k)
+    end
+
+    inds = Vector{Vector{Int}}()
+    for α in total_order_indices(p, k)
+        if q_norm(α, q) <= p + 1e-12
+            push!(inds, α)
         end
     end
     return inds
 end
 
-function q_norm(α::Tuple{Vararg{Int64}}, q::Float64)
-    s = sum(float.(α) .^ q)
-    return s^(1. / q)
+function q_norm(α::AbstractVector{<:Real}, q::Real)
+    s = sum(abs.(α) .^ q)
+    return s^(1 / q)
 end
 
 """
