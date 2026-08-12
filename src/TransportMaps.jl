@@ -51,15 +51,11 @@ export AbstractQuadratureKnots
 export Psi
 export basisfunction
 export basisfunction_derivative
-export basisfunction_second_derivative
 export basistype
 export evaluate
-export edge_controlled_hermite_polynomial
-export edge_controlled_hermite_derivative
 export f
 export hermite_polynomial
 export hermite_derivative
-export hermite_second_derivative
 export multivariate_indices
 
 export legendre_polynomial
@@ -78,7 +74,6 @@ export jacobian
 export inverse
 export inverse_jacobian
 export partial_derivative_z
-export partial_derivative_zj
 export partial_derivative_zk
 export pullback
 export pushforward
@@ -140,7 +135,6 @@ export ExpRectifier
 export TensorProductWeights
 export GaussHermiteWeights
 export GaussLegendreWeights
-export ClenshawCurtisWeights
 export SparseSmolyakWeights
 export MonteCarloWeights
 export LatinHypercubeWeights

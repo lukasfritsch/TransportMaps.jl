@@ -48,4 +48,7 @@ import DifferentiationInterface: AutoFiniteDiff, AutoForwardDiff, AutoMooncake, 
         include("util/test_hybridrootfinder.jl")
         include("util/test_mapdensity.jl")
     end
+
+    # Aqua.jl
+    include("Aqua.jl")
 end

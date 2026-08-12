@@ -6,6 +6,7 @@
 [![doc-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliauq.github.io/TransportMaps.jl/stable/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/885372338.svg)](https://doi.org/10.5281/zenodo.18309940)
+[![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 A Julia implementation of triangular transport maps for variational inference.
 
