@@ -35,7 +35,7 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
     if mode == :total
         # total-order multi-indices
         # A_k^{TO} = { α : ||α||_1 <= p and α_i = 0 for all i > k}
-        return hyperbolic_truncation(p, k, 1.)
+        return total_order_indices(p, k)
 
     elseif mode == :diagonal
         # Diagonal multi-index set for a fixed coordinate k:
@@ -77,30 +77,33 @@ end
 function total_order_indices(p::Int, k::Int)
     inds = Vector{Vector{Int}}()
     current = zeros(Int, k)
-
-    for total_degree in 0:p
-        _fill_total_order_indices!(inds, current, 1, total_degree, k)
-    end
-
+    _fill_total_order_product_order!(inds, current, k, 0, p)
     return inds
 end
 
-function _fill_total_order_indices!(
+function _fill_total_order_product_order!(
     inds::Vector{Vector{Int}},
     current::Vector{Int},
     pos::Int,
-    remaining::Int,
-    k::Int
+    partial_sum::Int,
+    p::Int
 )
-    if pos == k
-        current[pos] = remaining
-        push!(inds, copy(current))
+    remaining = p - partial_sum
+    remaining < 0 && return
+
+    if pos == 1
+        # First coordinate is fastest, matching Iterators.product ordering.
+        for a1 in 0:remaining
+            current[1] = a1
+            push!(inds, copy(current))
+        end
         return
     end
 
-    for value in 0:remaining
-        current[pos] = value
-        _fill_total_order_indices!(inds, current, pos + 1, remaining - value, k)
+    # Higher coordinates are outer loops.
+    for a in 0:remaining
+        current[pos] = a
+        _fill_total_order_product_order!(inds, current, pos - 1, partial_sum + a, p)
     end
 end
 
