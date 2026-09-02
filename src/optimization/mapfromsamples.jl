@@ -231,7 +231,7 @@ function optimize!(
     # Optimize each component sequentially using the training split
     for k in 1:numberdimensions(M)
         component = M[k]
-        println("Optimizing component $(k) / $(numberdimensions(M))")
+        @debug "Optimizing component $(k) / $(numberdimensions(M))"
 
         # Precompute basis evaluations for this component
         train_precomp = PrecomputedBasis(component, train_samples[:, 1:k])
