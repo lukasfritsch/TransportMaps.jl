@@ -49,7 +49,7 @@ function optimize_adaptive_transportmap(
     train_samples, test_samples = _test_train_split(samples, test_fraction)
 
     for k in 1:d
-        println("Start optimizing component $k:")
+        @info "Starting adaptive component optimization" component=k maxterms=maxterms[k]
         component, history = optimize_adaptive_transportmapcomponent(
             train_samples[:, 1:k],
             test_samples[:, 1:k],
@@ -119,7 +119,7 @@ function optimize_adaptive_transportmap(
     folds = _kfold_indices(size(samples, 1), k_folds)
 
     for k in 1:d
-        println("Start k-fold optimization of component $k with $k_folds folds")
+        @info "Starting k-fold adaptive component optimization" component=k folds=k_folds maxterms=maxterms[k]
         component_histories = Vector{OptimizationHistory}(undef, k_folds)
 
         for fold_id in 1:k_folds
@@ -129,7 +129,7 @@ function optimize_adaptive_transportmap(
             train_samples_fold = samples[train_idx, 1:k]
             test_samples_fold = samples[test_idx, 1:k]
 
-            println("   * Fold $fold_id / $k_folds")
+            @debug "Optimizing cross-validation fold" component=k fold=fold_id folds=k_folds
             _, history_fold = optimize_adaptive_transportmapcomponent(
                 train_samples_fold,
                 test_samples_fold,
@@ -155,15 +155,13 @@ function optimize_adaptive_transportmap(
             deepcopy(component_histories[best_fold].terms[best_iteration])
         )
 
-        println("   Best fold: $best_fold")
-        println("   Selected $(selected_terms[k]) terms (avg validation objective $(mean_test_objectives[best_iteration]))")
+        @info "Selected cross-validation model" component=k fold=best_fold terms=selected_terms[k] validation_objective=mean_test_objectives[best_iteration]
 
         component = PolynomialMapComponent(Λ_best, rectifier, basis, samples[:, 1:k])
         res = optimize!(component, samples[:, 1:k], optimizer, options)
 
         train_obj = objective(component, samples[:, 1:k]) / size(samples, 1)
-        println("   Full-data objective: $train_obj")
-        println("   Final optimizer status: $(Optim.converged(res) ? "Converged" : "Not Converged") with $(Optim.iterations(res)) iterations")
+        @debug "Finished full-data component optimization" component=k objective=train_obj converged=Optim.converged(res) iterations=Optim.iterations(res)
 
         map_components[k] = component
         fold_histories[k] = component_histories
@@ -212,7 +210,7 @@ function optimize_adaptive_transportmapcomponent(
     history = OptimizationHistory(maxterms)
 
     # Initialize component with the multi-index set
-    println("   * Optimizing term 1 / $maxterms")
+    @debug "Optimizing initial adaptive term" term=1 maxterms
     component = PolynomialMapComponent(Λ, rectifier, basis, train_samples)
 
     # Precompute basis for training samples
@@ -257,7 +255,7 @@ function optimize_adaptive_transportmapcomponent(
         push!(Λ, α⁺)
 
         # Update component with new multi-index set
-        println("   * Adding term $t / $maxterms")
+        @debug "Adding adaptive term" term=t maxterms multiindex=α⁺ gradient=maximum(gradients)
         component = PolynomialMapComponent(Λ, rectifier, basis, train_samples)
         setcoefficients!(component, [coeffs..., 0.0]) # set coefficients for existing terms
 
