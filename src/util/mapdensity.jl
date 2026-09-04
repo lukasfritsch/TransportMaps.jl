@@ -244,9 +244,11 @@ pdf(density::AbstractMapDensity, X::Matrix{<:Real}) = exp.(logpdf(density, X))
 
 function Base.show(io::IO, target::MapTargetDensity)
     backend_str = target.ad_backend === nothing ? "analytical" : string(target.ad_backend)
-    return print(io, "MapTargetDensity(backend=$(backend_str))")
+    print(io, "MapTargetDensity(backend=$(backend_str))")
+    return nothing
 end
 
 function Base.show(io::IO, ref::MapReferenceDensity)
-    return print(io, "MapReferenceDensity(density=$(ref.densitytype))")
+    print(io, "MapReferenceDensity(density=$(ref.densitytype))")
+    return nothing
 end

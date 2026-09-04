@@ -100,11 +100,13 @@ function Base.show(io::IO, C::ComposedMap{T}) where {T <: AbstractLinearMap}
     print(io, "ComposedMap{$(T)}(")
     print(io, "linearmap=$(C.linearmap), ")
     print(io, "polynomialmap=$(C.polynomialmap)")
-    return print(io, ")")
+    print(io, ")")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", C::ComposedMap{T}) where {T <: AbstractLinearMap}
     println(io, "ComposedMap{$(T)} with $(numberdimensions(C)) dimensions:")
     println(io, " linearmap: ", C.linearmap)
-    return println(io, " polynomialmap: ", C.polynomialmap)
+    println(io, " polynomialmap: ", C.polynomialmap)
+    return nothing
 end

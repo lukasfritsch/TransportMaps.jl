@@ -233,7 +233,8 @@ end
 function Base.show(io::IO, w::TensorProductWeights{T}) where {T <: AbstractQuadratureKnots}
     npts, dim = size(w.points)
     domain = support(w.knots)
-    return print(io, "TensorProductWeights{$T}(number_pts=$npts, dim=$dim, support=$(domain))")
+    print(io, "TensorProductWeights{$T}(number_pts=$npts, dim=$dim, support=$(domain))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::TensorProductWeights)
@@ -242,13 +243,15 @@ function Base.show(io::IO, ::MIME"text/plain", w::TensorProductWeights)
     println(io, "TensorProductWeights:")
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
-    return print(io, "  Knots: $(w.knots)")
+    print(io, "  Knots: $(w.knots)")
+    return nothing
 end
 
 # Display methods for MonteCarloWeights
 function Base.show(io::IO, w::MonteCarloWeights)
     npts, dim = size(w.points)
-    return print(io, "MonteCarloWeights($npts points, $dim dimensions, $(w.distribution))")
+    print(io, "MonteCarloWeights($npts points, $dim dimensions, $(w.distribution))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::MonteCarloWeights)
@@ -258,13 +261,15 @@ function Base.show(io::IO, ::MIME"text/plain", w::MonteCarloWeights)
     println(io, "MonteCarloWeights:")
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
-    return print(io, "  Distribution: $d")
+    print(io, "  Distribution: $d")
+    return nothing
 end
 
 # Display methods for LatinHypercubeWeights
 function Base.show(io::IO, w::LatinHypercubeWeights)
     npts, dim = size(w.points)
-    return print(io, "LatinHypercubeWeights($npts points, $dim dimensions, $(w.distribution))")
+    print(io, "LatinHypercubeWeights($npts points, $dim dimensions, $(w.distribution))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::LatinHypercubeWeights)
@@ -273,12 +278,14 @@ function Base.show(io::IO, ::MIME"text/plain", w::LatinHypercubeWeights)
     println(io, "LatinHypercubeWeights:")
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
-    return print(io, "  Distribution: $(w.distribution)")
+    print(io, "  Distribution: $(w.distribution)")
+    return nothing
 end
 
 function Base.show(io::IO, w::SparseSmolyakWeights)
     npts, dim = size(w.points)
-    return print(io, "SparseSmolyakWeights($npts points, $dim dimensions, $(w.knots))")
+    print(io, "SparseSmolyakWeights($npts points, $dim dimensions, $(w.knots))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::SparseSmolyakWeights)
@@ -287,7 +294,8 @@ function Base.show(io::IO, ::MIME"text/plain", w::SparseSmolyakWeights)
     println(io, "SparseSmolyakWeights:")
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
-    return print(io, "  Knots: $(w.knots)")
+    print(io, "  Knots: $(w.knots)")
+    return nothing
 end
 
 function numberdimensions(quad::AbstractQuadratureWeights)

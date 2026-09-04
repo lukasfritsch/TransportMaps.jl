@@ -63,7 +63,8 @@ function transform_to_domain!(knots::GaussLegendreKnots, quadrature_points, quad
     shift = (a + b) / 2
 
     quadrature_points .= scale .* quadrature_points .+ shift
-    return quadrature_weights .= quadrature_weights ./ 2
+    quadrature_weights .= quadrature_weights ./ 2
+    return nothing
 end
 
 """
@@ -126,5 +127,6 @@ function transform_to_domain!(knots::ClenshawCurtisKnots, quadrature_points, qua
     shift = (a + b) / 2
 
     quadrature_points .= scale .* quadrature_points .+ shift
-    return quadrature_weights .= quadrature_weights ./ 2
+    quadrature_weights .= quadrature_weights ./ 2
+    return nothing
 end

@@ -154,7 +154,8 @@ function Base.show(io::IO, basis::MultivariateBasis{T}) where {T <: AbstractPoly
     print(io, "$(basis.multiindexset), ")
     print(io, "degree=$degree, ")
     print(io, "dim=$dimension, ")
-    return print(io, "basis=$basis_name)")
+    print(io, "basis=$basis_name)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis{T}) where {T <: AbstractPolynomialBasis}
@@ -170,7 +171,8 @@ function Base.show(io::IO, ::MIME"text/plain", basis::MultivariateBasis{T}) wher
     println(io, "  Basis type: $basis_name")
 
     # Show individual polynomial degrees for each dimension
-    return if dimension > 1
+    if dimension > 1
         println(io, "  Individual degrees: $(basis.multiindexset)")
     end
+    return nothing
 end

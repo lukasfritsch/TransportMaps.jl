@@ -99,7 +99,8 @@ Evaluate derivative of `LinearizedHermiteBasis` with degree `αᵢ` at `zᵢ`.
 end
 
 function Base.show(io::IO, basis::LinearizedHermiteBasis)
-    return print(io, "LinearizedHermiteBasis(bounds=$(basis.linearizationbounds))")
+    print(io, "LinearizedHermiteBasis(bounds=$(basis.linearizationbounds))")
+    return nothing
 end
 
 support(basis::LinearizedHermiteBasis) = RealInterval(-Inf, Inf)

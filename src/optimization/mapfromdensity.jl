@@ -269,5 +269,5 @@ function _add_regularization_gradient!(g, a, pen, λ1, λ2, l1_eps)
     if λ1 != 0 || λ2 != 0
         g[pen] .+= λ1 .* a[pen] ./ sqrt.(a[pen] .^ 2 .+ l1_eps^2) .+ λ2 .* a[pen]
     end
-    return g
+    return nothing
 end

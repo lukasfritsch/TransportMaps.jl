@@ -46,7 +46,8 @@ Evaluate derivative of `HermiteBasis` with degree `αᵢ` at `zᵢ`.
 end
 
 function Base.show(io::IO, ::HermiteBasis)
-    return print(io, "HermiteBasis()")
+    print(io, "HermiteBasis()")
+    return nothing
 end
 
 support(basis::HermiteBasis) = RealInterval(-Inf, Inf)

@@ -564,7 +564,7 @@ function setcoefficients!(M::PolynomialMap, coefficients::AbstractVector{<:Real}
         setcoefficients!(component, coefficients[counter:(counter + length(component.basisfunctions) - 1)])
         counter += length(component.basisfunctions)
     end
-    return
+    return nothing
 end
 
 """
@@ -593,7 +593,8 @@ Valid directions: `:target` (map from density) or `:reference` (map from samples
 """
 function setforwarddirection!(M::PolynomialMap, forwarddirection::Symbol)
     @assert forwarddirection in [:reference, :target] "Direction must be :reference, :target"
-    return M.forwarddirection = forwarddirection
+    M.forwarddirection = forwarddirection
+    return nothing
 end
 
 """
@@ -649,7 +650,8 @@ function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
     M.components .= new_components
 
     # re-set coefficients
-    return setcoefficients!(M, map_coefficients)
+    setcoefficients!(M, map_coefficients)
+    return nothing
 end
 
 """
@@ -679,7 +681,7 @@ function Base.show(io::IO, M::PolynomialMap)
     n_coeffs = numbercoefficients(M)
 
     # Get common properties from the first component
-    return if n_dims > 0
+    if n_dims > 0
         first_component = M.components[1]
         max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
 
@@ -700,6 +702,7 @@ function Base.show(io::IO, M::PolynomialMap)
     else
         print(io, "PolynomialMap(empty)")
     end
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
@@ -711,7 +714,7 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
     println(io, "  Total coefficients: $n_coeffs")
     println(io, "  Reference density: $(M.reference.densitytype)")
 
-    return if n_dims > 0
+    if n_dims > 0
         # Get properties from the first component (assuming all components have similar properties)
         first_component = M.components[1]
         max_degree = maximum(sum(basis.multiindexset) for basis in first_component.basisfunctions)
@@ -747,6 +750,7 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
     else
         println(io, "  (Empty map)")
     end
+    return nothing
 end
 
 # Check compatibility of reference densities and selected basis

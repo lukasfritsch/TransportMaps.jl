@@ -40,7 +40,8 @@ function update_optimization_history!(
     history.train_objectives[iteration] = train_objective
     history.test_objectives[iteration] = test_objective
     history.gradients[iteration] = gradient
-    return history.optimization_results[iteration] = optimization_result
+    history.optimization_results[iteration] = optimization_result
+    return nothing
 end
 
 function Base.show(io::IO, history::OptimizationHistory)
@@ -52,7 +53,7 @@ function Base.show(io::IO, history::OptimizationHistory)
         println(io, "  Train Objective: ", history.train_objectives[i])
         println(io, "  Test Objective: ", history.test_objectives[i])
     end
-    return
+    return nothing
 end
 
 """
@@ -88,7 +89,8 @@ function update_optimization_result!(
     )
     result.train_objectives[component_index] = train_objective
     result.test_objectives[component_index] = test_objective
-    return result.optimization_results[component_index] = optimization_result
+    result.optimization_results[component_index] = optimization_result
+    return nothing
 end
 
 function Base.show(io::IO, result::OptimizationResult)
@@ -99,7 +101,7 @@ function Base.show(io::IO, result::OptimizationResult)
         println(io, "  Train : ", result.train_objectives[i])
         println(io, "  Test  : ", result.test_objectives[i])
     end
-    return
+    return nothing
 end
 
 """
@@ -146,7 +148,8 @@ function update_optimization_history!(
     result.train_objectives[iteration] = train_objective
     result.test_objectives[iteration] = test_objective
     result.gradients[iteration] = gradient
-    return result.optimization_results[iteration] = optimization_result
+    result.optimization_results[iteration] = optimization_result
+    return nothing
 end
 
 function Base.show(io::IO, result::MapOptimizationResult)
@@ -157,5 +160,5 @@ function Base.show(io::IO, result::MapOptimizationResult)
         println(io, "  Train : ", result.train_objectives[i])
         println(io, "  Test  : ", result.test_objectives[i])
     end
-    return
+    return nothing
 end

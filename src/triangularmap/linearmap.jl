@@ -44,7 +44,8 @@ Set the mean and standard deviation parameters of the linear map.
 """
 function setparameters!(map::LinearMap, μ::AbstractVector{<:Real}, σ::AbstractVector{<:Real})
     map.μ .= μ
-    return map.σ .= σ
+    map.σ .= σ
+    return nothing
 end
 
 """
@@ -122,11 +123,13 @@ numberdimensions(L::LinearMap) = length(L.μ)
 function Base.show(io::IO, L::LinearMap)
     print(io, "LinearMap($(numberdimensions(L))-dimensional, ")
     print(io, "μ: ", L.μ, ", ")
-    return print(io, "σ: ", L.σ, ")")
+    print(io, "σ: ", L.σ, ")")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", L::LinearMap)
     println(io, "LinearMap with $(numberdimensions(L)) dimensions")
     println(io, "  μ: ", L.μ)
-    return println(io, "  σ: ", L.σ)
+    println(io, "  σ: ", L.σ)
+    return nothing
 end

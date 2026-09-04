@@ -221,6 +221,7 @@ function update_multiindexset!(
 
     # Reconstruct map component with updated multi-index set
     M.components[k] = PolynomialMapComponent(Λ, component.rectifier, getbasis(component), M.reference.densitytype)
-    return setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
+    setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
+    return nothing
 
 end

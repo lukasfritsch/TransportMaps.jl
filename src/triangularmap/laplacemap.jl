@@ -165,11 +165,13 @@ Base.@propagate_inbounds (L::LaplaceMap)(X::AbstractMatrix{<:Real}) = evaluate(L
 function Base.show(io::IO, L::LaplaceMap)
     print(io, "LaplaceMap($(numberdimensions(L))-dimensional")
     print(io, " mode: ", mode(L), ", ")
-    return print(io, " Σ: ", cov(L), ")")
+    print(io, " Σ: ", cov(L), ")")
+    return nothing
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", L::LaplaceMap)
     println(io, "LaplaceMap with $(numberdimensions(L)) dimensions")
     println(io, "  mode: ", mode(L))
-    return println(io, "  Σ: ", cov(L))
+    println(io, "  Σ: ", cov(L))
+    return nothing
 end

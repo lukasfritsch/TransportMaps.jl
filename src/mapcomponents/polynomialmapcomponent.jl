@@ -365,7 +365,8 @@ Set the coefficients of the map component.
 """
 function setcoefficients!(map_component::PolynomialMapComponent, coefficients::AbstractVector{<:Real})
     @assert length(coefficients) == length(map_component.coefficients) "Length of coefficients must match the number of basis functions."
-    return map_component.coefficients .= coefficients
+    map_component.coefficients .= coefficients
+    return nothing
 end
 
 """
@@ -438,7 +439,8 @@ function Base.show(io::IO, component::PolynomialMapComponent)
     print(io, "degree=$max_degree, ")
     print(io, "basis=$basis_name, ")
     print(io, "rectifier=$rectifier_name, ")
-    return print(io, "$n_basis basis functions)")
+    print(io, "$n_basis basis functions)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent)
@@ -472,7 +474,7 @@ function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent
     end
 
     # Show coefficient statistics if they're set
-    return if all(isfinite, component.coefficients)
+    if all(isfinite, component.coefficients)
         coeff_min = minimum(component.coefficients)
         coeff_max = maximum(component.coefficients)
         coeff_mean = sum(component.coefficients) / length(component.coefficients)
@@ -480,4 +482,5 @@ function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent
     else
         println(io, "  Coefficients: uninitialized")
     end
+    return nothing
 end

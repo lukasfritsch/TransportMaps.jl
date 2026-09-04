@@ -64,7 +64,8 @@ Evaluate derivative of `LegendreBasis` with degree `αᵢ` at `zᵢ`.
 end
 
 function Base.show(io::IO, ::LegendreBasis)
-    return print(io, "LegendreBasis()")
+    print(io, "LegendreBasis()")
+    return nothing
 end
 
 """
@@ -112,7 +113,8 @@ Evaluate derivative of `ShiftedLegendreBasis` with degree `αᵢ` at `zᵢ` ∈ 
 end
 
 function Base.show(io::IO, ::ShiftedLegendreBasis)
-    return print(io, "ShiftedLegendreBasis()")
+    print(io, "ShiftedLegendreBasis()")
+    return nothing
 end
 
 support(basis::LegendreBasis) = RealInterval(-1, 1)

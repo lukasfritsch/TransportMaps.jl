@@ -97,7 +97,7 @@ function _fill_total_order_product_order!(
             current[1] = a1
             push!(inds, copy(current))
         end
-        return
+        return nothing
     end
 
     # Higher coordinates are outer loops.
@@ -105,7 +105,7 @@ function _fill_total_order_product_order!(
         current[pos] = a
         _fill_total_order_product_order!(inds, current, pos - 1, partial_sum + a, p)
     end
-    return
+    return nothing
 end
 
 function hyperbolic_truncation(p::Int, k::Int, q::Real)

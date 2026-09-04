@@ -234,7 +234,8 @@ end
 
 # Display methods
 function Base.show(io::IO, pb::PrecomputedBasis)
-    return print(io, "PrecomputedBasis($(pb.n_samples) samples, $(pb.n_basis) basis functions, $(pb.n_quad) quad points)")
+    print(io, "PrecomputedBasis($(pb.n_samples) samples, $(pb.n_basis) basis functions, $(pb.n_quad) quad points)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pb::PrecomputedBasis)
@@ -248,7 +249,8 @@ function Base.show(io::IO, ::MIME"text/plain", pb::PrecomputedBasis)
         sizeof(pb.Ψ₀) + sizeof(pb.∂Ψ_z) + sizeof(pb.Ψ_quad) + sizeof(pb.∂Ψ_quad) +
             sizeof(pb.quad_weights) + sizeof(pb.quad_scales)
     ) / (1024^2)
-    return println(io, "  Memory usage: $(round(memory_mb, digits = 2)) MB")
+    println(io, "  Memory usage: $(round(memory_mb, digits = 2)) MB")
+    return nothing
 end
 
 """
@@ -329,7 +331,8 @@ end
 
 # Display methods
 function Base.show(io::IO, pmb::PrecomputedMapBasis)
-    return print(io, "PrecomputedMapBasis($(pmb.n_quad) quadrature points, $(pmb.dimension) dimensions)")
+    print(io, "PrecomputedMapBasis($(pmb.n_quad) quadrature points, $(pmb.dimension) dimensions)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pmb::PrecomputedMapBasis)
@@ -347,7 +350,8 @@ function Base.show(io::IO, ::MIME"text/plain", pmb::PrecomputedMapBasis)
         )
     end
     memory_mb = total_memory / (1024^2)
-    return println(io, "  Memory usage: $(round(memory_mb, digits = 2)) MB")
+    println(io, "  Memory usage: $(round(memory_mb, digits = 2)) MB")
+    return nothing
 end
 
 function evaluate(M::PolynomialMap, precomp::PrecomputedMapBasis)

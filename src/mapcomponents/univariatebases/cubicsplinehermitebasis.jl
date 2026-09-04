@@ -76,7 +76,8 @@ function basisfunction_derivative(basis::CubicSplineHermiteBasis, αᵢ::Int, z�
 end
 
 function Base.show(io::IO, basis::CubicSplineHermiteBasis)
-    return print(io, "CubicSplineHermiteBasis(radius=$(basis.radius))")
+    print(io, "CubicSplineHermiteBasis(radius=$(basis.radius))")
+    return nothing
 end
 
 support(basis::CubicSplineHermiteBasis) = RealInterval(-Inf, Inf)
