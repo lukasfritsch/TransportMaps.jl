@@ -1,23 +1,41 @@
 """
-    GaussHermiteKnots
+    GaussHermiteKnots([μ = 0, σ = 1])
 
-One-dimensional Gauss-Hermite quadrature weights for computing integrals for the form:
+One-dimensional Gauss-Hermite quadrature weights for computing expectations under
+`Normal(μ, σ)`. The default is the standard normal distribution.
+
+The quadrature approximates integrals of the form:
 
 `` \\int_{-\\infty}^{\\infty} f(x) \\phi(x) \\ \\mathrm{d}x \\approx \\sum_{i=1}^{n} w_i f(x_i),``
 
-where ``\\phi(x)`` is the standard normal density.
+where ``\\phi(x)`` is the configured normal density.
+
+`GaussHermiteKnots(distribution::Normal)` constructs the rule directly from a normal
+distribution.
 """
 struct GaussHermiteKnots <: AbstractQuadratureKnots
+    μ::Float64
+    σ::Float64
+
+    function GaussHermiteKnots(μ::Real = 0.0, σ::Real = 1.0)
+        σ > 0 || throw(ArgumentError("The standard deviation must be positive."))
+        return new(Float64(μ), Float64(σ))
+    end
 end
+
+GaussHermiteKnots(distribution::Normal) =
+    GaussHermiteKnots(mean(distribution), std(distribution))
 
 support(knots::GaussHermiteKnots) = RealInterval(-Inf, Inf)
 
 function (knots::GaussHermiteKnots)(level::Int)
     if level == 0
-        return ([0.0], [1.0])
+        return ([knots.μ], [1.0])
     else
         n = min(2^level + 1, 200)
-        return gausshermite(n; normalize = true)
+        points, weights = gausshermite(n; normalize = true)
+        points .= knots.μ .+ knots.σ .* points
+        return points, weights
     end
 end
 

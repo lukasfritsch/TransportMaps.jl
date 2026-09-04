@@ -3,18 +3,19 @@ function kldivergence(
         M::PolynomialMap,
         target::AbstractMapDensity,
         quadrature::AbstractQuadratureWeights,
+        ; δ::Real = 1.0e-9,
     )
-    # Small regularization term
-    δ = 1.0e-9
+    @assert δ >= 0.0 "δ must be non-negative."
 
-    # Evaluate map and add small δ for regularization
+    # Evaluate the map and both densities in the KL change-of-variables formula.
     M_points = evaluate(M, quadrature.points) + δ * quadrature.points
+    log_reference = logpdf(M.reference, quadrature.points)
     # Evaluate target logpdf
     log_π = logpdf(target, M_points)
     # Evaluate log determinant of Jacobian
     log_detJ = log.(abs.(jacobian(M, quadrature.points)))
 
-    return sum(quadrature.weights .* (-log_π .- log_detJ))
+    return sum(quadrature.weights .* (log_reference .- log_π .- log_detJ))
 end
 
 # Gradient of KL divergence with respect to map coefficients
@@ -22,11 +23,12 @@ function kldivergence_gradient(
         M::PolynomialMap,
         target::AbstractMapDensity,
         quadrature::AbstractQuadratureWeights,
+        ; δ::Real = 1.0e-9,
     )
+    @assert δ >= 0.0 "δ must be non-negative."
+
     n_coeffs = numbercoefficients(M)
     n_dims = numberdimensions(M)
-    δ = 1.0e-9
-
     # Evaluate map at all quadrature points
     M_points = evaluate(M, quadrature.points) + δ * quadrature.points
 
@@ -54,30 +56,33 @@ end
 function kldivergence(
         M::PolynomialMap,
         target::AbstractMapDensity,
-        precomp::PrecomputedMapBasis
+        precomp::PrecomputedMapBasis;
+        δ::Real = 1.0e-9,
     )
-    δ = 1.0e-9  # Small value to avoid log(0)
+    @assert δ >= 0.0 "δ must be non-negative."
 
-    # Evaluate map and add small δ for regularization
+    # Evaluate the map and both densities in the KL change-of-variables formula.
     M_points = evaluate(M, precomp) + δ * precomp.quad_points
+    log_reference = logpdf(M.reference, precomp.quad_points)
     # Evaluate target logpdf
     log_π = logpdf(target, M_points)
     # Evaluate log determinant of Jacobian
     log_detJ = log.(abs.(jacobian(M, precomp)))
 
-    return sum(precomp.quad_weights .* (-log_π .- log_detJ))
+    return sum(precomp.quad_weights .* (log_reference .- log_π .- log_detJ))
 end
 
 # Gradient of KL divergence using precomputed basis
 function kldivergence_gradient(
         M::PolynomialMap,
         target::AbstractMapDensity,
-        precomp::PrecomputedMapBasis
+        precomp::PrecomputedMapBasis;
+        δ::Real = 1.0e-9,
     )
+    @assert δ >= 0.0 "δ must be non-negative."
+
     n_coeffs = numbercoefficients(M)
     n_dims = numberdimensions(M)
-    δ = 1.0e-9
-
     # Evaluate map at all quadrature points
     M_points = evaluate(M, precomp) + δ * precomp.quad_points
 
@@ -103,7 +108,8 @@ end
 """
     optimize!(
         M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
-        optimizer, options, λ1 = 0, λ2 = 0, l1_eps = 1.0e-8, interactions_only = false
+        optimizer, options, δ = 1.0e-9, λ1 = 0, λ2 = 0, l1_eps = 1.0e-8,
+        interactions_only = false
     )
 
 Optimize polynomial map coefficients to minimize KL divergence to a target density.
@@ -116,6 +122,8 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 # Keyword Arguments
 - `optimizer`: Optimizer from Optim.jl to use (default: `LBFGS()`).
 - `options`: Options passed to the optimizer (default: `Optim.Options()`).
+- `δ::Real`: Stability perturbation added to mapped quadrature points before target
+  density evaluation (default: `1e-9`). Set it to zero for the exact KL objective.
 - `λ1::Real`: Strength of the smoothed L1 penalty (default: `0`).
 - `λ2::Real`: Strength of the L2 penalty (default: `0`).
 - `l1_eps::Real`: Positive smoothing parameter used by the L1 approximation
@@ -137,6 +145,7 @@ function optimize!(
         quadrature::AbstractQuadratureWeights;
         optimizer::Optim.AbstractOptimizer = LBFGS(),
         options::Optim.Options = Optim.Options(),
+        δ::Real = 1.0e-9,
         λ1::Real = 0.0,
         λ2::Real = 0.0,
         l1_eps::Real = 1.0e-8,
@@ -150,6 +159,7 @@ function optimize!(
         M, target, precomp;
         optimizer = optimizer,
         options = options,
+        δ = δ,
         λ1 = λ1,
         λ2 = λ2,
         l1_eps = l1_eps,
@@ -164,6 +174,7 @@ function optimize!(
         precomp::PrecomputedMapBasis;
         optimizer::Optim.AbstractOptimizer = LBFGS(),
         options::Optim.Options = Optim.Options(),
+        δ::Real = 1.0e-9,
         λ1::Real = 0.0,
         λ2::Real = 0.0,
         l1_eps::Real = 1.0e-8,
@@ -172,18 +183,19 @@ function optimize!(
     @assert λ1 >= 0.0 "λ1 must be non-negative."
     @assert λ2 >= 0.0 "λ2 must be non-negative."
     @assert l1_eps > 0.0 "l1_eps must be strictly positive."
+    @assert δ >= 0.0 "δ must be non-negative."
 
     pen = _nonlinear_penalty_mask(M; interactions_only = interactions_only)
 
     function objective_function(a)
         setcoefficients!(M, a)
-        loss = kldivergence(M, target, precomp)
+        loss = kldivergence(M, target, precomp; δ)
         return loss + _regularization_penalty(a, pen, λ1, λ2, l1_eps)
     end
 
     function gradient_function!(g, a)
         setcoefficients!(M, a)
-        g .= kldivergence_gradient(M, target, precomp)
+        g .= kldivergence_gradient(M, target, precomp; δ)
         _add_regularization_gradient!(g, a, pen, λ1, λ2, l1_eps)
         return nothing
     end
