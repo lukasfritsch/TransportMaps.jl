@@ -13,15 +13,8 @@ on:
 
 jobs:
   julia-ci:
-    if: github.event_name != 'issue_comment' || github.actor == 'JuliaTagBot'
     uses: julia-testitems/testitem-workflow/.github/workflows/juliaci.yml@v2
-    permissions:
-      actions: write
-      contents: write
-      checks: read
-      issues: read
-      discussions: read
-      pull-requests: read
-      statuses: write
+    permissions: write-all
     secrets:
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
+      
