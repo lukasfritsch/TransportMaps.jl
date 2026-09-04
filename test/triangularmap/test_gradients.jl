@@ -5,6 +5,7 @@
     using Random
     using LinearAlgebra
     using Optim
+    using Logging
 
 end
 
@@ -74,7 +75,7 @@ end
             setcoefficients!(M, coeffs)
 
             # Should not throw errors
-            @test_nowarn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
+            @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
             grad = TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
@@ -136,7 +137,7 @@ end
         z = [0.5, 1.0]
 
         # Test gradient_coefficients function
-        @test_nowarn gradient_coefficients(component, z)
+        @test_logs min_level = Logging.Warn gradient_coefficients(component, z)
 
         grad = gradient_coefficients(component, z)
         @test length(grad) == length(component.coefficients)
@@ -177,7 +178,7 @@ end
         z = [0.3, 0.7]
 
         # Test gradient_coefficients for full map
-        @test_nowarn gradient_coefficients(M, z)
+        @test_logs min_level = Logging.Warn gradient_coefficients(M, z)
 
         grad_matrix = gradient_coefficients(M, z)
 
@@ -257,7 +258,7 @@ end
         target_density = MapTargetDensity(gaussian_density, gaussian_density_gradient)
 
         # Test that gradient computation works with analytical target gradient
-        @test_nowarn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
+        @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
         grad1 = TransportMaps.kldivergence_gradient(M, target_density, quadrature)
         @test all(isfinite.(grad1))
@@ -281,7 +282,7 @@ end
 
         target_density_exp = MapTargetDensity(exponential_density)
 
-        @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
+        @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
         grad2 = TransportMaps.kldivergence_gradient(M, target_density_exp, quadrature)
         @test all(isfinite.(grad2))
 
@@ -300,7 +301,7 @@ end
 
         target_density_quad = MapTargetDensity(quadratic_density, quadratic_density_gradient)
 
-        @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_quad, quadrature)
+        @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density_quad, quadrature)
         grad3 = TransportMaps.kldivergence_gradient(M, target_density_quad, quadrature)
         @test all(isfinite.(grad3))
 
@@ -347,11 +348,11 @@ end
 
         # Test with very small coefficients
         setcoefficients!(M, 1.0e-8 * ones(numbercoefficients(M)))
-        @test_nowarn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
+        @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
         # Test with larger coefficients
         setcoefficients!(M, 2.0 * ones(numbercoefficients(M)))
-        @test_nowarn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
+        @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
         # Test with mixed positive/negative coefficients
         mixed_coeffs = [1.0, -1.0, 0.5, -0.5, 0.0]
@@ -364,7 +365,7 @@ end
         banana_density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
         target_density_banana = MapTargetDensity(banana_density)
         setcoefficients!(M, 0.1 * randn(numbercoefficients(M)))
-        @test_nowarn TransportMaps.kldivergence_gradient(M, target_density_banana, quadrature)
+        @test_logs min_level = Logging.Warn TransportMaps.kldivergence_gradient(M, target_density_banana, quadrature)
 
     end
 end

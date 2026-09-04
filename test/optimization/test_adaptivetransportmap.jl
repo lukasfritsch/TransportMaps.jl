@@ -5,6 +5,7 @@
     using Distributions
     using Optim
     using Statistics
+    using Logging
 
 end
 
@@ -21,11 +22,10 @@ end
         maxterms = [2, 2]  # 2 terms max for each component
         opts = Optim.Options(iterations = 10)  # Few iterations for fast testing
 
-        M, histories = optimize_adaptive_transportmap(
-            samples,
-            maxterms;
-            optimizer = LBFGS(),
-            options = opts
+        M, histories = @test_logs (
+            :info, "Starting adaptive component optimization",
+        ) match_mode = :any optimize_adaptive_transportmap(
+            samples, maxterms; optimizer = LBFGS(), options = opts,
         )
 
         # Check that we get a PolynomialMap back
@@ -141,13 +141,17 @@ end
         k_folds = 3
         opts = Optim.Options(iterations = 5)
 
-        M, fold_histories, selected_terms = optimize_adaptive_transportmap(
-            samples,
-            maxterms,
-            k_folds;
-            optimizer = LBFGS(),
-            options = opts,
-        )
+        logger = Test.TestLogger()
+        result = Logging.with_logger(logger) do
+            optimize_adaptive_transportmap(
+                samples, maxterms, k_folds; optimizer = LBFGS(), options = opts,
+            )
+        end
+        M, fold_histories, selected_terms = result
+
+        info_messages = [log.message for log in logger.logs if log.level == Logging.Info]
+        @test "Starting k-fold adaptive component optimization" in info_messages
+        @test "Selected cross-validation model" in info_messages
 
         @test M isa ComposedMap
         @test M.polynomialmap isa PolynomialMap

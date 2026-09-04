@@ -5,6 +5,7 @@
     using Random
     using Optim
     using Distributions
+    using Logging
     import DifferentiationInterface: AutoFiniteDiff
 
 end
@@ -82,8 +83,8 @@ end
     @test_throws "LaplaceMap optimization did not converge." LaplaceMap(target, x0; options = options)
 
     # MvNormal
-    @test_nowarn MvNormal(L_map)
-    @test_nowarn MvNormal(L_fd)
+    @test_logs min_level = Logging.Warn MvNormal(L_map)
+    @test_logs min_level = Logging.Warn MvNormal(L_fd)
 
     # Evaluate map
     x_test = [0.1, 0.2]

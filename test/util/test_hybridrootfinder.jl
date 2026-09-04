@@ -107,6 +107,8 @@ end
         f_flat(x) = x^3 - 3x + 2  # Has root at x = 1
         ∂f_flat(x) = 3x^2 - 3
 
-        @test_warn "Maximum iterations reached in hybridrootfinder" hybridrootfinder(f_flat, ∂f_flat, 1.0, 3.0; maxiter = 5)
+        @test_logs (:warn, "Maximum iterations reached in hybridrootfinder") hybridrootfinder(
+            f_flat, ∂f_flat, 1.0, 3.0; maxiter = 5,
+        )
     end
 end

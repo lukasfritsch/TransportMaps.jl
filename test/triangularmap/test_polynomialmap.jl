@@ -3,6 +3,7 @@
     using Test
     using Distributions
     using LinearAlgebra
+    using Logging
 
 end
 
@@ -892,14 +893,14 @@ end
 
     @testset "Basis-Reference compatibility validation" begin
 
-        @test_nowarn PolynomialMap(2, 3, :normal, Softplus(), LinearizedHermiteBasis())
-        @test_nowarn PolynomialMap(2, 3, Normal(), Softplus(), HermiteBasis())
+        @test_logs min_level = Logging.Warn PolynomialMap(2, 3, :normal, Softplus(), LinearizedHermiteBasis())
+        @test_logs min_level = Logging.Warn PolynomialMap(2, 3, Normal(), Softplus(), HermiteBasis())
 
-        @test_nowarn PolynomialMap(2, 3, :uniform, Softplus(), LegendreBasis())
-        @test_nowarn PolynomialMap(2, 3, Uniform(-1, 1), Softplus(), LegendreBasis())
+        @test_logs min_level = Logging.Warn PolynomialMap(2, 3, :uniform, Softplus(), LegendreBasis())
+        @test_logs min_level = Logging.Warn PolynomialMap(2, 3, Uniform(-1, 1), Softplus(), LegendreBasis())
 
-        @test_nowarn PolynomialMap(2, 3, :uniform01, Softplus(), ShiftedLegendreBasis())
-        @test_nowarn PolynomialMap(2, 3, Uniform(0, 1), Softplus(), ShiftedLegendreBasis())
+        @test_logs min_level = Logging.Warn PolynomialMap(2, 3, :uniform01, Softplus(), ShiftedLegendreBasis())
+        @test_logs min_level = Logging.Warn PolynomialMap(2, 3, Uniform(0, 1), Softplus(), ShiftedLegendreBasis())
 
         @test_throws AssertionError PolynomialMap(2, 3, Uniform(), Softplus(), LinearizedHermiteBasis())
         @test_throws AssertionError PolynomialMap(2, 3, :uniform, Softplus(), LinearizedHermiteBasis())

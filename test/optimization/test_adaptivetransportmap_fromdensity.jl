@@ -4,6 +4,7 @@
     using Distributions
     using Optim
     using Random
+    using Logging
 
 end
 
@@ -16,17 +17,29 @@ end
     maxterms = 5
 
     @testset "No Validation" begin
-        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms)
+        T, hist = @test_logs (:info, "Selected best adaptive map") match_mode = :any optimize_adaptive_transportmap(
+            target, quadrature, maxterms,
+        )
 
         @test numbercoefficients(T) <= maxterms
         @test isnan(hist.test_objectives[1])
     end
 
     @testset "Validation" begin
-        T, hist = optimize_adaptive_transportmap(
-            target, quadrature, maxterms;
-            validation = LatinHypercubeWeights(10, 2)
+        logger = Test.TestLogger()
+        T, hist = Logging.with_logger(logger) do
+            optimize_adaptive_transportmap(
+                target, quadrature, maxterms;
+                validation = LatinHypercubeWeights(10, 2),
+            )
+        end
+
+        selection_logs = filter(
+            log -> log.level == Logging.Info && log.message == "Selected best adaptive map",
+            logger.logs,
         )
+        @test length(selection_logs) == 1
+        @test haskey(selection_logs[1].kwargs, :validation_objective)
 
         @test numbercoefficients(T) <= maxterms
         @test !iszero(hist.test_objectives[1])

@@ -3,6 +3,7 @@
     using Test
     using Distributions
     using Optim
+    using Logging
     import Mooncake
     import DifferentiationInterface: AutoFiniteDiff, AutoForwardDiff, AutoMooncake, GradientPrep
 
@@ -58,7 +59,7 @@ end
             for type in gradient_types_ad
                 t = MapTargetDensity(x -> logpdf(Normal(), x[1]), type, 1)
                 @test t.ad_backend == type
-                @test_nowarn grad_logpdf(t, X)
+                @test_logs min_level = Logging.Warn grad_logpdf(t, X)
             end
 
         end
