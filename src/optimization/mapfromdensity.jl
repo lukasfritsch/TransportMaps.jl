@@ -103,7 +103,7 @@ end
 """
     optimize!(
         M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
-        optimizer, options
+        optimizer, options, λ1 = 0, λ2 = 0, l1_eps = 1.0e-8, interactions_only = false
     )
 
 Optimize polynomial map coefficients to minimize KL divergence to a target density.
@@ -116,6 +116,17 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 # Keyword Arguments
 - `optimizer`: Optimizer from Optim.jl to use (default: `LBFGS()`).
 - `options`: Options passed to the optimizer (default: `Optim.Options()`).
+- `λ1::Real`: Strength of the smoothed L1 penalty (default: `0`).
+- `λ2::Real`: Strength of the L2 penalty (default: `0`).
+- `l1_eps::Real`: Positive smoothing parameter used by the L1 approximation
+  ``\\sqrt{a^2 + \\varepsilon^2}`` (default: `1e-8`).
+- `interactions_only::Bool`: If `false`, penalize all terms of total degree two or
+  greater. If `true`, penalize only terms involving at least two coordinates.
+
+Constant and linear terms are never penalized. The L1 term is differentiable and
+therefore approximates, rather than exactly equals, the L1 norm. Each penalized
+coefficient contributes `λ1 * l1_eps` at zero; this additive constant does not affect
+the minimizer.
 
 # Returns
 - Optimization result from Optim.jl. The optimized coefficients are written back into `M`.
@@ -167,22 +178,14 @@ function optimize!(
     function objective_function(a)
         setcoefficients!(M, a)
         loss = kldivergence(M, target, precomp)
-        a_pen = a[pen]
-        l1_penalty = λ1 == 0.0 ? 0.0 : λ1 * sum(sqrt.(abs2.(a_pen) .+ l1_eps^2))
-        l2_penalty = λ2 == 0.0 ? 0.0 : (λ2 / 2.0) * sum(abs2, a_pen)
-        return loss + l1_penalty + l2_penalty
+        return loss + _regularization_penalty(a, pen, λ1, λ2, l1_eps)
     end
 
     function gradient_function!(g, a)
         setcoefficients!(M, a)
         g .= kldivergence_gradient(M, target, precomp)
-        a_pen = a[pen]
-        if λ1 != 0.0
-            g[pen] .+= λ1 .* a_pen ./ sqrt.(a_pen .^ 2 .+ l1_eps^2)
-        end
-        return if λ2 != 0.0
-            g[pen] .+= λ2 .* a_pen
-        end
+        _add_regularization_gradient!(g, a, pen, λ1, λ2, l1_eps)
+        return nothing
     end
 
     initial_coefficients = getcoefficients(M)
@@ -251,4 +254,20 @@ function _nonlinear_penalty_mask(M::PolynomialMap; interactions_only::Bool = fal
         end
     end
     return mask
+end
+
+function _regularization_penalty(a, pen, λ1, λ2, l1_eps)
+    a_pen = @view a[pen]
+    l1_penalty = λ1 == 0 ? zero(eltype(a)) : λ1 * sum(
+            (sqrt(abs2(c) + l1_eps^2) for c in a_pen); init = zero(eltype(a)),
+        )
+    l2_penalty = λ2 == 0 ? zero(eltype(a)) : (λ2 / 2) * sum(abs2, a_pen; init = zero(eltype(a)))
+    return l1_penalty + l2_penalty
+end
+
+function _add_regularization_gradient!(g, a, pen, λ1, λ2, l1_eps)
+    if λ1 != 0 || λ2 != 0
+        g[pen] .+= λ1 .* a[pen] ./ sqrt.(a[pen] .^ 2 .+ l1_eps^2) .+ λ2 .* a[pen]
+    end
+    return g
 end

@@ -8,6 +8,72 @@
 
 end
 
+@testitem "Regularization selects nonlinear and interaction coefficients" setup = [MapFromDensitySetup] begin
+    M = PolynomialMap(2, 2, :normal, Softplus())
+
+    nonlinear = TransportMaps._nonlinear_penalty_mask(M)
+    interactions = TransportMaps._nonlinear_penalty_mask(M; interactions_only = true)
+
+    # Component 1: [0], [1], [2]. Component 2 follows product order:
+    # [0,0], [1,0], [2,0], [0,1], [1,1], [0,2].
+    @test nonlinear == Bool[0, 0, 1, 0, 0, 1, 0, 1, 1]
+    @test interactions == Bool[0, 0, 0, 0, 0, 0, 0, 1, 0]
+end
+
+@testitem "Smoothed L1 and L2 penalty has the expected gradient" setup = [MapFromDensitySetup] begin
+    coefficients = [0.0, -0.7, 0.0, 1.2]
+    penalized = Bool[0, 1, 1, 1]
+    λ1, λ2, l1_eps = 0.4, 0.3, 1.0e-3
+
+    penalty(a) = TransportMaps._regularization_penalty(a, penalized, λ1, λ2, l1_eps)
+    gradient = zeros(length(coefficients))
+    TransportMaps._add_regularization_gradient!(
+        gradient, coefficients, penalized, λ1, λ2, l1_eps,
+    )
+
+    step = 1.0e-6
+    finite_difference = [
+        (
+            penalty(coefficients + step * (eachindex(coefficients) .== i)) -
+                penalty(coefficients - step * (eachindex(coefficients) .== i))
+        ) / (2step)
+            for i in eachindex(coefficients)
+    ]
+    @test gradient ≈ finite_difference atol = 1.0e-7
+    @test gradient[1] == 0.0
+    @test gradient[3] == 0.0
+    @test penalty(zeros(4)) ≈ 3λ1 * l1_eps
+end
+
+@testitem "Regularization keywords are validated and forwarded" setup = [MapFromDensitySetup] begin
+    target = MapTargetDensity(x -> logpdf(Normal(), x[1]))
+    quadrature = GaussHermiteWeights(3, 1)
+    map = PolynomialMap(1, 2, :normal, Softplus())
+
+    @test_throws AssertionError optimize!(deepcopy(map), target, quadrature; λ1 = -1)
+    @test_throws AssertionError optimize!(deepcopy(map), target, quadrature; λ2 = -1)
+    @test_throws AssertionError optimize!(deepcopy(map), target, quadrature; l1_eps = 0)
+
+    precomputed = TransportMaps.PrecomputedMapBasis(map, quadrature.points, quadrature.weights)
+    options = Optim.Options(iterations = 2)
+    from_quadrature = deepcopy(map)
+    from_precomputed = deepcopy(map)
+    result_quadrature = optimize!(
+        from_quadrature, target, quadrature;
+        λ1 = 0.2, λ2 = 0.1, l1_eps = 1.0e-4, interactions_only = true, options,
+    )
+    result_precomputed = optimize!(
+        from_precomputed, target, precomputed;
+        λ1 = 0.2, λ2 = 0.1, l1_eps = 1.0e-4, interactions_only = true, options,
+    )
+    @test Optim.minimum(result_quadrature) ≈ Optim.minimum(result_precomputed)
+    @test getcoefficients(from_quadrature) ≈ getcoefficients(from_precomputed)
+
+    @test_throws AssertionError optimize_adaptive_transportmap(
+        target, quadrature, numbercoefficients(map); initial_map = map, λ1 = -1,
+    )
+end
+
 @testitem "Map from Density" setup = [MapFromDensitySetup] begin
 
     @testset "KL Divergence Computation" begin

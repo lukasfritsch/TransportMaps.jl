@@ -109,7 +109,7 @@ function _fill_total_order_product_order!(
 end
 
 function hyperbolic_truncation(p::Int, k::Int, q::Real)
-    @assert 0 <= q <= 1 "q must be in (0,1]"
+    @assert 0 < q <= 1 "q must be in (0,1]"
     if q == 1
         return total_order_indices(p, k)
     end

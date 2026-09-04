@@ -76,8 +76,8 @@ M, results, selected_terms, selected_folds = optimize_adaptive_transportmap(
 )
 #md nothing # hide
 
-# The adaptive map learning prints out information about the learning process,
-# including the selected terms and the training and test objectives for each fold.
+# The adaptive map learning emits log messages about the learning process, including
+# the selected terms and the training and test objectives for each fold.
 
 # We see, that in the first component, the ATM selected 2 terms (out of the maximum 3),
 # and in the second component, it selected all 5 out of the maximum 6 terms.

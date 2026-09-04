@@ -20,6 +20,10 @@ the multi-index set across all components simultaneously.
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
 - `options::Optim.Options=Optim.Options()`: Optimizer options
+- `λ1::Real=0`: Strength of the smoothed L1 penalty
+- `λ2::Real=0`: Strength of the L2 penalty
+- `l1_eps::Real=1e-8`: Positive smoothing parameter for the L1 penalty
+- `interactions_only::Bool=false`: Penalize only terms involving multiple coordinates
 - `validation::Union{AbstractQuadratureWeights,Nothing}=nothing`: Quadrature rule used for validation diagnostics
 
 # Returns
@@ -36,6 +40,10 @@ function optimize_adaptive_transportmap(
         reference_density::Distributions.UnivariateDistribution = Normal(),
         optimizer::Optim.AbstractOptimizer = LBFGS(),
         options::Optim.Options = Optim.Options(),
+        λ1::Real = 0.0,
+        λ2::Real = 0.0,
+        l1_eps::Real = 1.0e-8,
+        interactions_only::Bool = false,
         validation::Union{AbstractQuadratureWeights, Nothing} = nothing
     )
     d = size(quadrature.points, 2)
@@ -60,7 +68,10 @@ function optimize_adaptive_transportmap(
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
 
     # Optimize initial map
-    res = optimize!(M, target, precomp, optimizer = optimizer, options = options)
+    res = optimize!(
+        M, target, precomp;
+        optimizer, options, λ1, λ2, l1_eps, interactions_only,
+    )
     train_obj = Optim.minimum(res)
 
     @debug "Initial training KL divergence" objective = train_obj
@@ -133,7 +144,10 @@ function optimize_adaptive_transportmap(
             update_multiindexset!(M_trial, α_cand, k_cand)
 
             precomp_trial = PrecomputedMapBasis(M_trial, quadrature.points, quadrature.weights)
-            res_trial = optimize!(M_trial, target, precomp_trial, optimizer = optimizer, options = options)
+            res_trial = optimize!(
+                M_trial, target, precomp_trial;
+                optimizer, options, λ1, λ2, l1_eps, interactions_only,
+            )
 
             if Optim.converged(res_trial)
                 M = M_trial

@@ -4,6 +4,27 @@
 
 end
 
+@testitem "Total-order indices preserve product order and combinatorial size" setup = [MultivariateIndicesSetup] begin
+    @test multivariate_indices(2, 2, mode = :total) == [
+        [0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [0, 2],
+    ]
+
+    for p in 0:4, k in 1:5
+        indices = multivariate_indices(p, k, mode = :total)
+        @test length(indices) == binomial(p + k, k)
+        @test all(α -> length(α) == k && all(≥(0), α) && sum(α) <= p, indices)
+        @test length(Set(Tuple.(indices))) == length(indices)
+    end
+end
+
+@testitem "Hyperbolic truncation validates its norm and agrees at q one" setup = [MultivariateIndicesSetup] begin
+    @test multivariate_indices(4, 3, mode = :hyperbolic, q = 1) ==
+        multivariate_indices(4, 3, mode = :total)
+    @test_throws AssertionError multivariate_indices(2, 2, mode = :hyperbolic, q = 0)
+    @test_throws AssertionError multivariate_indices(2, 2, mode = :hyperbolic, q = -0.5)
+    @test_throws AssertionError multivariate_indices(2, 2, mode = :hyperbolic, q = 1.1)
+end
+
 @testitem "Multivariate Indices" setup = [MultivariateIndicesSetup] begin
     # total-order for p=1, k=2 should produce: [0,0], [1,0], [0,1]
     idxs = multivariate_indices(1, 2, mode = :total)
