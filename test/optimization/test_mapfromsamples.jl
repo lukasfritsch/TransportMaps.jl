@@ -2,6 +2,9 @@
     using TransportMaps
     using Test
     using Random
+    using Distributions
+    using Optim
+    using Statistics
 
 end
 
@@ -51,5 +54,36 @@ end
 
     @test result2.optimization_results[2].iterations > 0  # Check that optimization ran
     @test isfinite(result2.optimization_results[2].minimum)
+
+    @testset "Non-standard normal reference" begin
+        samples = rand(Normal(4, 2), 300, 1)
+        map = PolynomialMap(1, 1, Normal(2, 3), Softplus(), HermiteBasis())
+        result = optimize!(map, samples)
+        mapped_samples = evaluate(map, samples)
+
+        @test Optim.converged(result.optimization_results[1])
+        @test mean(mapped_samples) ≈ 2 atol = 1.0e-6
+        @test std(mapped_samples) ≈ 3 rtol = 0.02
+    end
+
+    @testset "Uniform reference" begin
+        samples = reshape(collect(range(0.02, 0.98, length = 60)), :, 1)
+        map = PolynomialMap(
+            1, 2, Uniform(0, 1), Softplus(), ShiftedLegendreBasis()
+        )
+        result = optimize!(map, samples)
+        mapped_samples = evaluate(map, samples)
+
+        @test Optim.converged(result.optimization_results[1])
+        @test all((0 .<= mapped_samples) .& (mapped_samples .<= 1))
+        @test first(extrema(mapped_samples)) < 0.05
+        @test last(extrema(mapped_samples)) > 0.95
+        @test isfinite(result.train_objectives[1])
+
+        map_lbfgs = PolynomialMap(
+            1, 2, Uniform(0, 1), Softplus(), ShiftedLegendreBasis()
+        )
+        @test_throws ArgumentError optimize!(map_lbfgs, samples, optimizer = LBFGS())
+    end
 
 end

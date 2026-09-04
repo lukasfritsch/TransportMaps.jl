@@ -55,8 +55,8 @@ end
 """
     GaussHermiteWeights(level::Int64, map::AbstractTransportMap)
 
-Tensor-product Gauss-Hermite weights for integration with respect to standard Gaussian
-constructed from the transport map `map` with normal reference density.
+Tensor-product Gauss-Hermite weights for integration with respect to the normal
+reference density configured on `map`, including its mean and standard deviation.
 Returns a [`TensorProductWeights`](@ref) object.
 """
 function GaussHermiteWeights(level::Int64, map::AbstractTransportMap)
@@ -64,7 +64,11 @@ function GaussHermiteWeights(level::Int64, map::AbstractTransportMap)
         error("GaussHermiteWeights requires Normal reference distribution, got $(typeof(map.reference.densitytype))")
     end
 
-    return TensorProductWeights(level, numberdimensions(map), GaussHermiteKnots())
+    return TensorProductWeights(
+        level,
+        numberdimensions(map),
+        GaussHermiteKnots(map.reference.densitytype),
+    )
 end
 
 """
@@ -136,7 +140,7 @@ Base.eltype(::Type{SparseSmolyakWeights{T}}) where {T <: AbstractQuadratureKnots
 function _determine_knots_from_reference(map::AbstractTransportMap)
     ref = map.reference.densitytype
     if ref isa Normal
-        return GaussHermiteKnots()
+        return GaussHermiteKnots(ref)
     elseif ref isa Uniform
         return GaussLegendreKnots(support(ref))
     end
