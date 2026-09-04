@@ -1,10 +1,16 @@
-using TransportMaps
-using Test
-using LinearAlgebra
-using Random
-using Optim
+@testsnippet LaplaceMapSetup begin
+    using TransportMaps
+    using Test
+    using LinearAlgebra
+    using Random
+    using Optim
+    using Distributions
+    using Logging
+    import DifferentiationInterface: AutoFiniteDiff
 
-@testset "LaplaceMap from Samples" begin
+end
+
+@testitem "LaplaceMap from Samples" setup = [LaplaceMapSetup] begin
     # Create samples from a Laplace distribution
     rng = MersenneTwister(123)
     n_samples = 10
@@ -19,24 +25,24 @@ using Optim
     x = [0.5, 0.2]
     y = evaluate(L_map, x)
     x_rec = inverse(L_map, y)
-    @test isapprox(x_rec, x; atol=1e-8)
+    @test isapprox(x_rec, x; atol = 1.0e-8)
 
     # Matrix forms
     X = randn(rng, 5, 2)
     Y = evaluate(L_map, X)
     X_rec = inverse(L_map, Y)
-    @test isapprox(X_rec, X; atol=1e-8)
+    @test isapprox(X_rec, X; atol = 1.0e-8)
 
     # Jacobian
     jac = jacobian(L_map)
-    @test isapprox(jac, abs(det(L_map.chol)); atol=1e-10)
+    @test isapprox(jac, abs(det(L_map.chol)); atol = 1.0e-10)
 
     # Test mean and covariance
-    μ = mean(samples, dims=1) |> vec
-    @test isapprox(mean(L_map), μ; atol=1e-8)
-    @test isapprox(cov(L_map), cov(samples); atol=1e-8)
-    @test isapprox(mode(L_map), μ; atol=1e-8)
-    @test isapprox(cov(L_map), L_map.chol * L_map.chol'; atol=1e-8)
+    μ = mean(samples, dims = 1) |> vec
+    @test isapprox(mean(L_map), μ; atol = 1.0e-8)
+    @test isapprox(cov(L_map), cov(samples); atol = 1.0e-8)
+    @test isapprox(mode(L_map), μ; atol = 1.0e-8)
+    @test isapprox(cov(L_map), L_map.chol * L_map.chol'; atol = 1.0e-8)
 
     @testset "Show" begin
         @test_nowarn sprint(show, L_map)
@@ -46,7 +52,7 @@ using Optim
 end
 
 
-@testset "LaplaceMap from Density" begin
+@testitem "LaplaceMap from Density" setup = [LaplaceMapSetup] begin
 
     density(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1])
     target = MapTargetDensity(density)
@@ -62,23 +68,23 @@ end
     target_fd = MapTargetDensity(density, AutoFiniteDiff())
     L_fd = LaplaceMap(target_fd, x0)
 
-    @test isapprox(mean(L_fd), [0.0, 0.0]; atol=1e-6)
-    @test isapprox(cov(L_fd), cov(L_map); atol=1e-6)
+    @test isapprox(mean(L_fd), [0.0, 0.0]; atol = 1.0e-6)
+    @test isapprox(cov(L_fd), cov(L_map); atol = 1.0e-6)
 
     # Finite Difference approximation of Hessian (analytical gradient)
     target_fd2 = MapTargetDensity(density, x -> [x[2] - 2 * x[1], x[1] - x[2]])
     L_fd2 = LaplaceMap(target_fd2, x0)
 
-    @test isapprox(mean(L_fd2), [0.0, 0.0]; atol=1e-6)
-    @test isapprox(cov(L_fd2), cov(L_map); atol=1e-6)
+    @test isapprox(mean(L_fd2), [0.0, 0.0]; atol = 1.0e-6)
+    @test isapprox(cov(L_fd2), cov(L_map); atol = 1.0e-6)
 
     # Error handling
-    options = Optim.Options(iterations=1)
-    @test_throws "LaplaceMap optimization did not converge." LaplaceMap(target, x0; options=options)
+    options = Optim.Options(iterations = 1)
+    @test_throws "LaplaceMap optimization did not converge." LaplaceMap(target, x0; options = options)
 
     # MvNormal
-    @test_nowarn MvNormal(L_map)
-    @test_nowarn MvNormal(L_fd)
+    @test_logs min_level = Logging.Warn MvNormal(L_map)
+    @test_logs min_level = Logging.Warn MvNormal(L_fd)
 
     # Evaluate map
     x_test = [0.1, 0.2]

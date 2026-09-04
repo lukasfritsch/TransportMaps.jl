@@ -22,8 +22,8 @@ struct LaplaceMap <: AbstractLinearMap
 
     # Construct a LaplaceMap from sample data
     function LaplaceMap(samples::Matrix{Float64})
-        mode = mean(samples, dims=1)[:]
-        Σ = cov(samples, corrected=true)
+        mode = mean(samples, dims = 1)[:]
+        Σ = cov(samples, corrected = true)
         # Cholesky decomposition (Σ = L * L')
         chol = cholesky(Σ).L
         return new(mode, chol)
@@ -31,11 +31,11 @@ struct LaplaceMap <: AbstractLinearMap
 
     # Compute a Laplace approximation given a target density and initial guess x0
     function LaplaceMap(
-        density::MapTargetDensity,
-        x0::Vector{Float64};
-        optimizer::Optim.AbstractOptimizer = LBFGS(),
-        options::Optim.Options = Optim.Options()
-    )
+            density::MapTargetDensity,
+            x0::Vector{Float64};
+            optimizer::Optim.AbstractOptimizer = LBFGS(),
+            options::Optim.Options = Optim.Options()
+        )
 
         # objective: f(x) = -log(π(x))
         function obj(x)
@@ -166,10 +166,12 @@ function Base.show(io::IO, L::LaplaceMap)
     print(io, "LaplaceMap($(numberdimensions(L))-dimensional")
     print(io, " mode: ", mode(L), ", ")
     print(io, " Σ: ", cov(L), ")")
+    return nothing
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", L::LaplaceMap)
     println(io, "LaplaceMap with $(numberdimensions(L)) dimensions")
     println(io, "  mode: ", mode(L))
     println(io, "  Σ: ", cov(L))
+    return nothing
 end

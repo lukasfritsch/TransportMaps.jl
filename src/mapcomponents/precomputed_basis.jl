@@ -24,8 +24,8 @@ we precompute basis evaluations at quadrature nodes for each sample.
 struct PrecomputedBasis
     Ψ₀::Matrix{Float64}              # Ψ₀[i,j] = ψⱼ(z₁,...,z_{k-1},0) for sample i
     ∂Ψ_z::Matrix{Float64}            # ∂Ψ_z[i,j] = ∂ψⱼ/∂zₖ(z) at sample point z
-    Ψ_quad::Array{Float64,3}         # Ψ_quad[i,q,j] = ψⱼ at quadrature point q for sample i
-    ∂Ψ_quad::Array{Float64,3}        # ∂Ψ_quad[i,q,j] = ∂ψⱼ/∂zₖ at quadrature point q for sample i
+    Ψ_quad::Array{Float64, 3}         # Ψ_quad[i,q,j] = ψⱼ at quadrature point q for sample i
+    ∂Ψ_quad::Array{Float64, 3}        # ∂Ψ_quad[i,q,j] = ∂ψⱼ/∂zₖ at quadrature point q for sample i
     quad_weights::Vector{Float64}    # Quadrature weights
     quad_scales::Vector{Float64}     # Scale factor for each sample (0.5 * z_k)
     n_samples::Int
@@ -33,13 +33,13 @@ struct PrecomputedBasis
     n_quad::Int
 
     function PrecomputedBasis(
-        Ψ₀::Matrix{Float64},
-        ∂Ψ_z::Matrix{Float64},
-        Ψ_quad::Array{Float64,3},
-        ∂Ψ_quad::Array{Float64,3},
-        quad_weights::Vector{Float64},
-        quad_scales::Vector{Float64}
-    )
+            Ψ₀::Matrix{Float64},
+            ∂Ψ_z::Matrix{Float64},
+            Ψ_quad::Array{Float64, 3},
+            ∂Ψ_quad::Array{Float64, 3},
+            quad_weights::Vector{Float64},
+            quad_scales::Vector{Float64}
+        )
         n_samples, n_basis = size(Ψ₀)
         n_quad = length(quad_weights)
 
@@ -48,12 +48,12 @@ struct PrecomputedBasis
         @assert size(∂Ψ_quad) == (n_samples, n_quad, n_basis) "∂Ψ_quad dimensions mismatch"
         @assert length(quad_scales) == n_samples "quad_scales length must match n_samples"
 
-        new(Ψ₀, ∂Ψ_z, Ψ_quad, ∂Ψ_quad, quad_weights, quad_scales, n_samples, n_basis, n_quad)
+        return new(Ψ₀, ∂Ψ_z, Ψ_quad, ∂Ψ_quad, quad_weights, quad_scales, n_samples, n_basis, n_quad)
     end
 end
 
 """
-    PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Float64}; n_quad::Int=64)
+    PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Float64}; n_quad::Int = 64)
 
 Precompute basis function evaluations and their partial derivatives at quadrature nodes
 for all samples. This enables exact computation of the map component and its gradient
@@ -67,7 +67,7 @@ using precomputed values.
 # Returns
 - `PrecomputedBasis`: Structure containing precomputed evaluations at quadrature nodes
 """
-function PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Float64}; n_quad::Int=64)
+function PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Float64}; n_quad::Int = 64)
     n_samples = size(samples, 1)
     n_basis = length(component.basisfunctions)
     k = component.index  # The component index
@@ -78,8 +78,8 @@ function PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Flo
     # Preallocate arrays
     Ψ₀ = Matrix{Float64}(undef, n_samples, n_basis)
     ∂Ψ_z = Matrix{Float64}(undef, n_samples, n_basis)
-    Ψ_quad = Array{Float64,3}(undef, n_samples, n_quad, n_basis)
-    ∂Ψ_quad = Array{Float64,3}(undef, n_samples, n_quad, n_basis)
+    Ψ_quad = Array{Float64, 3}(undef, n_samples, n_quad, n_basis)
+    ∂Ψ_quad = Array{Float64, 3}(undef, n_samples, n_quad, n_basis)
     quad_scales = Vector{Float64}(undef, n_samples)
 
     # Precompute for each sample
@@ -98,7 +98,7 @@ function PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Flo
 
         # Evaluate at z with z_k = 0 for f₀ term
         # Reuse z_buffer to avoid allocation
-        @inbounds for idx in 1:k-1
+        @inbounds for idx in 1:(k - 1)
             z_buffer[idx] = z[idx]
         end
         z_buffer[k] = 0.0
@@ -118,7 +118,7 @@ function PrecomputedBasis(component::PolynomialMapComponent, samples::Matrix{Flo
             x_k = quad_points_std[q] * scale + shift
 
             # Reuse z_buffer to avoid allocation
-            @inbounds for idx in 1:k-1
+            @inbounds for idx in 1:(k - 1)
                 z_buffer[idx] = z[idx]
             end
             z_buffer[k] = x_k
@@ -235,6 +235,7 @@ end
 # Display methods
 function Base.show(io::IO, pb::PrecomputedBasis)
     print(io, "PrecomputedBasis($(pb.n_samples) samples, $(pb.n_basis) basis functions, $(pb.n_quad) quad points)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pb::PrecomputedBasis)
@@ -244,9 +245,12 @@ function Base.show(io::IO, ::MIME"text/plain", pb::PrecomputedBasis)
     println(io, "  Number of quadrature points: $(pb.n_quad)")
 
     # Memory usage estimate
-    memory_mb = (sizeof(pb.Ψ₀) + sizeof(pb.∂Ψ_z) + sizeof(pb.Ψ_quad) + sizeof(pb.∂Ψ_quad) +
-                 sizeof(pb.quad_weights) + sizeof(pb.quad_scales)) / (1024^2)
-    println(io, "  Memory usage: $(round(memory_mb, digits=2)) MB")
+    memory_mb = (
+        sizeof(pb.Ψ₀) + sizeof(pb.∂Ψ_z) + sizeof(pb.Ψ_quad) + sizeof(pb.∂Ψ_quad) +
+            sizeof(pb.quad_weights) + sizeof(pb.quad_scales)
+    ) / (1024^2)
+    println(io, "  Memory usage: $(round(memory_mb, digits = 2)) MB")
+    return nothing
 end
 
 """
@@ -272,22 +276,22 @@ struct PrecomputedMapBasis
     dimension::Int
 
     function PrecomputedMapBasis(
-        component_data::Vector{PrecomputedBasis},
-        quad_points::Matrix{Float64},
-        quad_weights::Vector{Float64}
-    )
+            component_data::Vector{PrecomputedBasis},
+            quad_points::Matrix{Float64},
+            quad_weights::Vector{Float64}
+        )
         n_quad = length(quad_weights)
         dimension = length(component_data)
 
         @assert size(quad_points, 1) == n_quad "quad_points rows must match n_quad"
         @assert size(quad_points, 2) == dimension "quad_points columns must match dimension"
 
-        new(component_data, quad_points, quad_weights, n_quad, dimension)
+        return new(component_data, quad_points, quad_weights, n_quad, dimension)
     end
 end
 
 """
-    PrecomputedMapBasis(M::PolynomialMap, quad_points::Matrix{Float64}, quad_weights::Vector{Float64}; n_quad::Int=64)
+    PrecomputedMapBasis(M::PolynomialMap, quad_points::Matrix{Float64}, quad_weights::Vector{Float64}; n_quad::Int = 64)
 
 Precompute basis evaluations for all components of a PolynomialMap at given quadrature points.
 
@@ -301,11 +305,11 @@ Precompute basis evaluations for all components of a PolynomialMap at given quad
 - `PrecomputedMapBasis`: Structure containing precomputed evaluations for all components
 """
 function PrecomputedMapBasis(
-    M::PolynomialMap,
-    quad_points::Matrix{Float64},
-    quad_weights::Vector{Float64};
-    n_quad::Int=64
-)
+        M::PolynomialMap,
+        quad_points::Matrix{Float64},
+        quad_weights::Vector{Float64};
+        n_quad::Int = 64
+    )
     dimension = numberdimensions(M)
     n_quad_pts = size(quad_points, 1)
 
@@ -319,7 +323,7 @@ function PrecomputedMapBasis(
         component = M[k]
         # Extract relevant columns (z₁, ..., zₖ) from quadrature points
         samples_k = quad_points[:, 1:k]
-        component_data[k] = PrecomputedBasis(component, samples_k, n_quad=n_quad)
+        component_data[k] = PrecomputedBasis(component, samples_k, n_quad = n_quad)
     end
 
     return PrecomputedMapBasis(component_data, quad_points, quad_weights)
@@ -328,6 +332,7 @@ end
 # Display methods
 function Base.show(io::IO, pmb::PrecomputedMapBasis)
     print(io, "PrecomputedMapBasis($(pmb.n_quad) quadrature points, $(pmb.dimension) dimensions)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pmb::PrecomputedMapBasis)
@@ -338,12 +343,15 @@ function Base.show(io::IO, ::MIME"text/plain", pmb::PrecomputedMapBasis)
     # Memory usage estimate
     total_memory = sizeof(pmb.quad_points) + sizeof(pmb.quad_weights)
     for comp_data in pmb.component_data
-        total_memory += (sizeof(comp_data.Ψ₀) + sizeof(comp_data.∂Ψ_z) +
-                        sizeof(comp_data.Ψ_quad) + sizeof(comp_data.∂Ψ_quad) +
-                        sizeof(comp_data.quad_weights) + sizeof(comp_data.quad_scales))
+        total_memory += (
+            sizeof(comp_data.Ψ₀) + sizeof(comp_data.∂Ψ_z) +
+                sizeof(comp_data.Ψ_quad) + sizeof(comp_data.∂Ψ_quad) +
+                sizeof(comp_data.quad_weights) + sizeof(comp_data.quad_scales)
+        )
     end
     memory_mb = total_memory / (1024^2)
-    println(io, "  Memory usage: $(round(memory_mb, digits=2)) MB")
+    println(io, "  Memory usage: $(round(memory_mb, digits = 2)) MB")
+    return nothing
 end
 
 function evaluate(M::PolynomialMap, precomp::PrecomputedMapBasis)
@@ -474,7 +482,7 @@ function jacobian_logdet_gradient(M::PolynomialMap, precomp::PrecomputedMapBasis
 
             # ∂(log|∂M^k/∂z_k|)/∂c_j = (1/∂M^k/∂z_k) * g'(∂f/∂z_k) * ∂ψ_j/∂z_k
             # Vectorized assignment of gradient components
-            gradient[i, coeff_offset:coeff_offset + n_comp_coeffs - 1] .= (g_prime / diagonal_deriv) .* view(comp_precomp.∂Ψ_z, i, :)
+            gradient[i, coeff_offset:(coeff_offset + n_comp_coeffs - 1)] .= (g_prime / diagonal_deriv) .* view(comp_precomp.∂Ψ_z, i, :)
         end
 
         coeff_offset += n_comp_coeffs

@@ -1,9 +1,13 @@
-using Test
-using TransportMaps
-using Random
-using LinearAlgebra
+@testsnippet PrecomputedBasisSetup begin
+    using Test
+    using TransportMaps
+    using Random
+    using LinearAlgebra
+    using Optim
 
-@testset "PrecomputedBasis Tests" begin
+end
+
+@testitem "Precomputed basis" setup = [PrecomputedBasisSetup] begin
     Random.seed!(42)
 
     # Test parameters
@@ -30,7 +34,7 @@ using LinearAlgebra
         @test size(precomp.∂Ψ_quad) == (n_samples, precomp.n_quad, precomp.n_basis)
 
         # Test construction with custom quadrature points
-        precomp_custom = TransportMaps.PrecomputedBasis(component, train_samples, n_quad=32)
+        precomp_custom = TransportMaps.PrecomputedBasis(component, train_samples, n_quad = 32)
         @test precomp_custom.n_quad == 32
     end
 
@@ -44,7 +48,7 @@ using LinearAlgebra
         TransportMaps.setcoefficients!(component, coeffs)
 
         # Create precomputed basis with high quadrature accuracy
-        precomp = TransportMaps.PrecomputedBasis(component, train_samples, n_quad=100)
+        precomp = TransportMaps.PrecomputedBasis(component, train_samples, n_quad = 100)
 
         # Compute objective using precomputed basis
         obj_precomp = TransportMaps.objective(component, precomp)
@@ -59,7 +63,7 @@ using LinearAlgebra
         end
 
         # Should match to high precision with 100 quadrature points
-        @test isapprox(obj_precomp, obj_direct, rtol=1e-10)
+        @test isapprox(obj_precomp, obj_direct, rtol = 1.0e-10)
     end
 
     @testset "Numerical Accuracy - Gradient" begin
@@ -72,14 +76,14 @@ using LinearAlgebra
         TransportMaps.setcoefficients!(component, coeffs)
 
         # Create precomputed basis with high quadrature accuracy
-        precomp = TransportMaps.PrecomputedBasis(component, train_samples, n_quad=100)
+        precomp = TransportMaps.PrecomputedBasis(component, train_samples, n_quad = 100)
 
         # Compute gradient using precomputed basis
         grad_precomp = TransportMaps.objective_gradient!(component, precomp)
 
         # Compute using original function
         grad_original = TransportMaps.objective_gradient!(component, train_samples)
-        @test isapprox(grad_precomp, grad_original, rtol=1e-10)
+        @test isapprox(grad_precomp, grad_original, rtol = 1.0e-10)
 
         # Compute gradient point by point for verification
         n_coeffs = length(component.coefficients)
@@ -96,14 +100,14 @@ using LinearAlgebra
         end
 
         # Should match to high precision
-        @test isapprox(grad_precomp, grad_direct, rtol=1e-10)
+        @test isapprox(grad_precomp, grad_direct, rtol = 1.0e-10)
     end
 
     @testset "Optimization with Precomputed Basis" begin
         M = PolynomialMap(dimension, degree, :normal, Softplus(), LinearizedHermiteBasis())
 
         # Optimize map from samples (should use precomputation internally)
-        result = optimize!(M, samples, optimizer=LBFGS(), options=Optim.Options(iterations=10))
+        result = optimize!(M, samples, optimizer = LBFGS(), options = Optim.Options(iterations = 10))
 
         # Check that optimization ran
         @test result.optimization_results[1].iterations >= 1
@@ -122,8 +126,8 @@ using LinearAlgebra
         train_samples = samples[:, 1:1]
 
         # Test with different quadrature sizes
-        precomp_small = TransportMaps.PrecomputedBasis(component, train_samples, n_quad=16)
-        precomp_large = TransportMaps.PrecomputedBasis(component, train_samples, n_quad=128)
+        precomp_small = TransportMaps.PrecomputedBasis(component, train_samples, n_quad = 16)
+        precomp_large = TransportMaps.PrecomputedBasis(component, train_samples, n_quad = 128)
 
         mem_small = sizeof(precomp_small.Ψ_quad) + sizeof(precomp_small.∂Ψ_quad)
         mem_large = sizeof(precomp_large.Ψ_quad) + sizeof(precomp_large.∂Ψ_quad)
@@ -131,7 +135,7 @@ using LinearAlgebra
         # Memory should scale linearly with n_quad
         ratio = mem_large / mem_small
         expected_ratio = 128 / 16
-        @test isapprox(ratio, expected_ratio, rtol=0.1)
+        @test isapprox(ratio, expected_ratio, rtol = 0.1)
     end
 
     @testset "Consistency Across Different Sample Sizes" begin
@@ -145,7 +149,7 @@ using LinearAlgebra
         for n in [50, 100, 200]
             samples_n = randn(n, 1)
             TransportMaps.setcoefficients!(component, coeffs)
-            precomp = TransportMaps.PrecomputedBasis(component, samples_n, n_quad=64)
+            precomp = TransportMaps.PrecomputedBasis(component, samples_n, n_quad = 64)
 
             # Objective should be roughly proportional to sample size
             obj = TransportMaps.objective(component, precomp)
@@ -158,7 +162,7 @@ using LinearAlgebra
 
     @testset "Map from Density" begin
         M = PolynomialMap(dimension, degree, :normal, Softplus(), LinearizedHermiteBasis())
-        banana_density = function(x)
+        banana_density = function (x)
             return exp(-0.5 * x[1]^2) * exp(-0.5 * (x[2] - x[1]^2)^2)
         end
         target = TransportMaps.MapTargetDensity(banana_density)
@@ -172,12 +176,12 @@ using LinearAlgebra
         precomp = TransportMaps.PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
         kl_div = TransportMaps.kldivergence(M, target, precomp)
         kl_direct = TransportMaps.kldivergence(M, target, quadrature)
-        @test isapprox(kl_div, kl_direct; rtol=1e-5)
+        @test isapprox(kl_div, kl_direct; rtol = 1.0e-5)
 
         # Test gradient of KL divergence
         grad_precomp = TransportMaps.kldivergence_gradient(M, target, precomp)
         grad_direct = TransportMaps.kldivergence_gradient(M, target, quadrature)
-        @test isapprox(grad_precomp, grad_direct; rtol=1e-5)
+        @test isapprox(grad_precomp, grad_direct; rtol = 1.0e-5)
     end
 
     @testset "Show and Display Methods" begin

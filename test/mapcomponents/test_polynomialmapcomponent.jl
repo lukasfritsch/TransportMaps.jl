@@ -1,7 +1,11 @@
-using TransportMaps
-using Test
+@testsnippet PolynomialMapComponentSetup begin
+    using TransportMaps
+    using Test
+    using Distributions
 
-@testset "Polynomial Map Component" begin
+end
+
+@testitem "Polynomial Map Component" setup = [PolynomialMapComponentSetup] begin
     @testset "Construction" begin
         # Test basic construction
         pmc = PolynomialMapComponent(1, 2)
@@ -106,7 +110,7 @@ using Test
 
         # Test evaluation at x = 0 should give f(0)
         result_zero = evaluate(pmc, [0.0])
-        @test result_zero ≈ 1.0 atol = 1e-6  # f(0) = 1
+        @test result_zero ≈ 1.0 atol = 1.0e-6  # f(0) = 1
 
         # Test dimension mismatch
         @test_throws AssertionError evaluate(pmc, [1.0, 2.0])  # Wrong dimension
@@ -123,14 +127,14 @@ using Test
 
         # Test partial derivative: ∂M¹/∂x₁ = g(∂f/∂x₁) = g(2) = 2 (with IdentityRectifier)
         pd = partial_derivative_zk(pmc, [1.0])
-        @test pd ≈ 2.0 atol = 1e-6
+        @test pd ≈ 2.0 atol = 1.0e-6
 
         # Test at different points
         pd_zero = partial_derivative_zk(pmc, [0.0])
-        @test pd_zero ≈ 2.0 atol = 1e-6  # Should be constant for linear function
+        @test pd_zero ≈ 2.0 atol = 1.0e-6  # Should be constant for linear function
 
         pd_neg = partial_derivative_zk(pmc, [-1.0])
-        @test pd_neg ≈ 2.0 atol = 1e-6
+        @test pd_neg ≈ 2.0 atol = 1.0e-6
     end
 
     @testset "Different Rectifiers" begin
@@ -142,17 +146,17 @@ using Test
 
         pmc_softplus = PolynomialMapComponent(basisfunctions, coefficients, Softplus(), 1)
         pd_softplus = partial_derivative_zk(pmc_softplus, [1.0])
-        @test pd_softplus ≈ log1p(exp(1.0)) atol = 1e-6  # Softplus(1) = log(1 + e¹)
+        @test pd_softplus ≈ log1p(exp(1.0)) atol = 1.0e-6  # Softplus(1) = log(1 + e¹)
 
         # Test with ShiftedELU rectifier
         pmc_elu = PolynomialMapComponent(basisfunctions, coefficients, ShiftedELU(), 1)
         pd_elu = partial_derivative_zk(pmc_elu, [1.0])
-        @test pd_elu ≈ 2.0 atol = 1e-6  # ShiftedELU(1) = 1 + 1 = 2
+        @test pd_elu ≈ 2.0 atol = 1.0e-6  # ShiftedELU(1) = 1 + 1 = 2
 
         # Test with IdentityRectifier
         pmc_identity = PolynomialMapComponent(basisfunctions, coefficients, IdentityRectifier(), 1)
         pd_identity = partial_derivative_zk(pmc_identity, [1.0])
-        @test pd_identity ≈ 1.0 atol = 1e-6  # Identity(1) = 1
+        @test pd_identity ≈ 1.0 atol = 1.0e-6  # Identity(1) = 1
     end
 
     @testset "Higher Dimensions" begin
@@ -224,7 +228,7 @@ using Test
         @test all(isfinite, grad)
 
         # Verify gradient using finite differences
-        ε = 1e-8
+        ε = 1.0e-8
         numerical_grad = zeros(length(coefficients))
 
         for i in 1:length(coefficients)
@@ -246,7 +250,7 @@ using Test
         end
 
         # Check agreement within tolerance
-        @test all(abs.(grad - numerical_grad) .< 1e-6)
+        @test all(abs.(grad - numerical_grad) .< 1.0e-6)
 
         # Test with Softplus rectifier
         pmc_softplus = PolynomialMapComponent(2, 1, Softplus())
@@ -326,20 +330,20 @@ using Test
         # Vector{Float32}
         z_f32 = Float32[0.5, 1.2]
         result_f32 = pmc(z_f32)
-        @test isapprox(result_f32, pmc(Float64.(z_f32)), atol=1e-5, rtol=1e-5)
+        @test isapprox(result_f32, pmc(Float64.(z_f32)), atol = 1.0e-5, rtol = 1.0e-5)
         @test typeof(result_f32) == Float64
 
         # Matrix{Int}
         Z_int = [1 2; 3 4; 5 6]
         result_matrix_int = pmc(Z_int)
-        @test isapprox(result_matrix_int, pmc(Float64.(Z_int)), atol=1e-5)
+        @test isapprox(result_matrix_int, pmc(Float64.(Z_int)), atol = 1.0e-5)
         @test typeof(result_matrix_int) == Vector{Float64}
         @test length(result_matrix_int) == size(Z_int, 1)
 
         # Matrix{Float32}
         Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
         result_matrix_f32 = pmc(Z_f32)
-        @test isapprox(result_matrix_f32, pmc(Float64.(Z_f32)), atol=1e-5, rtol=1e-5)
+        @test isapprox(result_matrix_f32, pmc(Float64.(Z_f32)), atol = 1.0e-5, rtol = 1.0e-5)
         @test typeof(result_matrix_f32) == Vector{Float64}
         @test length(result_matrix_f32) == size(Z_f32, 1)
 
@@ -354,7 +358,7 @@ using Test
         mi_pmc = getmultiindexsets(pmc)
         mis = permutedims(hcat(multivariate_indices(2, 2)...))
 
-        @test maximum(mi_pmc, dims=1) ≈ [2 2]
+        @test maximum(mi_pmc, dims = 1) ≈ [2 2]
         @test mi_pmc ≈ mis
     end
 

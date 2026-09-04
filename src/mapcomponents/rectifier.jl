@@ -1,12 +1,12 @@
 """
-    Softplus(β::Float64=1.0)
+    Softplus(β::Float64 = 1.0)
 
 Smooth rectifier function: `g(ξ) = log(1 + exp(βξ)) / β`. Ensures monotonicity
 with smooth approximation to ReLU. Higher β values create sharper transitions.
 """
 struct Softplus <: AbstractRectifierFunction
     β::Float64
-    Softplus(β::Float64=1.0) = new(β)
+    Softplus(β::Float64 = 1.0) = new(β)
 end
 
 """
@@ -15,7 +15,7 @@ end
 Evaluate the Softplus rectifier at `ξ`.
 """
 function (r::Softplus)(ξ)
-    return 1 / r.β   * log1p(exp(r.β * ξ))
+    return 1 / r.β * log1p(exp(r.β * ξ))
 end
 
 """
@@ -112,6 +112,7 @@ end
 # Display methods for Softplus
 function Base.show(io::IO, s::Softplus)
     print(io, "Softplus(β=$(s.β))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", s::Softplus)
@@ -122,11 +123,13 @@ function Base.show(io::IO, ::MIME"text/plain", s::Softplus)
     println(io, "  Range: (0, ∞)")
     println(io, "  Properties: Smooth approximation to ReLU, always positive")
     println(io, "  Derivative: σ(βξ) = 1/(1 + exp(-βξ)) (sigmoid)")
+    return nothing
 end
 
 # Display methods for ShiftedELU
 function Base.show(io::IO, ::ShiftedELU)
     print(io, "ShiftedELU()")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", ::ShiftedELU)
@@ -136,11 +139,13 @@ function Base.show(io::IO, ::MIME"text/plain", ::ShiftedELU)
     println(io, "  Range: (0, ∞)")
     println(io, "  Properties: Exponential for negative inputs, linear + 1 for positive")
     println(io, "  Continuous and differentiable everywhere")
+    return nothing
 end
 
 # Display methods for IdentityRectifier
 function Base.show(io::IO, ::IdentityRectifier)
     print(io, "IdentityRectifier()")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", ::IdentityRectifier)
@@ -150,4 +155,5 @@ function Base.show(io::IO, ::MIME"text/plain", ::IdentityRectifier)
     println(io, "  Range: ℝ")
     println(io, "  Properties: No transformation, passes input unchanged")
     println(io, "  Warning: May result in non-monotonic transport maps")
+    return nothing
 end

@@ -1,9 +1,12 @@
-using Test
-using TransportMaps
-using Distributions
+@testsnippet ConditionalDensitiesSetup begin
+    using Test
+    using TransportMaps
+    using Distributions
 
-# Test setup for conditional densities
-@testset "Conditional Densities" begin
+    # Test setup for conditional densities
+end
+
+@testitem "Conditional Densities" setup = [ConditionalDensitiesSetup] begin
     # Create a simple PolynomialMap for testing
     M = PolynomialMap(2, 2, :normal)
     quadrature = SparseSmolyakWeights(2, 2)
@@ -21,7 +24,7 @@ using Distributions
 
     # Test conditional_density for single value
     @testset "Single Value Density" begin
-        @test conditional_density(M, xₖ, xₖ₋₁) ≈ 0.34151562832217836 atol = 1e-6
+        @test conditional_density(M, xₖ, xₖ₋₁) ≈ 0.34151562832217836 atol = 1.0e-6
     end
 
     # Test conditional_density for multiple values
@@ -46,21 +49,21 @@ using Distributions
 
     # Edge case: xₖ₋₁ as a single value
     @testset "Edge Case" begin
-        @test conditional_density(M, xₖ, 0.5) ≈ 0.34151562832217836 atol = 1e-6
-        @test conditional_sample(M, 0.5, zₖ) ≈ conditional_sample(M, 0.5, zₖ) atol = 1e-6
+        @test conditional_density(M, xₖ, 0.5) ≈ 0.34151562832217836 atol = 1.0e-6
+        @test conditional_sample(M, 0.5, zₖ) ≈ conditional_sample(M, 0.5, zₖ) atol = 1.0e-6
     end
 end
 
 # Test multivariate conditional densities
-@testset "Multivariate Conditional Densities" begin
+@testitem "Multivariate Conditional Densities" setup = [ConditionalDensitiesSetup] begin
     # Create a 3-dimensional PolynomialMap for testing (more stable than 4D)
     M3 = PolynomialMap(3, 2, :normal)
     quadrature = SparseSmolyakWeights(2, 3)
 
     # Define a 3D target density (extending the banana example)
     banana3d(x) = logpdf(Normal(), x[1]) +
-                  logpdf(Normal(), x[2] - 0.5 * x[1]^2) +
-                  logpdf(Normal(), x[3] - 0.3 * x[2])
+        logpdf(Normal(), x[2] - 0.5 * x[1]^2) +
+        logpdf(Normal(), x[3] - 0.3 * x[2])
     target3d = MapTargetDensity(banana3d)
 
     # Optimize the map coefficients
@@ -83,7 +86,7 @@ end
         manual_density *= conditional_density(M3, x_full[2], x_full[1:1])  # p(x₂|x₁)
         manual_density *= conditional_density(M3, x_full[3], x_full[1:2])  # p(x₃|x₁,x₂)
 
-        @test joint_density ≈ manual_density atol = 1e-10
+        @test joint_density ≈ manual_density atol = 1.0e-10
     end
 
     @testset "Conditional Density (Range Given)" begin
@@ -96,7 +99,7 @@ end
         manual_cond = conditional_density(M3, x_range[1], x_given)  # p(x₂|x₁)
         manual_cond *= conditional_density(M3, x_range[2], [x_given..., x_range[1]])  # p(x₃|x₁,x₂)
 
-        @test cond_density ≈ manual_cond atol = 1e-10
+        @test cond_density ≈ manual_cond atol = 1.0e-10
     end
 
     @testset "Single Dimensional Cases" begin
@@ -104,28 +107,28 @@ end
         x1 = [0.5]
         density_1d = multivariate_conditional_density(M3, x1)
         marginal_density = conditional_density(M3, x1[1], Float64[])
-        @test density_1d ≈ marginal_density atol = 1e-10
+        @test density_1d ≈ marginal_density atol = 1.0e-10
 
         # Test single range with single given
         single_range = [0.8]
         single_given = [0.5]
         cond_single = multivariate_conditional_density(M3, single_range, single_given)
         expected_single = conditional_density(M3, single_range[1], single_given)
-        @test cond_single ≈ expected_single atol = 1e-10
+        @test cond_single ≈ expected_single atol = 1.0e-10
     end
 
     @testset "Convenience Function Variants" begin
         # Test with single given value (Float64)
         cond_density_float = multivariate_conditional_density(M3, x_range, x_given[1])
         expected_float = multivariate_conditional_density(M3, x_range, [x_given[1]])
-        @test cond_density_float ≈ expected_float atol = 1e-10
+        @test cond_density_float ≈ expected_float atol = 1.0e-10
 
         # Test with AbstractArray inputs
         x_range_array = convert(Vector{Float32}, x_range)
         x_given_array = convert(Vector{Float32}, x_given)
         cond_density_array = multivariate_conditional_density(M3, x_range_array, x_given_array)
         expected_array = multivariate_conditional_density(M3, x_range, x_given)
-        @test cond_density_array ≈ expected_array atol = 1e-5
+        @test cond_density_array ≈ expected_array atol = 1.0e-5
     end
 
     @testset "Multivariate Conditional Sampling" begin
@@ -142,12 +145,12 @@ end
             push!(manual_samples, sample)
             push!(x_current, sample)
         end
-        @test samples ≈ manual_samples atol = 1e-10
+        @test samples ≈ manual_samples atol = 1.0e-10
 
         # Test with single given value
         samples_single = multivariate_conditional_sample(M3, x_given[1], z_range)
         expected_single = multivariate_conditional_sample(M3, [x_given[1]], z_range)
-        @test samples_single ≈ expected_single atol = 1e-10
+        @test samples_single ≈ expected_single atol = 1.0e-10
 
         # Test with AbstractArray inputs
         z_range_array = convert(Vector{Float32}, z_range)
@@ -173,13 +176,13 @@ end
 
         multivar_result = multivariate_conditional_density(M3, x_single_range, x_single_given)
         univar_result = conditional_density(M3, x_single_range[1], x_single_given)
-        @test multivar_result ≈ univar_result atol = 1e-10
+        @test multivar_result ≈ univar_result atol = 1.0e-10
 
         # Same for sampling
         z_single = [0.3]
         multivar_sample = multivariate_conditional_sample(M3, x_single_given, z_single)
         univar_sample = [conditional_sample(M3, x_single_given, z_single[1])]
-        @test multivar_sample ≈ univar_sample atol = 1e-10
+        @test multivar_sample ≈ univar_sample atol = 1.0e-10
     end
 
     @testset "Mathematical Properties" begin
@@ -193,7 +196,7 @@ end
         joint_12 = multivariate_conditional_density(M3, x12)
         cond_3_given_12 = multivariate_conditional_density(M3, x3_given_12, x12)
 
-        @test joint_123 ≈ joint_12 * cond_3_given_12 atol = 1e-10
+        @test joint_123 ≈ joint_12 * cond_3_given_12 atol = 1.0e-10
 
         # Test that densities are positive and finite
         x_range_test = [0.0, 0.0]  # Test point
@@ -212,7 +215,7 @@ end
 
             # Verify it matches the standard call
             expected = conditional_density(M3, x_range_float, float.(x_given_array))
-            @test result ≈ expected atol = 1e-10
+            @test result ≈ expected atol = 1.0e-10
         end
 
         @testset "conditional_density - AbstractArray x_range, AbstractArray x_given" begin
@@ -226,7 +229,7 @@ end
             # Verify each result matches individual calls
             for (i, xr) in enumerate(x_range_array)
                 expected = conditional_density(M3, float(xr), x_given_array)
-                @test results[i] ≈ expected atol = 1e-10
+                @test results[i] ≈ expected atol = 1.0e-10
             end
         end
 
@@ -240,7 +243,7 @@ end
 
             # Verify it matches the call with x_given as array
             expected = conditional_density(M3, x_range_array, [x_given_float])
-            @test results ≈ expected atol = 1e-10
+            @test results ≈ expected atol = 1.0e-10
         end
 
         @testset "conditional_sample - AbstractArray x_given, Float64 z_range" begin
@@ -251,7 +254,7 @@ end
 
             # Verify consistency - calling twice with same inputs should give same result
             result2 = conditional_sample(M3, float.(x_given_array), z_float)
-            @test result ≈ result2 atol = 1e-10
+            @test result ≈ result2 atol = 1.0e-10
         end
 
         @testset "conditional_sample - Float64 x_given, AbstractArray z_range" begin
@@ -263,7 +266,7 @@ end
 
             # Verify it matches the call with x_given as array
             expected = conditional_sample(M3, [x_given_float], z_array)
-            @test results ≈ expected atol = 1e-10
+            @test results ≈ expected atol = 1.0e-10
         end
 
         @testset "conditional_sample - AbstractArray x_given, AbstractArray z_range" begin
@@ -276,7 +279,7 @@ end
             # Verify each result is consistent
             for (i, z) in enumerate(z_array)
                 individual = conditional_sample(M3, Float64.(x_given_array), Float64(z))
-                @test results[i] ≈ individual atol = 1e-5
+                @test results[i] ≈ individual atol = 1.0e-5
             end
         end
 
@@ -289,7 +292,7 @@ end
 
             # Verify it matches the call with x_given as array
             expected = multivariate_conditional_density(M3, float.(x_range_array), [x_given_float])
-            @test result ≈ expected atol = 1e-10
+            @test result ≈ expected atol = 1.0e-10
         end
 
         @testset "multivariate_conditional_density - AbstractArray x (full vector)" begin
@@ -302,7 +305,7 @@ end
             manual = conditional_density(M3, float(x_full_array[1]), Float64[])
             manual *= conditional_density(M3, float(x_full_array[2]), float(x_full_array[1:1]))
             manual *= conditional_density(M3, float(x_full_array[3]), float(x_full_array[1:2]))
-            @test result ≈ manual atol = 1e-10
+            @test result ≈ manual atol = 1.0e-10
         end
 
         @testset "multivariate_conditional_sample - Float64 x_given, AbstractArray z_range" begin
@@ -314,7 +317,7 @@ end
 
             # Verify it matches the call with x_given as array
             expected = multivariate_conditional_sample(M3, [x_given_float], Float64.(z_array))
-            @test results ≈ expected atol = 1e-10
+            @test results ≈ expected atol = 1.0e-10
         end
 
         @testset "Explicit Vector{Float64} inputs" begin
@@ -365,7 +368,7 @@ end
 
             # Results should be close to Float64 versions
             dens_f64 = conditional_density(M3, Float64.(x_range_f32), Float64.(x_given_f32))
-            @test dens_f32 ≈ dens_f64 atol = 1e-5
+            @test dens_f32 ≈ dens_f64 atol = 1.0e-5
         end
     end
 end

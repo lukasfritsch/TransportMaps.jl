@@ -1,5 +1,5 @@
 """
-    PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent
+    PolynomialMapComponent{T <: AbstractPolynomialBasis} <: AbstractMapComponent
 
 A single component Mᵏ of a triangular transport map with polynomial basis.
 
@@ -14,7 +14,7 @@ A single component Mᵏ of a triangular transport map with polynomial basis.
 - `PolynomialMapComponent(multi_indices::Vector{Vector{Int}}, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, samples::AbstractMatrix{Float64})`: Initialize component with custom multi-index sets from samples.
 - `PolynomialMapComponent(multi_indices::Vector{Vector{Int}}, rectifier::AbstractRectifierFunction, basis::AbstractPolynomialBasis, reference_density::Distributions.UnivariateDistribution)`: Initialize component with custom multi-index sets from density.
 """
-struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponent
+struct PolynomialMapComponent{T <: AbstractPolynomialBasis} <: AbstractMapComponent
     basisfunctions::Vector{MultivariateBasis{T}}  # Vector of MultivariateBasis objects
     coefficients::Vector{Float64}  # Coefficients for the basis functions
     rectifier::AbstractRectifierFunction  # Rectifier function to apply to the partial derivatives
@@ -22,11 +22,11 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
 
     # Constructor for map-from-samples
     function PolynomialMapComponent(
-        multi_indices::Vector{Vector{Int}},
-        rectifier::AbstractRectifierFunction,
-        basis::AbstractPolynomialBasis,
-        samples::AbstractMatrix{Float64}
-    )
+            multi_indices::Vector{Vector{Int}},
+            rectifier::AbstractRectifierFunction,
+            basis::AbstractPolynomialBasis,
+            samples::AbstractMatrix{Float64}
+        )
         # Determine index from multi_indices and type of basis
         index = length(multi_indices[1])
         T = typeof(basis)
@@ -38,11 +38,11 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
 
     # Constructor for map-from-density
     function PolynomialMapComponent(
-        multi_indices::Vector{Vector{Int}},
-        rectifier::AbstractRectifierFunction,
-        basis::AbstractPolynomialBasis,
-        reference_density::Distributions.UnivariateDistribution,
-    )
+            multi_indices::Vector{Vector{Int}},
+            rectifier::AbstractRectifierFunction,
+            basis::AbstractPolynomialBasis,
+            reference_density::Distributions.UnivariateDistribution,
+        )
         # Determine index from multi_indices and type of basis
         index = length(multi_indices[1])
         T = typeof(basis)
@@ -53,23 +53,23 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
     end
 
     function PolynomialMapComponent(
-        index::Int,
-        degree::Int,
-        rectifier::AbstractRectifierFunction=Softplus(),
-        basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-        reference_density::Distributions.UnivariateDistribution=Normal(),
-        map_type=:total
-    )
-        multi_indices = multivariate_indices(degree, index, mode=map_type)
+            index::Int,
+            degree::Int,
+            rectifier::AbstractRectifierFunction = Softplus(),
+            basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+            reference_density::Distributions.UnivariateDistribution = Normal(),
+            map_type = :total
+        )
+        multi_indices = multivariate_indices(degree, index, mode = map_type)
         return PolynomialMapComponent(multi_indices, rectifier, basis, reference_density)
     end
 
     function PolynomialMapComponent(
-        basisfunctions::Vector{MultivariateBasis{T}},
-        coefficients::Vector{Float64},
-        rectifier::AbstractRectifierFunction,
-        index::Int
-    ) where T<:AbstractPolynomialBasis
+            basisfunctions::Vector{MultivariateBasis{T}},
+            coefficients::Vector{Float64},
+            rectifier::AbstractRectifierFunction,
+            index::Int
+        ) where {T <: AbstractPolynomialBasis}
 
         @assert length(basisfunctions) == length(coefficients) "Number of basis functions must equal number of coefficients"
         @assert index > 0 "Index must be a positive integer"
@@ -79,11 +79,11 @@ struct PolynomialMapComponent{T<:AbstractPolynomialBasis} <: AbstractMapComponen
 end
 
 function _initialize_multivariate_basis(
-    multi_indices::Vector{Vector{Int}},
-    basis::AbstractPolynomialBasis,
-    density::Distributions.UnivariateDistribution,
-    index::Int
-)
+        multi_indices::Vector{Vector{Int}},
+        basis::AbstractPolynomialBasis,
+        density::Distributions.UnivariateDistribution,
+        index::Int
+    )
     T = typeof(basis)
     basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
 
@@ -111,11 +111,11 @@ function _initialize_multivariate_basis(
 end
 
 function _initialize_multivariate_basis(
-    multi_indices::Vector{Vector{Int}},
-    basis::AbstractPolynomialBasis,
-    samples::AbstractMatrix{Float64},
-    index::Int
-)
+        multi_indices::Vector{Vector{Int}},
+        basis::AbstractPolynomialBasis,
+        samples::AbstractMatrix{Float64},
+        index::Int
+    )
     T = typeof(basis)
     basisfunctions = Vector{MultivariateBasis{T}}(undef, length(multi_indices))
 
@@ -170,7 +170,7 @@ function evaluate(map_component::PolynomialMapComponent, z::AbstractVector{<:Rea
     end
 
     # Second part: ∫g∂f: Numerical integration using Gauss-Legendre quadrature
-    ∫g∂f = gaussquadrature(integrand, 100, 0., z[map_component.index])
+    ∫g∂f = gaussquadrature(integrand, 100, 0.0, z[map_component.index])
 
     return f₀ + ∫g∂f
 end
@@ -316,7 +316,7 @@ function gradient_coefficients(map_component::PolynomialMapComponent, z::Abstrac
         end
 
         # Integrate from 0 to z[k]
-        ∇integral[j] = gaussquadrature(integrand_j, 100, 0., z[map_component.index])
+        ∇integral[j] = gaussquadrature(integrand_j, 100, 0.0, z[map_component.index])
     end
 
     return ∇f₀ + ∇integral
@@ -339,10 +339,10 @@ Compute the inverse of the map component using one-dimensional root finding.
 Given z[1:k-1] and the target value xₖ, finds zₖ such that Mᵏ(z) = xₖ.
 """
 function inverse(
-    map_component::PolynomialMapComponent,
-    zₖ₋₁::AbstractVector{<:Real},
-    xₖ::Real,
-)
+        map_component::PolynomialMapComponent,
+        zₖ₋₁::AbstractVector{<:Real},
+        xₖ::Real,
+    )
     @assert length(zₖ₋₁) == map_component.index - 1 "Length of zₖ₋₁ must be equal to index - 1"
 
     # Define the residual
@@ -366,6 +366,7 @@ Set the coefficients of the map component.
 function setcoefficients!(map_component::PolynomialMapComponent, coefficients::AbstractVector{<:Real})
     @assert length(coefficients) == length(map_component.coefficients) "Length of coefficients must match the number of basis functions."
     map_component.coefficients .= coefficients
+    return nothing
 end
 
 """
@@ -439,6 +440,7 @@ function Base.show(io::IO, component::PolynomialMapComponent)
     print(io, "basis=$basis_name, ")
     print(io, "rectifier=$rectifier_name, ")
     print(io, "$n_basis basis functions)")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent)
@@ -480,4 +482,5 @@ function Base.show(io::IO, ::MIME"text/plain", component::PolynomialMapComponent
     else
         println(io, "  Coefficients: uninitialized")
     end
+    return nothing
 end

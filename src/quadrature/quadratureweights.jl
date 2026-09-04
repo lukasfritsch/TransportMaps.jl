@@ -1,7 +1,7 @@
 # Implementation of various quadrature rules for numerical integration
 
 """
-    TensorProductWeights{T<:AbstractQuadratureKnots}
+    TensorProductWeights{T <: AbstractQuadratureKnots}
 
 Multi-dimensional quadrature rule constructed from a tensor-product of one-dimensional
 quadrature knots. The `level` parameter controls accuracy.
@@ -17,7 +17,7 @@ quadrature knots. The `level` parameter controls accuracy.
 
 See also [`GaussHermiteWeights`](@ref) and [`GaussLegendreWeights`](@ref), and [`SparseSmolyakWeights`](@ref) for spare grids.
 """
-struct TensorProductWeights{T<:AbstractQuadratureKnots} <: AbstractQuadratureWeights
+struct TensorProductWeights{T <: AbstractQuadratureKnots} <: AbstractQuadratureWeights
     points::Matrix{Float64}
     weights::Vector{Float64}
     knots::AbstractQuadratureKnots
@@ -39,7 +39,7 @@ struct TensorProductWeights{T<:AbstractQuadratureKnots} <: AbstractQuadratureWei
     end
 end
 
-Base.eltype(::Type{TensorProductWeights{T}}) where T<:AbstractQuadratureKnots = T
+Base.eltype(::Type{TensorProductWeights{T}}) where {T <: AbstractQuadratureKnots} = T
 
 """
     GaussHermiteWeights(level::Int64, dim::Int64)
@@ -68,12 +68,12 @@ function GaussHermiteWeights(level::Int64, map::AbstractTransportMap)
 end
 
 """
-    GaussLegendreWeights(level::Int64, dim::Int64, domain=[0, 1])
+    GaussLegendreWeights(level::Int64, dim::Int64, domain = [0, 1])
 
 Tensor-product Gauss-Legendre weights for integration with respect to Uniform[0,1].
 Returns a [`TensorProductWeights`](@ref) object.
 """
-function GaussLegendreWeights(level::Int64, dim::Int64, domain::Vector{<:Real}=[0, 1])
+function GaussLegendreWeights(level::Int64, dim::Int64, domain::Vector{<:Real} = [0, 1])
     return TensorProductWeights(level, dim, GaussLegendreKnots(domain))
 end
 
@@ -94,7 +94,7 @@ function GaussLegendreWeights(level::Int64, map::AbstractTransportMap)
 end
 
 """
-    SparseSmolyakWeights{T<:AbstractQuadratureKnots}
+    SparseSmolyakWeights{T <: AbstractQuadratureKnots}
 
 Multi-dimensional quadrature rule constructed using a sparse Smolyak grid of one-dimensional
 quadrature knots. The `level` parameter controls accuracy.
@@ -110,18 +110,18 @@ quadrature knots. The `level` parameter controls accuracy.
 
 See also [`TensorProductWeights`](@ref).
 """
-struct SparseSmolyakWeights{T<:AbstractQuadratureKnots} <: AbstractQuadratureWeights
+struct SparseSmolyakWeights{T <: AbstractQuadratureKnots} <: AbstractQuadratureWeights
     points::Matrix{Float64}
     weights::Vector{Float64}
     knots::AbstractQuadratureKnots
 
-    function SparseSmolyakWeights(level::Int64, dim::Int64, knots::AbstractQuadratureKnots=GaussHermiteKnots(); sparse::Bool=true)
+    function SparseSmolyakWeights(level::Int64, dim::Int64, knots::AbstractQuadratureKnots = GaussHermiteKnots(); sparse::Bool = true)
         T = typeof(knots)
         points, weights = smolyak_points(dim, level, knots, sparse)
         return new{T}(points, weights, knots)
     end
 
-    function SparseSmolyakWeights(level::Int64, map::AbstractTransportMap; sparse::Bool=true)
+    function SparseSmolyakWeights(level::Int64, map::AbstractTransportMap; sparse::Bool = true)
         dim = numberdimensions(map)
         knots = _determine_knots_from_reference(map)
         T = typeof(knots)
@@ -131,7 +131,7 @@ struct SparseSmolyakWeights{T<:AbstractQuadratureKnots} <: AbstractQuadratureWei
     end
 end
 
-Base.eltype(::Type{SparseSmolyakWeights{T}}) where T<:AbstractQuadratureKnots = T
+Base.eltype(::Type{SparseSmolyakWeights{T}}) where {T <: AbstractQuadratureKnots} = T
 
 function _determine_knots_from_reference(map::AbstractTransportMap)
     ref = map.reference.densitytype
@@ -161,9 +161,9 @@ All points receive uniform weights `1/numberpoints`.
 struct MonteCarloWeights <: AbstractQuadratureWeights
     points::Matrix{Float64}
     weights::Vector{Float64}
-    distribution::Union{Distributions.UnivariateDistribution,Nothing}
+    distribution::Union{Distributions.UnivariateDistribution, Nothing}
 
-    function MonteCarloWeights(numberpoints::Int64, dimension::Int64, dist::Distributions.UnivariateDistribution=Normal())
+    function MonteCarloWeights(numberpoints::Int64, dimension::Int64, dist::Distributions.UnivariateDistribution = Normal())
         points, weights = montecarlo_weights(numberpoints, dimension, dist)
         return new(points, weights, dist)
     end
@@ -175,7 +175,7 @@ struct MonteCarloWeights <: AbstractQuadratureWeights
         return new(points, weights, map.reference.densitytype)
     end
 
-    function MonteCarloWeights(points::Matrix{Float64}, weights::Vector{Float64}=Float64[])
+    function MonteCarloWeights(points::Matrix{Float64}, weights::Vector{Float64} = Float64[])
         if isempty(weights)
             # If no weights are provided, assume uniform weights
             weights = 1 / size(points, 1) * ones(size(points, 1))
@@ -211,7 +211,7 @@ struct LatinHypercubeWeights <: AbstractQuadratureWeights
     weights::Vector{Float64}
     distribution::Distributions.UnivariateDistribution
 
-    function LatinHypercubeWeights(n::Int64, d::Int64, dist::Distributions.UnivariateDistribution=Normal())
+    function LatinHypercubeWeights(n::Int64, d::Int64, dist::Distributions.UnivariateDistribution = Normal())
         points, weights = latinhypercube_weights(n, d, dist)
         return new(points, weights, dist)
     end
@@ -230,10 +230,11 @@ function latinhypercube_weights(numberpoints::Int64, dimension::Int64, dist::Dis
 end
 
 # Display methods for TensorProductWeights
-function Base.show(io::IO, w::TensorProductWeights{T}) where T<:AbstractQuadratureKnots
+function Base.show(io::IO, w::TensorProductWeights{T}) where {T <: AbstractQuadratureKnots}
     npts, dim = size(w.points)
     domain = support(w.knots)
     print(io, "TensorProductWeights{$T}(number_pts=$npts, dim=$dim, support=$(domain))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::TensorProductWeights)
@@ -243,12 +244,14 @@ function Base.show(io::IO, ::MIME"text/plain", w::TensorProductWeights)
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
     print(io, "  Knots: $(w.knots)")
+    return nothing
 end
 
 # Display methods for MonteCarloWeights
 function Base.show(io::IO, w::MonteCarloWeights)
     npts, dim = size(w.points)
     print(io, "MonteCarloWeights($npts points, $dim dimensions, $(w.distribution))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::MonteCarloWeights)
@@ -259,12 +262,14 @@ function Base.show(io::IO, ::MIME"text/plain", w::MonteCarloWeights)
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
     print(io, "  Distribution: $d")
+    return nothing
 end
 
 # Display methods for LatinHypercubeWeights
 function Base.show(io::IO, w::LatinHypercubeWeights)
     npts, dim = size(w.points)
     print(io, "LatinHypercubeWeights($npts points, $dim dimensions, $(w.distribution))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::LatinHypercubeWeights)
@@ -274,11 +279,13 @@ function Base.show(io::IO, ::MIME"text/plain", w::LatinHypercubeWeights)
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
     print(io, "  Distribution: $(w.distribution)")
+    return nothing
 end
 
 function Base.show(io::IO, w::SparseSmolyakWeights)
     npts, dim = size(w.points)
     print(io, "SparseSmolyakWeights($npts points, $dim dimensions, $(w.knots))")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", w::SparseSmolyakWeights)
@@ -288,6 +295,7 @@ function Base.show(io::IO, ::MIME"text/plain", w::SparseSmolyakWeights)
     println(io, "  Number of points: $npts")
     println(io, "  Dimensions: $dim")
     print(io, "  Knots: $(w.knots)")
+    return nothing
 end
 
 function numberdimensions(quad::AbstractQuadratureWeights)

@@ -17,29 +17,29 @@ struct LinearizedHermiteBasis <: AbstractHermiteBasis
     linearizationbounds::Vector{Float64}
     normalization::Vector{Float64}
 
-    function LinearizedHermiteBasis(; lower=-Inf, upper=Inf, normalization=Float64[])
+    function LinearizedHermiteBasis(; lower = -Inf, upper = Inf, normalization = Float64[])
         return new([lower, upper], normalization)
     end
 end
 
-LinearizedHermiteBasis(max_degree::Int) = LinearizedHermiteBasis(normalization=ones(max_degree + 1))
+LinearizedHermiteBasis(max_degree::Int) = LinearizedHermiteBasis(normalization = ones(max_degree + 1))
 
 function LinearizedHermiteBasis(samples::Vector{<:Real}, max_degree::Int, k::Int)
     lower_bound, upper_bound = quantile(samples, 0.01), quantile(samples, 0.99)
     normalization = [factorial(n) for n in 0:max_degree]
     if k <= max_degree
-        normalization[k+1] = factorial(k + 1)
+        normalization[k + 1] = factorial(k + 1)
     end
-    return LinearizedHermiteBasis(lower=lower_bound, upper=upper_bound, normalization=normalization)
+    return LinearizedHermiteBasis(lower = lower_bound, upper = upper_bound, normalization = normalization)
 end
 
 function LinearizedHermiteBasis(density::Distributions.UnivariateDistribution, max_degree::Int, k::Int)
     lower_bound, upper_bound = quantile(density, 0.01), quantile(density, 0.99)
     normalization = [factorial(n) for n in 0:max_degree]
     if k <= max_degree
-        normalization[k+1] = factorial(k + 1)
+        normalization[k + 1] = factorial(k + 1)
     end
-    return LinearizedHermiteBasis(lower=lower_bound, upper=upper_bound, normalization=normalization)
+    return LinearizedHermiteBasis(lower = lower_bound, upper = upper_bound, normalization = normalization)
 end
 
 @inline function _linearized_hermite(n::Int, z::Real, linearizationbounds::Vector{Float64})
@@ -78,7 +78,7 @@ Evaluate `LinearizedHermiteBasis` with degree `αᵢ` at `zᵢ`.
 @inline function basisfunction(basis::LinearizedHermiteBasis, αᵢ::Int, zᵢ::Real)
     n = Int(αᵢ)
     if !isempty(basis.normalization) && isfinite(basis.linearizationbounds[1]) && isfinite(basis.linearizationbounds[2])
-        return _linearized_hermite(n, zᵢ, basis.linearizationbounds) / sqrt(basis.normalization[n+1])
+        return _linearized_hermite(n, zᵢ, basis.linearizationbounds) / sqrt(basis.normalization[n + 1])
     else
         return _linearized_hermite(n, zᵢ, basis.linearizationbounds)
     end
@@ -92,7 +92,7 @@ Evaluate derivative of `LinearizedHermiteBasis` with degree `αᵢ` at `zᵢ`.
 @inline function basisfunction_derivative(basis::LinearizedHermiteBasis, αᵢ::Int, zᵢ::Real)
     n = Int(αᵢ)
     if !isempty(basis.normalization) && isfinite(basis.linearizationbounds[1]) && isfinite(basis.linearizationbounds[2])
-        return _linearized_hermite_derivative(n, zᵢ, basis.linearizationbounds) / sqrt(basis.normalization[n+1])
+        return _linearized_hermite_derivative(n, zᵢ, basis.linearizationbounds) / sqrt(basis.normalization[n + 1])
     else
         return _linearized_hermite_derivative(n, zᵢ, basis.linearizationbounds)
     end
@@ -100,6 +100,7 @@ end
 
 function Base.show(io::IO, basis::LinearizedHermiteBasis)
     print(io, "LinearizedHermiteBasis(bounds=$(basis.linearizationbounds))")
+    return nothing
 end
 
 support(basis::LinearizedHermiteBasis) = RealInterval(-Inf, Inf)

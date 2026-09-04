@@ -37,10 +37,10 @@ density = MapTargetDensity(logπ, AutoFiniteDiff(), d)
 density = MapTargetDensity(logπ, grad_logπ)
 
 # Use vectorized log-density (accepts matrix input where rows are samples)
-density = MapTargetDensity(logπ_vectorized; isvectorized=true)
+density = MapTargetDensity(logπ_vectorized; isvectorized = true)
 ```
 """
-struct MapTargetDensity{F<:Function,B<:Union{Nothing,ADTypes.AbstractADType},G<:Function,P<:Union{Nothing,DifferentiationInterface.GradientPrep}} <: AbstractMapDensity
+struct MapTargetDensity{F <: Function, B <: Union{Nothing, ADTypes.AbstractADType}, G <: Function, P <: Union{Nothing, DifferentiationInterface.GradientPrep}} <: AbstractMapDensity
     logdensity::F
     ad_backend::B
     grad_logdensity::G
@@ -49,12 +49,12 @@ struct MapTargetDensity{F<:Function,B<:Union{Nothing,ADTypes.AbstractADType},G<:
     threaded::Bool
 
     # Analytical gradient
-    function MapTargetDensity(logdensity::F, grad_logdensity::G; isvectorized::Bool=false, threaded::Bool=true) where {F<:Function,G<:Function}
-        return new{F,Nothing,G,Nothing}(logdensity, nothing, grad_logdensity, nothing, isvectorized, threaded)
+    function MapTargetDensity(logdensity::F, grad_logdensity::G; isvectorized::Bool = false, threaded::Bool = true) where {F <: Function, G <: Function}
+        return new{F, Nothing, G, Nothing}(logdensity, nothing, grad_logdensity, nothing, isvectorized, threaded)
     end
 
     # AD backend with prepared gradient
-    function MapTargetDensity(logdensity::F, backend::B, d::Int; isvectorized::Bool=false, threaded::Bool=true) where {F<:Function,B<:ADTypes.AbstractADType}
+    function MapTargetDensity(logdensity::F, backend::B, d::Int; isvectorized::Bool = false, threaded::Bool = true) where {F <: Function, B <: ADTypes.AbstractADType}
         # Prepare gradient once for this input size
         prep = DifferentiationInterface.prepare_gradient(logdensity, backend, zeros(d))
 
@@ -66,11 +66,11 @@ struct MapTargetDensity{F<:Function,B<:Union{Nothing,ADTypes.AbstractADType},G<:
             threaded = false
         end
 
-        return new{F,B,typeof(grad_logdensity),typeof(prep)}(logdensity, backend, grad_logdensity, prep, isvectorized, threaded)
+        return new{F, B, typeof(grad_logdensity), typeof(prep)}(logdensity, backend, grad_logdensity, prep, isvectorized, threaded)
     end
 
     # AD backend without preparation
-    function MapTargetDensity(logdensity::F, backend::B; isvectorized::Bool=false, threaded::Bool=true) where {F<:Function,B<:ADTypes.AbstractADType}
+    function MapTargetDensity(logdensity::F, backend::B; isvectorized::Bool = false, threaded::Bool = true) where {F <: Function, B <: ADTypes.AbstractADType}
         grad_logdensity = function (x)
             return DifferentiationInterface.gradient(logdensity, backend, x)
         end
@@ -79,16 +79,16 @@ struct MapTargetDensity{F<:Function,B<:Union{Nothing,ADTypes.AbstractADType},G<:
             threaded = false
         end
 
-        return new{F,B,typeof(grad_logdensity),Nothing}(logdensity, backend, grad_logdensity, nothing, isvectorized, threaded)
+        return new{F, B, typeof(grad_logdensity), Nothing}(logdensity, backend, grad_logdensity, nothing, isvectorized, threaded)
     end
 
     # Default: ForwardDiff without preparation
-    function MapTargetDensity(logdensity::F; isvectorized::Bool=false, threaded::Bool=true) where {F<:Function}
+    function MapTargetDensity(logdensity::F; isvectorized::Bool = false, threaded::Bool = true) where {F <: Function}
         backend = AutoForwardDiff()
         grad_logdensity = function (x)
             return DifferentiationInterface.gradient(logdensity, backend, x)
         end
-        return new{F,typeof(backend),typeof(grad_logdensity),Nothing}(logdensity, backend, grad_logdensity, nothing, isvectorized, threaded)
+        return new{F, typeof(backend), typeof(grad_logdensity), Nothing}(logdensity, backend, grad_logdensity, nothing, isvectorized, threaded)
     end
 end
 
@@ -108,14 +108,14 @@ to the target distribution.
 - `MapReferenceDensity()`: Use standard normal as reference density.
 - `MapReferenceDensity(densitytype)`: Specify univariate distribution; uses analytical `gradlogpdf` when available, otherwise falls back to ForwardDiff.
 """
-struct MapReferenceDensity{F<:Function,G<:Function} <: AbstractMapDensity
+struct MapReferenceDensity{F <: Function, G <: Function} <: AbstractMapDensity
     logdensity::F
     grad_logdensity::G
     densitytype::Distributions.UnivariateDistribution
 
     function MapReferenceDensity(
-        densitytype::Distributions.UnivariateDistribution=Normal()
-    )
+            densitytype::Distributions.UnivariateDistribution = Normal()
+        )
         density = x -> sum(logpdf.(Ref(densitytype), x))
 
         # Use gradlogpdf if available, otherwise fall back to ForwardDiff
@@ -126,7 +126,7 @@ struct MapReferenceDensity{F<:Function,G<:Function} <: AbstractMapDensity
             x -> DifferentiationInterface.gradient(density, backend, x)
         end
 
-        return new{typeof(density),typeof(grad_density)}(
+        return new{typeof(density), typeof(grad_density)}(
             density, grad_density, densitytype
         )
     end
@@ -245,8 +245,10 @@ pdf(density::AbstractMapDensity, X::Matrix{<:Real}) = exp.(logpdf(density, X))
 function Base.show(io::IO, target::MapTargetDensity)
     backend_str = target.ad_backend === nothing ? "analytical" : string(target.ad_backend)
     print(io, "MapTargetDensity(backend=$(backend_str))")
+    return nothing
 end
 
 function Base.show(io::IO, ref::MapReferenceDensity)
     print(io, "MapReferenceDensity(density=$(ref.densitytype))")
+    return nothing
 end

@@ -1,8 +1,11 @@
-using TransportMaps
-using Test
-using Distributions
+@testsnippet QuadratureWeightsSetup begin
+    using TransportMaps
+    using Test
+    using Distributions
 
-@testset "QuadratureWeights" begin
+end
+
+@testitem "QuadratureWeights" setup = [QuadratureWeightsSetup] begin
 
     @testset "TensorProductWeights" begin
 
@@ -83,7 +86,7 @@ using Distributions
         @test isa(sparse, SparseSmolyakWeights{GaussHermiteKnots})
         @test size(sparse.points, 2) == 2
         @test length(sparse.weights) == size(sparse.points, 1)
-        @test sum(sparse.weights) ≈ 1.0 atol = 1e-10
+        @test sum(sparse.weights) ≈ 1.0 atol = 1.0e-10
 
         sparse_tm = SparseSmolyakWeights(2, PolynomialMap(2, 2))
         @test isa(sparse_tm, SparseSmolyakWeights{GaussHermiteKnots})

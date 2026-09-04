@@ -1,4 +1,3 @@
-
 """
     GaussHermiteKnots
 
@@ -18,7 +17,7 @@ function (knots::GaussHermiteKnots)(level::Int)
         return ([0.0], [1.0])
     else
         n = min(2^level + 1, 200)
-        return gausshermite(n; normalize=true)
+        return gausshermite(n; normalize = true)
     end
 end
 
@@ -34,7 +33,7 @@ where ``u(x)`` is the uniform density.
 struct GaussLegendreKnots <: AbstractQuadratureKnots
     domain::RealInterval{<:Real}
 
-    function GaussLegendreKnots(domain::AbstractVector{<:Real}=[-1, 1])
+    function GaussLegendreKnots(domain::AbstractVector{<:Real} = [-1, 1])
         return new(RealInterval(domain...))
     end
 
@@ -65,6 +64,7 @@ function transform_to_domain!(knots::GaussLegendreKnots, quadrature_points, quad
 
     quadrature_points .= scale .* quadrature_points .+ shift
     quadrature_weights .= quadrature_weights ./ 2
+    return nothing
 end
 
 """
@@ -79,7 +79,7 @@ where ``u(x)`` is the uniform density.
 struct ClenshawCurtisKnots <: AbstractQuadratureKnots
     domain::RealInterval{<:Real}
 
-    function ClenshawCurtisKnots(domain::AbstractVector{<:Real}=[-1, 1])
+    function ClenshawCurtisKnots(domain::AbstractVector{<:Real} = [-1, 1])
         return new(RealInterval(domain...))
     end
 
@@ -112,9 +112,9 @@ function clenshaw_curtis_rule(n::Int64)
     # ∫_{-1}^1 x^m dx = 0 for m odd, 2/(m+1) for m even
     A = Matrix{Float64}(undef, n + 1, n + 1)
     for m in 0:n
-        A[m+1, :] .= x .^ m
+        A[m + 1, :] .= x .^ m
     end
-    b = Float64[(1 + (-1.)^m) / (m + 1) for m in 0:n]
+    b = Float64[(1 + (-1.0)^m) / (m + 1) for m in 0:n]
 
     w = A \ b
     return x, w
@@ -128,4 +128,5 @@ function transform_to_domain!(knots::ClenshawCurtisKnots, quadrature_points, qua
 
     quadrature_points .= scale .* quadrature_points .+ shift
     quadrature_weights .= quadrature_weights ./ 2
+    return nothing
 end

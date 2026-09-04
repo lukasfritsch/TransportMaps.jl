@@ -14,7 +14,7 @@ struct LegendreBasis <: AbstractLegendreBasis end
     else
         P_nm2 = 1.0
         P_nm1 = x
-        for k in 1:(n-1)
+        for k in 1:(n - 1)
             P_n = ((2k + 1) * x * P_nm1 - k * P_nm2) / (k + 1)
             P_nm2, P_nm1 = P_nm1, P_n
         end
@@ -36,7 +36,7 @@ end
         P_nm1 = legendre_polynomial(n - 1, x)
 
         # Handle near-singular points
-        if abs(1 - x^2) < 1e-10
+        if abs(1 - x^2) < 1.0e-10
             # Use alternative formula: P'_n = n*P_{n-1} + x*P'_{n-1}
             return n * P_nm1 + x * legendre_derivative(n - 1, x)
         else
@@ -65,6 +65,7 @@ end
 
 function Base.show(io::IO, ::LegendreBasis)
     print(io, "LegendreBasis()")
+    return nothing
 end
 
 """
@@ -113,6 +114,7 @@ end
 
 function Base.show(io::IO, ::ShiftedLegendreBasis)
     print(io, "ShiftedLegendreBasis()")
+    return nothing
 end
 
 support(basis::LegendreBasis) = RealInterval(-1, 1)

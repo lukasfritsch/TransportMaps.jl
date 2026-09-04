@@ -14,7 +14,7 @@ Probabilist Hermite polynomial basis with cubic spline edge control.
 struct CubicSplineHermiteBasis <: AbstractHermiteBasis
     radius::Float64
 
-    function CubicSplineHermiteBasis(radius::Float64=3.0)
+    function CubicSplineHermiteBasis(radius::Float64 = 3.0)
         return new(radius)
     end
 end
@@ -77,6 +77,7 @@ end
 
 function Base.show(io::IO, basis::CubicSplineHermiteBasis)
     print(io, "CubicSplineHermiteBasis(radius=$(basis.radius))")
+    return nothing
 end
 
 support(basis::CubicSplineHermiteBasis) = RealInterval(-Inf, Inf)

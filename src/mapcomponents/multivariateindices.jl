@@ -1,7 +1,7 @@
 # Multivariate index set generation and reduced margin of multi-index sets
 
 """
-    multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
+    multivariate_indices(p::Int, k::Int; mode::Symbol = :total, q::Real = 1.0)
 
 Generate multi-index sets Λ for multivariate polynomial bases.
 
@@ -22,7 +22,7 @@ Generate multi-index sets Λ for multivariate polynomial bases.
 [marzouk2016](@cite), [blatman2011](@cite)
 
 """
-function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
+function multivariate_indices(p::Int, k::Int; mode::Symbol = :total, q::Real = 1.0)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
     @assert mode in [:total, :diagonal, :no_mixed, :hyperbolic] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed, :hyperbolic"
@@ -35,7 +35,7 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
     if mode == :total
         # total-order multi-indices
         # A_k^{TO} = { α : ||α||_1 <= p and α_i = 0 for all i > k}
-        return hyperbolic_truncation(p, k, 1.)
+        return total_order_indices(p, k)
 
     elseif mode == :diagonal
         # Diagonal multi-index set for a fixed coordinate k:
@@ -74,24 +74,58 @@ function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
 
 end
 
-function hyperbolic_truncation(p::Int64, k::Int64, q::Real)
-    # Hyperbolic truncation:
-    # A_k^{q} = { α : ||α||_q <= p and α_i = 0 for all i > k}
-    @assert 0 <= q <= 1 "q must be in (0,1]"
+function total_order_indices(p::Int, k::Int)
     inds = Vector{Vector{Int}}()
-    ranges = ntuple(_ -> 0:p, k)
-    for tup in Iterators.product(ranges...)
-        # compute quasi-norm
-        if q_norm(tup, q) <= p + 1e-12
-            push!(inds, collect(tup))
+    current = zeros(Int, k)
+    _fill_total_order_product_order!(inds, current, k, 0, p)
+    return inds
+end
+
+function _fill_total_order_product_order!(
+        inds::Vector{Vector{Int}},
+        current::Vector{Int},
+        pos::Int,
+        partial_sum::Int,
+        p::Int
+    )
+    remaining = p - partial_sum
+    remaining < 0 && return
+
+    if pos == 1
+        # First coordinate is fastest, matching Iterators.product ordering.
+        for a1 in 0:remaining
+            current[1] = a1
+            push!(inds, copy(current))
+        end
+        return nothing
+    end
+
+    # Higher coordinates are outer loops.
+    for a in 0:remaining
+        current[pos] = a
+        _fill_total_order_product_order!(inds, current, pos - 1, partial_sum + a, p)
+    end
+    return nothing
+end
+
+function hyperbolic_truncation(p::Int, k::Int, q::Real)
+    @assert 0 < q <= 1 "q must be in (0,1]"
+    if q == 1
+        return total_order_indices(p, k)
+    end
+
+    inds = Vector{Vector{Int}}()
+    for α in total_order_indices(p, k)
+        if q_norm(α, q) <= p + 1.0e-12
+            push!(inds, α)
         end
     end
     return inds
 end
 
-function q_norm(α::Tuple{Vararg{Int64}}, q::Float64)
-    s = sum(float.(α) .^ q)
-    return s^(1. / q)
+function q_norm(α::AbstractVector{<:Real}, q::Real)
+    s = sum(abs.(α) .^ q)
+    return s^(1 / q)
 end
 
 """
@@ -117,7 +151,7 @@ function reduced_margin(Λ::Vector{<:Vector{Int}})
     present = Set(tuple(α...) for α in Λ)
 
     # Generate candidates: all multi-indices one step above elements in Λ
-    candidates = Set{NTuple{d,Int}}()
+    candidates = Set{NTuple{d, Int}}()
     for β in Λ
         for i in 1:d
             α = copy(β)

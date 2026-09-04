@@ -1,8 +1,11 @@
-using TransportMaps
-using Test
-using Random
+@testsnippet ComposedMapSetup begin
+    using TransportMaps
+    using Test
+    using Random
 
-@testset "ComposedMap" begin
+end
+
+@testitem "ComposedMap" setup = [ComposedMapSetup] begin
     rng = MersenneTwister(42)
 
     # Build a simple PolynomialMap that acts approximately as identity
@@ -29,13 +32,13 @@ using Random
     x = [0.1, -0.2]
     y = evaluate(C, x)
     x_rec = inverse(C, y)
-    @test isapprox(x_rec, x; atol=1e-8)
+    @test isapprox(x_rec, x; atol = 1.0e-8)
 
     # Matrix forms
     X = randn(rng, 5, 2)
     Y = evaluate(C, X)
     X_rec = inverse(C, Y)
-    @test isapprox(X_rec, X; atol=1e-8)
+    @test isapprox(X_rec, X; atol = 1.0e-8)
 
     # Test pullback scaling: pullback(Composed) == pullback(Polynomial) / prod(σ)
     # Compute pullbacks at a point (use X row)
@@ -43,13 +46,13 @@ using Random
     pb_C = pullback(C, x0)
     pb_pm = pullback(pm, evaluate(L, x0))
     scale = prod(L.σ)
-    @test isapprox(pb_C * scale, pb_pm; atol=1e-8, rtol=1e-8)
+    @test isapprox(pb_C * scale, pb_pm; atol = 1.0e-8, rtol = 1.0e-8)
 
     # Test pullback scaling: pullback(Composed) == pullback(Polynomial) / prod(σ) for matrix input
     pb_C = pullback(C, X)
     pb_pm = pullback(pm, evaluate(L, X))
     scale = prod(L.σ)
-    @test isapprox(pb_C * scale, pb_pm; atol=1e-8, rtol=1e-8)
+    @test isapprox(pb_C * scale, pb_pm; atol = 1.0e-8, rtol = 1.0e-8)
 
     @testset "Show" begin
         @test_nowarn sprint(show, C)

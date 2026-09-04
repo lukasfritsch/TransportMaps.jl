@@ -19,14 +19,14 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     forwarddirection::Symbol
 
     function PolynomialMap(
-        dimension::Int,
-        degree::Int,
-        referencetype::Symbol=:normal,
-        rectifier::AbstractRectifierFunction=Softplus(),
-        basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-        map_type::Symbol=:total,
-        q::Real=1.
-    )
+            dimension::Int,
+            degree::Int,
+            referencetype::Symbol = :normal,
+            rectifier::AbstractRectifierFunction = Softplus(),
+            basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+            map_type::Symbol = :total,
+            q::Real = 1.0
+        )
         @assert referencetype in [:normal, :uniform, :uniform01] "Supported reference types: :normal, :uniform (U(-1,1)), :uniform01 (U(0,1))"
 
         reference = Dict(
@@ -39,21 +39,21 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     end
 
     function PolynomialMap(
-        dimension::Int,
-        degree::Int,
-        reference::Distributions.UnivariateDistribution,
-        rectifier::AbstractRectifierFunction=Softplus(),
-        basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-        map_type::Symbol=:total,
-        q::Real=1.
-    )
+            dimension::Int,
+            degree::Int,
+            reference::Distributions.UnivariateDistribution,
+            rectifier::AbstractRectifierFunction = Softplus(),
+            basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+            map_type::Symbol = :total,
+            q::Real = 1.0
+        )
         @assert validate_basis_reference_compatibility(basis, reference) "Invalid combination of reference density and basis. Support of $reference is $(support(reference)), while support of $basis is $(support(basis))."
 
         T = typeof(basis)
         components = Vector{PolynomialMapComponent{T}}(undef, dimension)
 
         for k in 1:dimension
-            multi_indices = multivariate_indices(degree, k, mode=map_type, q=q)
+            multi_indices = multivariate_indices(degree, k, mode = map_type, q = q)
             components[k] = PolynomialMapComponent(multi_indices, rectifier, basis, reference)
         end
 
@@ -61,55 +61,55 @@ mutable struct PolynomialMap <: AbstractTriangularMap
     end
 
     function PolynomialMap(
-        components::Vector{PolynomialMapComponent{T}},
-        reference::Distributions.UnivariateDistribution=Normal();
-        forwarddirection::Symbol=:target
-    ) where T<:AbstractPolynomialBasis
+            components::Vector{PolynomialMapComponent{T}},
+            reference::Distributions.UnivariateDistribution = Normal();
+            forwarddirection::Symbol = :target
+        ) where {T <: AbstractPolynomialBasis}
         return new(components, MapReferenceDensity(reference), forwarddirection)
     end
 end
 
 # Convenience constructor for DiagonalMap
 function DiagonalMap(
-    dimension::Int,
-    degree::Int,
-    reference::Distributions.UnivariateDistribution=Normal(),
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
-)
+        dimension::Int,
+        degree::Int,
+        reference::Distributions.UnivariateDistribution = Normal(),
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+    )
     return PolynomialMap(dimension, degree, reference, rectifier, basis, :diagonal)
 end
 
 # Convenience constructor for NoMixedMap
 function NoMixedMap(
-    dimension::Int,
-    degree::Int,
-    reference::Distributions.UnivariateDistribution=Normal(),
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
-)
+        dimension::Int,
+        degree::Int,
+        reference::Distributions.UnivariateDistribution = Normal(),
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+    )
     return PolynomialMap(dimension, degree, reference, rectifier, basis, :no_mixed)
 end
 
 function HyperbolicMap(
-    dimension::Int,
-    degree::Int,
-    q::Real,
-    reference::Distributions.UnivariateDistribution=Normal(),
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis()
-)
+        dimension::Int,
+        degree::Int,
+        q::Real,
+        reference::Distributions.UnivariateDistribution = Normal(),
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis()
+    )
 
     return PolynomialMap(dimension, degree, reference, rectifier, basis, :hyperbolic, q)
 end
 
 # Construct PolynomialMap from multi-index sets Λ and given density
 function PolynomialMap(
-    Λ::Vector{Vector{Vector{Int}}},
-    rectifier::AbstractRectifierFunction,
-    basis::AbstractPolynomialBasis,
-    reference_density::Distributions.UnivariateDistribution=Normal()
-)
+        Λ::Vector{Vector{Vector{Int}}},
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        reference_density::Distributions.UnivariateDistribution = Normal()
+    )
     d = length(Λ)
     T = typeof(basis)
     components = Vector{PolynomialMapComponent{T}}(undef, d)
@@ -118,7 +118,7 @@ function PolynomialMap(
         components[k] = PolynomialMapComponent(Λ[k], rectifier, basis, reference_density)
     end
 
-    return PolynomialMap(components; forwarddirection=:target)
+    return PolynomialMap(components; forwarddirection = :target)
 end
 
 """
@@ -253,7 +253,7 @@ function gradient_coefficients(M::PolynomialMap, z::AbstractVector{<:Real})
         component_grad = gradient_coefficients(component, z[1:i])
 
         # Fill in the gradient matrix
-        gradient_matrix[i, coeff_offset:coeff_offset+n_component_coeffs-1] = component_grad
+        gradient_matrix[i, coeff_offset:(coeff_offset + n_component_coeffs - 1)] = component_grad
 
         # All other coefficients don't affect this component (triangular structure)
         # So gradient_matrix[i, other_indices] remains zero
@@ -279,7 +279,7 @@ function gradient_coefficients(M::PolynomialMap, Z::AbstractMatrix{<:Real})
     n_coeffs = numbercoefficients(M)
 
     # Preallocate result: 3D array (n_points × n_dims × n_coeffs)
-    results = Array{Float64,3}(undef, n_points, n_dims, n_coeffs)
+    results = Array{Float64, 3}(undef, n_points, n_dims, n_coeffs)
 
     # Use multithreading to compute gradient for each point
     Threads.@threads for i in 1:n_points
@@ -354,7 +354,7 @@ function jacobian_logdet_gradient(M::PolynomialMap, z::AbstractVector{<:Real})
         comp_grad = partial_derivative_zk_gradient_coefficients(component, z[1:i])
 
         # Add contribution: (1/diagonal_deriv) * comp_grad
-        coeff_range = coeff_offset:coeff_offset+n_comp_coeffs-1
+        coeff_range = coeff_offset:(coeff_offset + n_comp_coeffs - 1)
         gradient[coeff_range] += comp_grad / diagonal_deriv
 
         coeff_offset += n_comp_coeffs
@@ -387,32 +387,32 @@ function jacobian_logdet_gradient(M::PolynomialMap, Z::AbstractMatrix{<:Real})
 end
 
 """
-    inverse(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int=numberdimensions(M))
+    inverse(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int = numberdimensions(M))
 
 Compute the inverse of the first k components of the map at point x.
 
 Returns z such that M(z)[1:k] = x[1:k].
 """
-function inverse(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int=numberdimensions(M))
+function inverse(M::PolynomialMap, x::AbstractVector{<:Real}, k::Int = numberdimensions(M))
     @assert k <= length(x) <= numberdimensions(M) "x must have at least k dimensions and at most the map dimension"
 
     # Initialize the inverse map
     z = Vector{Float64}(undef, k)
     for (i, component) in enumerate(M.components[1:k])
-        z[i] = inverse(component, z[1:i-1], x[i])
+        z[i] = inverse(component, z[1:(i - 1)], x[i])
     end
 
     return z
 end
 
 """
-    inverse(M::PolynomialMap, X::AbstractMatrix{<:Real}, k::Int=numberdimensions(M))
+    inverse(M::PolynomialMap, X::AbstractMatrix{<:Real}, k::Int = numberdimensions(M))
 
 Compute the inverse at multiple points using multithreading.
 
 Returns a matrix where row i contains M⁻¹(X[i,:])[1:k].
 """
-function inverse(M::PolynomialMap, X::AbstractMatrix{<:Real}, k::Int=numberdimensions(M))
+function inverse(M::PolynomialMap, X::AbstractMatrix{<:Real}, k::Int = numberdimensions(M))
     @assert k <= size(X, 2) == numberdimensions(M) "X must have at least k columns and at most the map dimension"
 
     n_points = size(X, 1)
@@ -479,7 +479,7 @@ function pullback(M::PolynomialMap, x::AbstractVector{<:Real})
     @assert length(M.components) == length(x) "Number of components must match the dimension of x"
 
     value = M.forwarddirection == :target ? pdf(M.reference, inverse(M, x)) * abs(inverse_jacobian(M, x)) :
-            pdf(M.reference, evaluate(M, x)) * abs(jacobian(M, x))
+        pdf(M.reference, evaluate(M, x)) * abs(jacobian(M, x))
 
     # Compute pull-back density π̂(x) = ρ(M⁻¹(x)) * |det J(M^-1(x))|
     return value
@@ -521,7 +521,7 @@ function pushforward(M::PolynomialMap, target::MapTargetDensity, z::AbstractVect
     @assert length(M.components) == length(z) "Number of components must match the dimension of z"
 
     value = M.forwarddirection == :target ? pdf(target, evaluate(M, z)) * abs(jacobian(M, z)) :
-            error("Can't evaluate pushforward for a map from samples!")
+        error("Can't evaluate pushforward for a map from samples!")
 
     # Compute push-forward density ρ(z) = π(M(z)) * |det J(M(z))|
     return value
@@ -561,9 +561,10 @@ Coefficients are ordered by component: [c₁₁, c₁₂, ..., c₂₁, c₂₂,
 function setcoefficients!(M::PolynomialMap, coefficients::AbstractVector{<:Real})
     counter = 1
     for component in M.components
-        setcoefficients!(component, coefficients[counter:counter+length(component.basisfunctions)-1])
+        setcoefficients!(component, coefficients[counter:(counter + length(component.basisfunctions) - 1)])
         counter += length(component.basisfunctions)
     end
+    return nothing
 end
 
 """
@@ -577,7 +578,7 @@ function getcoefficients(M::PolynomialMap)
     coefficients = Vector{Float64}(undef, numbercoefficients(M))
     counter = 1
     for component in M.components
-        coefficients[counter:counter+length(component.basisfunctions)-1] .= getcoefficients(component)
+        coefficients[counter:(counter + length(component.basisfunctions) - 1)] .= getcoefficients(component)
         counter += length(component.basisfunctions)
     end
     return coefficients
@@ -593,6 +594,7 @@ Valid directions: `:target` (map from density) or `:reference` (map from samples
 function setforwarddirection!(M::PolynomialMap, forwarddirection::Symbol)
     @assert forwarddirection in [:reference, :target] "Direction must be :reference, :target"
     M.forwarddirection = forwarddirection
+    return nothing
 end
 
 """
@@ -649,6 +651,7 @@ function initializemapfromsamples!(M::PolynomialMap, samples::Matrix{Float64})
 
     # re-set coefficients
     setcoefficients!(M, map_coefficients)
+    return nothing
 end
 
 """
@@ -699,6 +702,7 @@ function Base.show(io::IO, M::PolynomialMap)
     else
         print(io, "PolynomialMap(empty)")
     end
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
@@ -746,12 +750,13 @@ function Base.show(io::IO, ::MIME"text/plain", M::PolynomialMap)
     else
         println(io, "  (Empty map)")
     end
+    return nothing
 end
 
 # Check compatibility of reference densities and selected basis
 function validate_basis_reference_compatibility(basis::AbstractPolynomialBasis, reference::Distributions.UnivariateDistribution)
     # Check Hermite basis family with Gaussian reference
-    if basis isa Union{HermiteBasis,LinearizedHermiteBasis,CubicSplineHermiteBasis,GaussianWeightedHermiteBasis}
+    if basis isa Union{HermiteBasis, LinearizedHermiteBasis, CubicSplineHermiteBasis, GaussianWeightedHermiteBasis}
         if !(reference isa Normal)
             return false
         end

@@ -21,9 +21,13 @@ if isdir(LITERATE_DIR)
         dest = joinpath(OUTPUT_DIR, subdir)
         mkpath(dest)
 
-        files = sort(filter(name ->
+        files = sort(
+            filter(
+                name ->
                 !startswith(name, ".") && endswith(name, ".jl"),
-            readdir(srcdir)))
+                readdir(srcdir)
+            )
+        )
 
         for fname in files
             src = joinpath(srcdir, fname)
@@ -34,7 +38,7 @@ end
 
 makedocs(
     sitename = "TransportMaps.jl",
-    authors="Lukas Fritsch and Jan Grashorn",
+    authors = "Lukas Fritsch and Jan Grashorn",
     format = DocumenterVitepress.MarkdownVitepress(
         repo = "https://github.com/JuliaUQ/TransportMaps.jl",
     ),
@@ -65,9 +69,9 @@ makedocs(
             "Reference and Target Densities" => "api/densities.md",
             "Quadrature" => "api/quadrature.md",
             "Maps" => "api/maps.md",
-            "Optimization" => "api/optimization.md"
+            "Optimization" => "api/optimization.md",
         ],
-        "References" => "references.md"
+        "References" => "references.md",
     ],
     checkdocs = :export,
     doctestfilters = [r"Ptr{0x[0-9a-f]+}"],

@@ -31,13 +31,16 @@ println("Generated $(size(target_samples, 1)) samples")
 L = LinearMap(target_samples)
 
 M, results, selected_terms, selected_folds = optimize_adaptive_transportmap(
-    target_samples, [3, 6], 5, L, Softplus(2.))
+    target_samples, [3, 6], 5, L, Softplus(2.0)
+)
 
 ind_atm = getmultiindexsets(M.polynomialmap[2])
 
-dim = scatter(ind_atm[:, 1], ind_atm[:, 2], ms=30, legend=false)
-plot!(xlims=(-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims=(-0.5, maximum(ind_atm[:, 2]) + 0.5),
-    aspect_ratio=1, xlabel="Multi-index α₁", ylabel="Multi-index α₂")
+dim = scatter(ind_atm[:, 1], ind_atm[:, 2], ms = 30, legend = false)
+plot!(
+    xlims = (-0.5, maximum(ind_atm[:, 1]) + 0.5), ylims = (-0.5, maximum(ind_atm[:, 2]) + 0.5),
+    aspect_ratio = 1, xlabel = "Multi-index α₁", ylabel = "Multi-index α₂"
+)
 xticks!(0:maximum(ind_atm[:, 1]))
 yticks!(0:maximum(ind_atm[:, 2]))
 
@@ -46,35 +49,43 @@ norm_samples = randn(1000, 2)
 
 mapped_banana_samples = inverse(M, norm_samples)
 
-p11 = scatter(new_samples[:, 1], new_samples[:, 2],
-    label="Original Samples", alpha=0.5, color=1,
-    title="Original Banana Distribution Samples",
-    xlabel="x₁", ylabel="x₂")
+p11 = scatter(
+    new_samples[:, 1], new_samples[:, 2],
+    label = "Original Samples", alpha = 0.5, color = 1,
+    title = "Original Banana Distribution Samples",
+    xlabel = "x₁", ylabel = "x₂"
+)
 
-scatter!(p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
-    label="Mapped Samples", alpha=0.5, color=2,
-    title="Transport Map Generated Samples",
-    xlabel="x₁", ylabel="x₂")
+scatter!(
+    p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
+    label = "Mapped Samples", alpha = 0.5, color = 2,
+    title = "Transport Map Generated Samples",
+    xlabel = "x₁", ylabel = "x₂"
+)
 
-plot(p11, size=(600, 400))
+plot(p11, size = (600, 400))
 
-x₁ = range(-3, 3, length=100)
-x₂ = range(-2.5, 4.0, length=100)
+x₁ = range(-3, 3, length = 100)
+x₂ = range(-2.5, 4.0, length = 100)
 
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
 learned_density = [pullback(M, [x1, x2]) for x2 in x₂, x1 in x₁]
 
-p3 = contour(x₁, x₂, true_density,
-    title="True Banana Density",
-    xlabel="x₁", ylabel="x₂",
-    colormap=:viridis, levels=10)
+p3 = contour(
+    x₁, x₂, true_density,
+    title = "True Banana Density",
+    xlabel = "x₁", ylabel = "x₂",
+    colormap = :viridis, levels = 10
+)
 
-p4 = contour(x₁, x₂, learned_density,
-    title="Learned Density (Pullback)",
-    xlabel="x₁", ylabel="x₂",
-    colormap=:viridis, levels=10)
+p4 = contour(
+    x₁, x₂, learned_density,
+    title = "Learned Density (Pullback)",
+    xlabel = "x₁", ylabel = "x₂",
+    colormap = :viridis, levels = 10
+)
 
-plot(p3, p4, layout=(1, 2), size=(800, 400))
+plot(p3, p4, layout = (1, 2), size = (800, 400))
 
 map_index = 2  # Choose 2nd component
 best_fold = selected_folds[map_index]
@@ -83,21 +94,25 @@ res_best = results[map_index][best_fold]
 max_1 = maximum(res_best.terms[end][:, 1])
 max_2 = maximum(res_best.terms[end][:, 2])
 
-p = plot(layout=(2, 3), xlims=(-0.5, max_1 + 0.5), ylims=(-0.5, max_2 + 0.5),
-    aspect_ratio=1, xlabel="Multi-index α₁", ylabel="Multi-index α₂", legend=false,)
+p = plot(
+    layout = (2, 3), xlims = (-0.5, max_1 + 0.5), ylims = (-0.5, max_2 + 0.5),
+    aspect_ratio = 1, xlabel = "Multi-index α₁", ylabel = "Multi-index α₂", legend = false,
+)
 
 for (i, term) in enumerate(res_best.terms)
-    scatter!(p, term[:, 1], term[:, 2], ms=20, title="Iteration $i", subplot=i)
+    scatter!(p, term[:, 1], term[:, 2], ms = 20, title = "Iteration $i", subplot = i)
 end
 
 xticks!(0:max_1)
 yticks!(0:max_2)
-plot!(p, size=(800, 600))
+plot!(p, size = (800, 600))
 
-plot(res_best.train_objectives, label="Train Objective", lw=2, ls=:dash, marker=:o)
-plot!(res_best.test_objectives, label="Test Objective", lw=2, ls=:dash, marker=:o)
-plot!(xlabel="Iteration", ylabel="Objective Value",
-    title="Training and Test Objectives over Iterations")
-plot!(size=(600, 400))
+plot(res_best.train_objectives, label = "Train Objective", lw = 2, ls = :dash, marker = :o)
+plot!(res_best.test_objectives, label = "Test Objective", lw = 2, ls = :dash, marker = :o)
+plot!(
+    xlabel = "Iteration", ylabel = "Objective Value",
+    title = "Training and Test Objectives over Iterations"
+)
+plot!(size = (600, 400))
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl

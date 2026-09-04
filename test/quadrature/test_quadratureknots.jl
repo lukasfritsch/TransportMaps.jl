@@ -1,9 +1,12 @@
-using TransportMaps
-using Test
-using Distributions
-using FastGaussQuadrature
+@testsnippet QuadratureKnotsSetup begin
+    using TransportMaps
+    using Test
+    using Distributions
+    using FastGaussQuadrature
 
-@testset "Quadrature Knots" begin
+end
+
+@testitem "Quadrature Knots" setup = [QuadratureKnotsSetup] begin
     gh = GaussHermiteKnots()
     @test support(gh) == RealInterval(-Inf, Inf)
 
@@ -14,7 +17,7 @@ using FastGaussQuadrature
     for l in 1:4
         p_l, w_l = gh(l)
         n = 2^l + 1
-        p_test, w_test = gausshermite(n; normalize=true)
+        p_test, w_test = gausshermite(n; normalize = true)
         @test p_l == p_test
         @test w_l == w_test
         @test length(p_test) == n

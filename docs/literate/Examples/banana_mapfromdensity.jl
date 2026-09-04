@@ -69,10 +69,12 @@ mapped_samples = evaluate(M, samples_z)
 # Let's create a scatter plot of the mapped samples to see how well
 # our transport map approximates the banana distribution:
 
-scatter(mapped_samples[:, 1], mapped_samples[:, 2],
-    label="Mapped Samples", alpha=0.5, color=2,
-    title="Transport Map Approximation of Banana Distribution",
-    xlabel="x₁", ylabel="x₂")
+scatter(
+    mapped_samples[:, 1], mapped_samples[:, 2],
+    label = "Mapped Samples", alpha = 0.5, color = 2,
+    title = "Transport Map Approximation of Banana Distribution",
+    xlabel = "x₁", ylabel = "x₂"
+)
 #md savefig("samples-banana.svg"); nothing # hide
 # ![Banana Samples](samples-banana.svg)
 

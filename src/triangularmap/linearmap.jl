@@ -1,4 +1,3 @@
-
 """
     LinearMap <: AbstractLinearMap
 
@@ -18,8 +17,8 @@ struct LinearMap <: AbstractLinearMap
 
     # Constructor that computes mean and std from samples
     function LinearMap(samples::Matrix{Float64})
-        μ = mean(samples, dims=1)[:]
-        σ = std(samples, dims=1)[:]
+        μ = mean(samples, dims = 1)[:]
+        σ = std(samples, dims = 1)[:]
         return new(μ, σ)
     end
 
@@ -46,6 +45,7 @@ Set the mean and standard deviation parameters of the linear map.
 function setparameters!(map::LinearMap, μ::AbstractVector{<:Real}, σ::AbstractVector{<:Real})
     map.μ .= μ
     map.σ .= σ
+    return nothing
 end
 
 """
@@ -124,10 +124,12 @@ function Base.show(io::IO, L::LinearMap)
     print(io, "LinearMap($(numberdimensions(L))-dimensional, ")
     print(io, "μ: ", L.μ, ", ")
     print(io, "σ: ", L.σ, ")")
+    return nothing
 end
 
 function Base.show(io::IO, ::MIME"text/plain", L::LinearMap)
     println(io, "LinearMap with $(numberdimensions(L)) dimensions")
     println(io, "  μ: ", L.μ)
     println(io, "  σ: ", L.σ)
+    return nothing
 end

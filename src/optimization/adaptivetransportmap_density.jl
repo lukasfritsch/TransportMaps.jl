@@ -20,6 +20,10 @@ the multi-index set across all components simultaneously.
 - `basis::AbstractPolynomialBasis=LinearizedHermiteBasis()`: Polynomial basis
 - `optimizer::Optim.AbstractOptimizer=LBFGS()`: Optimization algorithm
 - `options::Optim.Options=Optim.Options()`: Optimizer options
+- `λ1::Real=0`: Strength of the smoothed L1 penalty
+- `λ2::Real=0`: Strength of the L2 penalty
+- `l1_eps::Real=1e-8`: Positive smoothing parameter for the L1 penalty
+- `interactions_only::Bool=false`: Penalize only terms involving multiple coordinates
 - `validation::Union{AbstractQuadratureWeights,Nothing}=nothing`: Quadrature rule used for validation diagnostics
 
 # Returns
@@ -27,17 +31,21 @@ the multi-index set across all components simultaneously.
 - `history::OptimizationHistory`: History of optimization iterations
 """
 function optimize_adaptive_transportmap(
-    target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights,
-    maxterms::Int;
-    initial_map::Union{Nothing,PolynomialMap}=nothing,
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-    reference_density::Distributions.UnivariateDistribution=Normal(),
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options(),
-    validation::Union{AbstractQuadratureWeights,Nothing}=nothing
-)
+        target::AbstractMapDensity,
+        quadrature::AbstractQuadratureWeights,
+        maxterms::Int;
+        initial_map::Union{Nothing, PolynomialMap} = nothing,
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+        reference_density::Distributions.UnivariateDistribution = Normal(),
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        λ1::Real = 0.0,
+        λ2::Real = 0.0,
+        l1_eps::Real = 1.0e-8,
+        interactions_only::Bool = false,
+        validation::Union{AbstractQuadratureWeights, Nothing} = nothing
+    )
     d = size(quadrature.points, 2)
 
     if isnothing(initial_map)
@@ -51,7 +59,7 @@ function optimize_adaptive_transportmap(
     end
 
     num_initial_coefficients = numbercoefficients(M)
-    println("Initialized map with $(num_initial_coefficients) initial coefficients.")
+    @debug "Initialized adaptive map" initial_coefficients = num_initial_coefficients maxterms
 
     # Initialize history tracking
     history = MapOptimizationResult(maxterms - num_initial_coefficients + 1)
@@ -60,15 +68,18 @@ function optimize_adaptive_transportmap(
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
 
     # Optimize initial map
-    res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
+    res = optimize!(
+        M, target, precomp;
+        optimizer, options, λ1, λ2, l1_eps, interactions_only,
+    )
     train_obj = Optim.minimum(res)
 
-    println("Initial KL divergence (train): $train_obj")
+    @debug "Initial training KL divergence" objective = train_obj
 
     # Perform validation if not set to nothing
     if !isnothing(validation)
         validation_obj = kldivergence(M, target, validation)
-        println("Initial KL divergence (valid): $validation_obj")
+        @debug "Initial validation KL divergence" objective = validation_obj
     else
         validation_obj = NaN
     end
@@ -84,11 +95,11 @@ function optimize_adaptive_transportmap(
     )
 
     # Greedy optimization loop
-    for iteration in (num_initial_coefficients+1):maxterms
-        println("\nTerm $iteration / $maxterms")
+    for iteration in (num_initial_coefficients + 1):maxterms
+        @debug "Starting adaptive term selection" iteration maxterms
 
         # Collect all candidate terms from reduced margins of all components
-        candidates = Vector{Tuple{Int,Vector{Int}}}()  # (component_idx, multi_index)
+        candidates = Vector{Tuple{Int, Vector{Int}}}()  # (component_idx, multi_index)
 
         for k in 1:d
             Λᵣₘᵏ = reduced_margin(getmultivariateindices(M[k]))
@@ -97,7 +108,7 @@ function optimize_adaptive_transportmap(
             end
         end
 
-        println("   Evaluating $(length(candidates)) candidates...")
+        @debug "Evaluating candidate terms" iteration candidates = length(candidates)
 
         # Evaluate all candidates by computing gradient magnitude of KL divergence
         gradient_metrics = zeros(Float64, length(candidates))
@@ -113,7 +124,7 @@ function optimize_adaptive_transportmap(
 
             # Get gradient component corresponding to the new coefficient (last one for component k)
             # Find position of new coefficient in the full coefficient vector
-            coeff_offset = k == 1 ? 0 : sum(numbercoefficients(M_cand[j]) for j in 1:(k-1))
+            coeff_offset = k == 1 ? 0 : sum(numbercoefficients(M_cand[j]) for j in 1:(k - 1))
             new_coeff_idx = coeff_offset + numbercoefficients(M_cand[k])
 
             # Use absolute value of gradient as metric
@@ -121,20 +132,22 @@ function optimize_adaptive_transportmap(
         end
 
         # Try candidates in descending order of gradient magnitude and keep the first converged one
-        sorted_candidate_indices = sortperm(gradient_metrics, rev=true)
+        sorted_candidate_indices = sortperm(gradient_metrics, rev = true)
         candidate_selected = false
 
         for cand_idx in sorted_candidate_indices
             k_cand, α_cand = candidates[cand_idx]
 
-            println("   Trying candidate: Component $k_cand")
-            println("   Gradient magnitude: $(gradient_metrics[cand_idx])")
+            @debug "Trying candidate term" iteration component = k_cand multiindex = α_cand gradient = gradient_metrics[cand_idx]
 
             M_trial = deepcopy(M)
             update_multiindexset!(M_trial, α_cand, k_cand)
 
             precomp_trial = PrecomputedMapBasis(M_trial, quadrature.points, quadrature.weights)
-            res_trial = optimize!(M_trial, target, precomp_trial, optimizer=optimizer, options=options)
+            res_trial = optimize!(
+                M_trial, target, precomp_trial;
+                optimizer, options, λ1, λ2, l1_eps, interactions_only,
+            )
 
             if Optim.converged(res_trial)
                 M = M_trial
@@ -143,23 +156,23 @@ function optimize_adaptive_transportmap(
                 candidate_selected = true
                 break
             else
-                println("   Candidate did not converge. Trying next-best candidate...")
+                @debug "Candidate did not converge" iteration component = k_cand multiindex = α_cand
             end
         end
 
         if candidate_selected
             # Compute objectives for accepted candidate
             train_obj = Optim.minimum(res)
-            println("   KL divergence (train): $train_obj")
+            @debug "Accepted adaptive term" iteration training_objective = train_obj
 
             if !isnothing(validation)
                 validation_obj = kldivergence(M, target, validation)
-                println("   KL divergence (valid): $validation_obj")
+                @debug "Validation KL divergence" iteration objective = validation_obj
             else
                 validation_obj = NaN
             end
         else
-            println("   No converged candidate found. Map remains unchanged for this iteration.")
+            @warn "No converged candidate found; map remains unchanged" iteration
             # Keep the previous objective values and optimization result in history.
         end
 
@@ -180,12 +193,10 @@ function optimize_adaptive_transportmap(
     # Select model with best KL divergence
     if !isnothing(validation)
         best_iteration = argmin(history.test_objectives)
-        println("\nBest iteration: $best_iteration")
-        println("Final KL divergence (train): $(history.train_objectives[best_iteration])")
-        println("Final KL divergence (valid): $(history.test_objectives[best_iteration])")
+        @info "Selected best adaptive map" iteration = best_iteration training_objective = history.train_objectives[best_iteration] validation_objective = history.test_objectives[best_iteration]
     else
         best_iteration = argmin(history.train_objectives)
-        println("Final KL divergence (train): $(history.train_objectives[best_iteration])")
+        @info "Selected best adaptive map" iteration = best_iteration training_objective = history.train_objectives[best_iteration]
     end
 
     # Get best map
@@ -196,10 +207,10 @@ end
 
 # Update the polynomial map with a new multi-index α in component k
 function update_multiindexset!(
-    M::PolynomialMap,
-    α::Vector{Int},
-    k::Int,
-)
+        M::PolynomialMap,
+        α::Vector{Int},
+        k::Int,
+    )
     # Get k-th component to update
     component = M[k]
     coeffs = getcoefficients(component)
@@ -211,5 +222,6 @@ function update_multiindexset!(
     # Reconstruct map component with updated multi-index set
     M.components[k] = PolynomialMapComponent(Λ, component.rectifier, getbasis(component), M.reference.densitytype)
     setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
+    return nothing
 
 end

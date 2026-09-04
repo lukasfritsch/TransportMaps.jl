@@ -45,6 +45,7 @@ end
 
 function Base.show(io::IO, ::GaussianWeightedHermiteBasis)
     print(io, "GaussianWeightedHermiteBasis()")
+    return nothing
 end
 
 

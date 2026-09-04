@@ -16,11 +16,11 @@ Numerically integrates the function `fun` over the interval `[a, b]` using the G
 
 """
 function gaussquadrature(
-    fun::Function,
-    n::Int,
-    a::Real,
-    b::Real
-)
+        fun::Function,
+        n::Int,
+        a::Real,
+        b::Real
+    )
     # Get Gauss-Legendre points and weights for the interval [-1, 1]
     (points, weights) = gausslegendre(n)
 

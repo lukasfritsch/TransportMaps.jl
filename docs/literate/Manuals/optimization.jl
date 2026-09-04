@@ -1,4 +1,3 @@
-
 # # Optimization of the Map Coefficients
 #
 # A crucial step in constructing transport maps is the optimization of the map coefficients, which determine how well the map represents the target distribution.
@@ -12,7 +11,13 @@
 # Formally, we define the following optimization problem to determine the coefficients $\boldsymbol{a}$ of the parameterized map $T$:
 # ```math
 # \min_{\boldsymbol{a}} \sum_{i=1}^{N} w_{q,i}\Big[-\log\pi\bigl(T(\boldsymbol{a},\boldsymbol{z}_{q,i})\bigr)-\log |\det\nabla T(\boldsymbol{a},\boldsymbol{z}_{q,i}) |\Big]
+# + \lambda_1 \sum_{j \in P}\sqrt{a_j^2 + \varepsilon^2}
+# + \frac{\lambda_2}{2}\sum_{j \in P}a_j^2.
 # ```
+# Here, ``P`` contains all nonlinear coefficients by default, so constant and linear
+# terms remain unpenalized. With `interactions_only=true`, ``P`` instead contains only
+# terms involving at least two coordinates. The L1 term uses the differentiable
+# approximation ``\sqrt{a_j^2 + \varepsilon^2}``, controlled by `l1_eps`.
 
 # As noted by [marzouk2016](@cite), this optimization problem is generally non-convex.
 # Specifically, it is only convex when the target density $\pi(\boldsymbol{x})$ is log-concave.
@@ -24,11 +29,16 @@
 # To perform the optimization of the map coefficients, we call:
 # ```julia
 # optimize!(M::PolynomialMap, target_density::Function, quadrature::AbstractQuadratureWeights;
-#   optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options())
+#   optimizer::Optim.AbstractOptimizer = LBFGS(), options::Optim.Options = Optim.Options(),
+#   λ1::Real = 0, λ2::Real = 0, l1_eps::Real = 1e-8,
+#   interactions_only::Bool = false)
 # ```
 
 # We have to provide the polynomial map `M`, the target density function, and a quadrature scheme.
-# Optionally, we can specify the optimizer (default is `LBFGS()`) and options.
+# Optionally, we can specify the optimizer, its options, and L1 or L2 regularization.
+# For example, `λ1=1e-3` shrinks every nonlinear term, while combining it with
+# `interactions_only=true` shrinks only mixed-coordinate terms. These keywords are
+# also available for density-based `optimize_adaptive_transportmap` calls.
 
 # !!! note "Set initial coefficients"
 #     As the starting point of the optimization, the map coefficients can be set using `setcoefficients!(M, coeffs)`, where `coeffs` is a vector of coefficients.
@@ -48,38 +58,38 @@ quadrature = GaussHermiteWeights(3, 2)
 #md nothing #hide
 
 # Set optimization options to print the trace every 20 iterations:
-opts_trace = Optim.Options(iterations=200, show_trace=true, show_every=20, store_trace=true)
+opts_trace = Optim.Options(iterations = 200, show_trace = true, show_every = 20, store_trace = true)
 
 # We will try the following optimizers from `Optim.jl`, ordered from simplest to most sophisticated:
 
 # ### Gradient Descent
 # The most basic optimization algorithm, Gradient Descent iteratively moves in the direction of the negative gradient. It is simple and robust, but can be slow to converge, especially for ill-conditioned problems.
 M_gd = PolynomialMap(2, 2)
-res_gd = optimize!(M_gd, target, quadrature; optimizer=GradientDescent(), options=opts_trace)
+res_gd = optimize!(M_gd, target, quadrature; optimizer = GradientDescent(), options = opts_trace)
 println(res_gd)
 
 # ### Conjugate Gradient
 # Conjugate Gradient improves upon basic gradient descent by using conjugate directions, which can accelerate convergence for large-scale or quadratic problems. It requires gradient information but not the Hessian.
 M_cg = PolynomialMap(2, 2)
-res_cg = optimize!(M_cg, target, quadrature; optimizer=ConjugateGradient(), options=opts_trace)
+res_cg = optimize!(M_cg, target, quadrature; optimizer = ConjugateGradient(), options = opts_trace)
 println(res_cg)
 
 # ### Nelder-Mead
 # Nelder-Mead is a derivative-free optimizer that uses a simplex of points to search for the minimum. It is useful when gradients are unavailable or unreliable, but may be less efficient for high-dimensional or smooth problems.
 M_nm = PolynomialMap(2, 2)
-res_nm = optimize!(M_nm, target, quadrature; optimizer=NelderMead(), options=opts_trace)
+res_nm = optimize!(M_nm, target, quadrature; optimizer = NelderMead(), options = opts_trace)
 println(res_nm)
 
 # ### BFGS
 # BFGS is a quasi-Newton method that builds up an approximation to the Hessian matrix using gradient evaluations. It is generally faster and more robust than gradient descent and conjugate gradient for smooth problems.
 M_bfgs = PolynomialMap(2, 2)
-res_bfgs = optimize!(M_bfgs, target, quadrature; optimizer=BFGS(), options=opts_trace)
+res_bfgs = optimize!(M_bfgs, target, quadrature; optimizer = BFGS(), options = opts_trace)
 println(res_bfgs)
 
 # ### LBFGS
 # LBFGS is a limited-memory version of BFGS, making it suitable for large-scale problems where storing the full Hessian approximation is impractical. It is the default optimizer in many scientific computing packages due to its efficiency and reliability.
 M_lbfgs = PolynomialMap(2, 2)
-res_lbfgs = optimize!(M_lbfgs, target, quadrature; optimizer=LBFGS(), options=opts_trace)
+res_lbfgs = optimize!(M_lbfgs, target, quadrature; optimizer = LBFGS(), options = opts_trace)
 println(res_lbfgs)
 
 # Finally, we can compare the results by means of variance diagnostic:
@@ -97,19 +107,31 @@ println("Variance diagnostic BFGS:              ", v_bfgs)
 println("Variance diagnostic LBFGS:             ", v_lbfgs)
 
 # We can visualize the convergence of all optimizers:
-plot([res_gd.trace[i].iteration for i in 1:length(res_gd.trace)], lw=2,
-    [res_gd.trace[i].g_norm for i in 1:length(res_gd.trace)], label="GradientDescent")
-plot!([res_cg.trace[i].iteration for i in 1:length(res_cg.trace)], lw=2,
-    [res_cg.trace[i].g_norm for i in 1:length(res_cg.trace)], label="ConjugateGradient")
-plot!([res_nm.trace[i].iteration for i in 1:length(res_nm.trace)], lw=2,
-    [res_nm.trace[i].g_norm for i in 1:length(res_nm.trace)], label="NelderMead")
-plot!([res_bfgs.trace[i].iteration for i in 1:length(res_bfgs.trace)], lw=2,
-    [res_bfgs.trace[i].g_norm for i in 1:length(res_bfgs.trace)], label="BFGS")
-plot!([res_lbfgs.trace[i].iteration for i in 1:length(res_lbfgs.trace)], lw=2,
-    [res_lbfgs.trace[i].g_norm for i in 1:length(res_lbfgs.trace)], label="LBFGS")
-plot!(xaxis=:log, yaxis=:log, xlabel="Iteration", ylabel="Gradient norm",
-    title="Convergence of different optimizers", xlims=(1, 200),
-    legend=:bottomleft)
+plot(
+    [res_gd.trace[i].iteration for i in 1:length(res_gd.trace)], lw = 2,
+    [res_gd.trace[i].g_norm for i in 1:length(res_gd.trace)], label = "GradientDescent"
+)
+plot!(
+    [res_cg.trace[i].iteration for i in 1:length(res_cg.trace)], lw = 2,
+    [res_cg.trace[i].g_norm for i in 1:length(res_cg.trace)], label = "ConjugateGradient"
+)
+plot!(
+    [res_nm.trace[i].iteration for i in 1:length(res_nm.trace)], lw = 2,
+    [res_nm.trace[i].g_norm for i in 1:length(res_nm.trace)], label = "NelderMead"
+)
+plot!(
+    [res_bfgs.trace[i].iteration for i in 1:length(res_bfgs.trace)], lw = 2,
+    [res_bfgs.trace[i].g_norm for i in 1:length(res_bfgs.trace)], label = "BFGS"
+)
+plot!(
+    [res_lbfgs.trace[i].iteration for i in 1:length(res_lbfgs.trace)], lw = 2,
+    [res_lbfgs.trace[i].g_norm for i in 1:length(res_lbfgs.trace)], label = "LBFGS"
+)
+plot!(
+    xaxis = :log, yaxis = :log, xlabel = "Iteration", ylabel = "Gradient norm",
+    title = "Convergence of different optimizers", xlims = (1, 200),
+    legend = :bottomleft
+)
 #md savefig("optimization-conv.svg"); nothing # hide
 # ![Optimization Convergence](optimization-conv.svg)
 

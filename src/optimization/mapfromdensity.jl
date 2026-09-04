@@ -1,11 +1,11 @@
 # Kullback-Leibler divergence between the polynomial map and a target density
 function kldivergence(
-    M::PolynomialMap,
-    target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights,
-)
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        quadrature::AbstractQuadratureWeights,
+    )
     # Small regularization term
-    δ = 1e-9
+    δ = 1.0e-9
 
     # Evaluate map and add small δ for regularization
     M_points = evaluate(M, quadrature.points) + δ * quadrature.points
@@ -19,13 +19,13 @@ end
 
 # Gradient of KL divergence with respect to map coefficients
 function kldivergence_gradient(
-    M::PolynomialMap,
-    target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights,
-)
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        quadrature::AbstractQuadratureWeights,
+    )
     n_coeffs = numbercoefficients(M)
     n_dims = numberdimensions(M)
-    δ = 1e-9
+    δ = 1.0e-9
 
     # Evaluate map at all quadrature points
     M_points = evaluate(M, quadrature.points) + δ * quadrature.points
@@ -52,11 +52,11 @@ end
 
 # KL divergence using precomputed basis
 function kldivergence(
-    M::PolynomialMap,
-    target::AbstractMapDensity,
-    precomp::PrecomputedMapBasis
-)
-    δ = 1e-9  # Small value to avoid log(0)
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        precomp::PrecomputedMapBasis
+    )
+    δ = 1.0e-9  # Small value to avoid log(0)
 
     # Evaluate map and add small δ for regularization
     M_points = evaluate(M, precomp) + δ * precomp.quad_points
@@ -70,13 +70,13 @@ end
 
 # Gradient of KL divergence using precomputed basis
 function kldivergence_gradient(
-    M::PolynomialMap,
-    target::AbstractMapDensity,
-    precomp::PrecomputedMapBasis
-)
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        precomp::PrecomputedMapBasis
+    )
     n_coeffs = numbercoefficients(M)
     n_dims = numberdimensions(M)
-    δ = 1e-9
+    δ = 1.0e-9
 
     # Evaluate map at all quadrature points
     M_points = evaluate(M, precomp) + δ * precomp.quad_points
@@ -101,8 +101,10 @@ function kldivergence_gradient(
 end
 
 """
-    optimize!(M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
-              optimizer, options)
+    optimize!(
+        M::PolynomialMap, target::AbstractMapDensity, quadrature::AbstractQuadratureWeights;
+        optimizer, options, λ1 = 0, λ2 = 0, l1_eps = 1.0e-8, interactions_only = false
+    )
 
 Optimize polynomial map coefficients to minimize KL divergence to a target density.
 
@@ -114,41 +116,76 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 # Keyword Arguments
 - `optimizer`: Optimizer from Optim.jl to use (default: `LBFGS()`).
 - `options`: Options passed to the optimizer (default: `Optim.Options()`).
+- `λ1::Real`: Strength of the smoothed L1 penalty (default: `0`).
+- `λ2::Real`: Strength of the L2 penalty (default: `0`).
+- `l1_eps::Real`: Positive smoothing parameter used by the L1 approximation
+  ``\\sqrt{a^2 + \\varepsilon^2}`` (default: `1e-8`).
+- `interactions_only::Bool`: If `false`, penalize all terms of total degree two or
+  greater. If `true`, penalize only terms involving at least two coordinates.
+
+Constant and linear terms are never penalized. The L1 term is differentiable and
+therefore approximates, rather than exactly equals, the L1 norm. Each penalized
+coefficient contributes `λ1 * l1_eps` at zero; this additive constant does not affect
+the minimizer.
 
 # Returns
 - Optimization result from Optim.jl. The optimized coefficients are written back into `M`.
 """
 function optimize!(
-    M::PolynomialMap,
-    target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights;
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options()
-)
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        quadrature::AbstractQuadratureWeights;
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        λ1::Real = 0.0,
+        λ2::Real = 0.0,
+        l1_eps::Real = 1.0e-8,
+        interactions_only::Bool = false,
+    )
     # Precompute basis evaluations at quadrature points
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
 
     # Call the optimized version
-    return optimize!(M, target, precomp, optimizer=optimizer, options=options)
+    return optimize!(
+        M, target, precomp;
+        optimizer = optimizer,
+        options = options,
+        λ1 = λ1,
+        λ2 = λ2,
+        l1_eps = l1_eps,
+        interactions_only = interactions_only,
+    )
 end
 
 # Optimized version using precomputed basis
 function optimize!(
-    M::PolynomialMap,
-    target::AbstractMapDensity,
-    precomp::PrecomputedMapBasis;
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options()
-)
+        M::PolynomialMap,
+        target::AbstractMapDensity,
+        precomp::PrecomputedMapBasis;
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        λ1::Real = 0.0,
+        λ2::Real = 0.0,
+        l1_eps::Real = 1.0e-8,
+        interactions_only::Bool = false,
+    )
+    @assert λ1 >= 0.0 "λ1 must be non-negative."
+    @assert λ2 >= 0.0 "λ2 must be non-negative."
+    @assert l1_eps > 0.0 "l1_eps must be strictly positive."
+
+    pen = _nonlinear_penalty_mask(M; interactions_only = interactions_only)
 
     function objective_function(a)
         setcoefficients!(M, a)
-        return kldivergence(M, target, precomp)
+        loss = kldivergence(M, target, precomp)
+        return loss + _regularization_penalty(a, pen, λ1, λ2, l1_eps)
     end
 
-    function gradient_function!(grad_storage, a)
+    function gradient_function!(g, a)
         setcoefficients!(M, a)
-        grad_storage .= kldivergence_gradient(M, target, precomp)
+        g .= kldivergence_gradient(M, target, precomp)
+        _add_regularization_gradient!(g, a, pen, λ1, λ2, l1_eps)
+        return nothing
     end
 
     initial_coefficients = getcoefficients(M)
@@ -165,10 +202,11 @@ function optimize!(
     logpdf_calls = Optim.f_calls(result) * n_quad
     grad_logpdf_calls = Optim.g_calls(result) * n_quad
 
-    @debug "Function calls" target_calls=logpdf_calls ∇target_calls=grad_logpdf_calls
+    @debug "Function calls" target_calls = logpdf_calls ∇target_calls = grad_logpdf_calls
 
     return result
 end
+
 """
     variance_diagnostic(M::PolynomialMap, target::MapTargetDensity, Z::AbstractArray{<:Real})
 
@@ -189,12 +227,47 @@ target density by the transport map.
 
 """
 function variance_diagnostic(
-    M::PolynomialMap,
-    target::MapTargetDensity,
-    Z::AbstractArray{<:Real},
-)
+        M::PolynomialMap,
+        target::MapTargetDensity,
+        Z::AbstractArray{<:Real},
+    )
     @assert size(Z, 2) == numberdimensions(M) "Z must have the same number of columns as number of map components in M"
 
     log_pushforward = logpdf(target, evaluate(M, Z)) + log.(abs.(jacobian(M, Z)))
     return 0.5 * var(log_pushforward - logpdf(M.reference, Z))
+end
+
+function _nonlinear_penalty_mask(M::PolynomialMap; interactions_only::Bool = false)
+    mask = Bool[]
+    for component in M.components
+        for α in getmultivariateindices(component)
+            total_degree = sum(α)
+            active_dims = count(>(0), α)
+
+            penalize = if interactions_only
+                active_dims >= 2
+            else
+                total_degree >= 2
+            end
+
+            push!(mask, penalize)
+        end
+    end
+    return mask
+end
+
+function _regularization_penalty(a, pen, λ1, λ2, l1_eps)
+    a_pen = a[pen]
+    l1_penalty = λ1 == 0 ? zero(eltype(a)) : λ1 * sum(
+            (sqrt(abs2(c) + l1_eps^2) for c in a_pen); init = zero(eltype(a)),
+        )
+    l2_penalty = λ2 == 0 ? zero(eltype(a)) : (λ2 / 2) * sum(abs2, a_pen; init = zero(eltype(a)))
+    return l1_penalty + l2_penalty
+end
+
+function _add_regularization_gradient!(g, a, pen, λ1, λ2, l1_eps)
+    if λ1 != 0 || λ2 != 0
+        g[pen] .+= λ1 .* a[pen] ./ sqrt.(a[pen] .^ 2 .+ l1_eps^2) .+ λ2 .* a[pen]
+    end
+    return nothing
 end
