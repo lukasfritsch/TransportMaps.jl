@@ -18,10 +18,7 @@ function create_tensor_product(nodes_sets::Vector{Vector{Float64}}, weights_sets
     d = length(nodes_sets)
     ranges = [eachindex(nodes_sets[i]) for i in 1:d]
     entries = [
-        (
-            [nodes_sets[i][idx[i]] for i in 1:d],
-            prod(weights_sets[i][idx[i]] for i in 1:d),
-        ) for idx in Iterators.product(ranges...)
+        ([nodes_sets[i][idx[i]] for i in 1:d], prod(weights_sets[i][idx[i]] for i in 1:d)) for idx in Iterators.product(ranges...)
     ]
 
     tensor_nodes = first.(entries)

@@ -33,10 +33,7 @@ end
 
     step = 1.0e-6
     finite_difference = [
-        (
-            penalty(coefficients + step * (eachindex(coefficients) .== i)) -
-                penalty(coefficients - step * (eachindex(coefficients) .== i))
-        ) / (2step)
+        (penalty(coefficients + step * (eachindex(coefficients) .== i)) - penalty(coefficients - step * (eachindex(coefficients) .== i))) / (2step)
             for i in eachindex(coefficients)
     ]
     @test gradient ≈ finite_difference atol = 1.0e-7
