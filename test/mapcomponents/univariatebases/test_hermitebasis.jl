@@ -1,9 +1,12 @@
-using TransportMaps
-using Test
-using Statistics
+@testsnippet HermiteBasisSetup begin
+    using TransportMaps
+    using Test
+    using Statistics
 
 
-@testset "HermiteBasis" begin
+end
+
+@testitem "HermiteBasis" setup = [HermiteBasisSetup] begin
     # Test first few Hermite polynomials at x = 0
     @test hermite_polynomial(0, 0.0) ≈ 1.0
     @test hermite_polynomial(1, 0.0) ≈ 0.0

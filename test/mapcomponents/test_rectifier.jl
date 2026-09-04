@@ -1,14 +1,17 @@
-using TransportMaps
-using Test
+@testsnippet RectifierSetup begin
+    using TransportMaps
+    using Test
 
-@testset "Rectifier Functions" begin
+end
+
+@testitem "Rectifier Functions" setup = [RectifierSetup] begin
     @testset "Softplus" begin
         softplus = Softplus()
 
         # Test basic functionality
         @test softplus(0.0) ≈ log(2.0)  # log(1 + exp(0)) = log(2)
-        @test softplus(-10.0) ≈ exp(-10.0) atol = 1e-7  # log(1 + exp(-10)) ≈ exp(-10) for large negative values
-        @test softplus(10.0) ≈ 10.0 atol = 1e-4  # log(1 + exp(10)) ≈ 10 for large positive values
+        @test softplus(-10.0) ≈ exp(-10.0) atol = 1.0e-7  # log(1 + exp(-10)) ≈ exp(-10) for large negative values
+        @test softplus(10.0) ≈ 10.0 atol = 1.0e-4  # log(1 + exp(10)) ≈ 10 for large positive values
 
         # Test monotonicity (should be increasing)
         @test softplus(-1.0) < softplus(0.0) < softplus(1.0)
@@ -25,8 +28,8 @@ using Test
         # Test softplus with different β values
         softplus_beta_2 = Softplus(2.0)
         @test softplus_beta_2(0.0) ≈ log(2.0) / 2.0
-        @test softplus_beta_2(-10.0) ≈ exp(-20.0) / 2.0 atol = 1e-9
-        @test softplus_beta_2(10.0) ≈ 10.0 atol = 1e-4
+        @test softplus_beta_2(-10.0) ≈ exp(-20.0) / 2.0 atol = 1.0e-9
+        @test softplus_beta_2(10.0) ≈ 10.0 atol = 1.0e-4
 
     end
 
@@ -41,7 +44,7 @@ using Test
 
         # Test continuity at ξ = 0
         @test shifted_elu(0.0) ≈ 1.0
-        @test abs(shifted_elu(1e-10) - shifted_elu(-1e-10)) < 1e-9
+        @test abs(shifted_elu(1.0e-10) - shifted_elu(-1.0e-10)) < 1.0e-9
 
         # Test monotonicity (should be increasing)
         @test shifted_elu(-2.0) < shifted_elu(-1.0) < shifted_elu(0.0) < shifted_elu(1.0) < shifted_elu(2.0)

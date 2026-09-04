@@ -103,7 +103,7 @@ function multivariate_conditional_density(M::PolynomialMap, x::AbstractVector{<:
 
     # Multiply by conditional densities for subsequent variables
     for k in 2:d
-        x_given_k = x[1:k-1]
+        x_given_k = x[1:(k - 1)]
         x_range_k = x[k]
         density *= conditional_density(M, x_range_k, x_given_k)
     end
@@ -132,7 +132,7 @@ function multivariate_conditional_density(M::PolynomialMap, x_range::AbstractVec
 
     # Multiply by conditional densities for subsequent variables in the range
     for i in 2:length(x_range)
-        x_given_i = x_full[1:j+i-2]  # x₁, ..., xⱼ₊ᵢ₋₂
+        x_given_i = x_full[1:(j + i - 2)]  # x₁, ..., xⱼ₊ᵢ₋₂
         x_range_i = x_range[i]
         density *= conditional_density(M, x_range_i, x_given_i)
     end

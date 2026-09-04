@@ -44,7 +44,7 @@ Evaluate derivative of `GaussianWeightedHermiteBasis` with degree `αᵢ` at `z�
 end
 
 function Base.show(io::IO, ::GaussianWeightedHermiteBasis)
-    print(io, "GaussianWeightedHermiteBasis()")
+    return print(io, "GaussianWeightedHermiteBasis()")
 end
 
 

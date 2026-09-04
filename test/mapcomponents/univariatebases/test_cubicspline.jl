@@ -1,8 +1,11 @@
-using TransportMaps
-using Test
-using Distributions
+@testsnippet CubicSplineBasisSetup begin
+    using TransportMaps
+    using Test
+    using Distributions
 
-@testset "CubicSplineHermiteBasis" begin
+end
+
+@testitem "CubicSplineHermiteBasis" setup = [CubicSplineBasisSetup] begin
     # Default constructor
     cs_default = CubicSplineHermiteBasis()
     @test isa(cs_default.radius, Float64)

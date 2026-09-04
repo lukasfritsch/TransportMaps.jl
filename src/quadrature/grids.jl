@@ -31,8 +31,8 @@ end
 
 # Combine duplicate nodes to get reduced sparse grid
 function combine_duplicate_nodes(
-    nodes::Vector{Vector{Float64}}, weights::Vector{Float64}, tol::Float64=1e-14
-)
+        nodes::Vector{Vector{Float64}}, weights::Vector{Float64}, tol::Float64 = 1.0e-14
+    )
     unique_nodes = Vector{Vector{Float64}}()
     combined_weights = Float64[]
 
@@ -51,8 +51,8 @@ end
 
 # Generate (sparse) Smolyak grid
 function smolyak_points(
-    d::Int, level::Int, basis::AbstractQuadratureKnots, sparse::Bool=true; tol::Float64=1e-14
-)
+        d::Int, level::Int, basis::AbstractQuadratureKnots, sparse::Bool = true; tol::Float64 = 1.0e-14
+    )
     all_nodes = Vector{Vector{Float64}}()
     all_weights = Float64[]
 
@@ -92,8 +92,8 @@ end
 
 # Generate full-order tensor-product grid at a fixed 1D level
 function full_tensor_points(
-    d::Int, level::Int, basis::AbstractQuadratureKnots; tol::Float64=eps(Float64)
-)
+        d::Int, level::Int, basis::AbstractQuadratureKnots; tol::Float64 = eps(Float64)
+    )
     rules_1d = [basis(level) for _ in 1:d]
     nodes_1d = first.(rules_1d)
     weights_1d = last.(rules_1d)

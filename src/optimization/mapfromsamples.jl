@@ -1,6 +1,5 @@
-
 # Objective for optimization of component coefficients from samples
-function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64}) where {T<:AbstractHermiteBasis}
+function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64}) where {T <: AbstractHermiteBasis}
 
     # Evaluate map component Mk and its partial derivative w.r.t. xk
     Mₖ = evaluate(component, samples)
@@ -13,7 +12,7 @@ function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64
 end
 
 # Objective for optimization using precomputed basis evaluations
-function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:AbstractHermiteBasis}
+function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T <: AbstractHermiteBasis}
     # Get current coefficients
     c = component.coefficients
 
@@ -29,7 +28,7 @@ function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBas
 end
 
 # Gradient of objective for optimization of component coefficients from samples
-function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) where {T<:AbstractHermiteBasis}
+function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) where {T <: AbstractHermiteBasis}
     # Analytical gradient of objective w.r.t. coefficients c of component Mk
     # Objective per sample: J(z) = 0.5 * Mₖ(z)^2 - log|∂Mₖ/∂zₖ(z)|
     # ∂J/∂c = Mₖ * ∂Mₖ/∂c - (1 / (∂Mₖ/∂zₖ)) * ∂(∂Mₖ/∂zₖ)/∂c
@@ -62,7 +61,7 @@ function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) 
 end
 
 # Gradient of objective using precomputed basis evaluations
-function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:AbstractHermiteBasis}
+function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T <: AbstractHermiteBasis}
     # Analytical gradient of objective w.r.t. coefficients c
     # Objective: J = Σᵢ [0.5 * Mᵏ(zⁱ)² - log|∂Mᵏ/∂zₖ(zⁱ)|]
     # where Mᵏ(z) = f₀(z) + ∫₀^{z_k} g(∂f/∂x_k) dx_k
@@ -122,15 +121,15 @@ function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::Precomputed
 end
 
 # For uniform reference
-function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64}) where {T<:AbstractLegendreBasis}
+function objective(component::PolynomialMapComponent{T}, samples::Matrix{Float64}) where {T <: AbstractLegendreBasis}
     return -sum(log.(abs.(partial_derivative_zk(component, samples))))
 end
 
-function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:AbstractLegendreBasis}
+function objective(component::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T <: AbstractLegendreBasis}
     return -sum(log.(abs.(evaluate_∂M(precomp, component.coefficients, component.rectifier))))
 end
 
-function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) where {T<:AbstractLegendreBasis}
+function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) where {T <: AbstractLegendreBasis}
     # Analytical gradient of objective w.r.t. coefficients c of component Mk
     # Objective per sample: J(z) = - log|∂Mₖ/∂zₖ(z)|
     # ∂J/∂c = - (1 / (∂Mₖ/∂zₖ)) * ∂(∂Mₖ/∂zₖ)/∂c
@@ -158,7 +157,7 @@ function objective_gradient!(Mk::PolynomialMapComponent{T}, X::Matrix{Float64}) 
     return grad
 end
 
-function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T<:AbstractLegendreBasis}
+function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::PrecomputedBasis) where {T <: AbstractLegendreBasis}
     # Objective: J = -Σᵢ log|∂Mᵏ/∂zₖ(zⁱ)|
     # Gradient: ∂J/∂c = -Σᵢ (1 / ∂Mᵏ/∂zₖ(zⁱ)) * ∂(∂Mᵏ/∂zₖ(zⁱ))/∂c
 
@@ -187,10 +186,12 @@ function objective_gradient!(Mk::PolynomialMapComponent{T}, precomp::Precomputed
 end
 
 """
-    optimize!(M::PolynomialMap, samples::Matrix{Float64}, lm::AbstractLinearMap=LinearMap();
-              optimizer::Optim.AbstractOptimizer = LBFGS(),
-              options::Optim.Options = Optim.Options(),
-              test_fraction::Float64 = 0.0)
+    optimize!(
+        M::PolynomialMap, samples::Matrix{Float64}, lm::AbstractLinearMap = LinearMap();
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        test_fraction::Float64 = 0.0
+    )
 
 Optimize polynomial map coefficients to minimize KL divergence to a target density.
 
@@ -208,13 +209,13 @@ Optimize polynomial map coefficients to minimize KL divergence to a target densi
 - `OptimizationResult`: Optimization results containing training and test objectives for each component. The optimized coefficients are written back into `M`.
 """
 function optimize!(
-    M::PolynomialMap,
-    samples::Matrix{Float64},
-    lm::AbstractLinearMap=LinearMap();
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options(),
-    test_fraction::Float64=0.0,
-)
+        M::PolynomialMap,
+        samples::Matrix{Float64},
+        lm::AbstractLinearMap = LinearMap();
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        test_fraction::Float64 = 0.0,
+    )
     @assert size(samples, 2) == numberdimensions(M) "Samples must have the same number of columns as number of map components in M"
     # Standardize samples using linear map
     samples = evaluate(lm, samples)
@@ -241,7 +242,7 @@ function optimize!(
 
         # Compute validation objective using precomputed basis
         train_obj = objective(component, train_precomp) / size(train_samples, 1)
-        test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.
+        test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.0
 
         update_optimization_result!(results, k, train_obj, test_obj, res)
     end
@@ -251,11 +252,11 @@ end
 
 # Optimize a single map component (original interface, for backwards compatibility)
 function optimize!(
-    component::PolynomialMapComponent,
-    samples::Matrix{Float64},
-    optimizer::Optim.AbstractOptimizer,
-    options::Optim.Options
-)
+        component::PolynomialMapComponent,
+        samples::Matrix{Float64},
+        optimizer::Optim.AbstractOptimizer,
+        options::Optim.Options
+    )
     # Precompute basis evaluations
     precomp = PrecomputedBasis(component, samples)
 
@@ -265,11 +266,11 @@ end
 
 # Optimize a single map component using precomputed basis
 function optimize!(
-    component::PolynomialMapComponent,
-    precomp::PrecomputedBasis,
-    optimizer::Optim.AbstractOptimizer,
-    options::Optim.Options
-)
+        component::PolynomialMapComponent,
+        precomp::PrecomputedBasis,
+        optimizer::Optim.AbstractOptimizer,
+        options::Optim.Options
+    )
 
     obj_fun = c -> begin
         setcoefficients!(component, c)
@@ -307,7 +308,7 @@ function _test_train_split(samples::Matrix{Float64}, test_fraction::Float64)
     if n_test > 0
         idx = randperm(n_points)
         test_idx = idx[1:n_test]
-        train_idx = idx[n_test+1:end]
+        train_idx = idx[(n_test + 1):end]
     end
 
     train_samples = samples[train_idx, :]

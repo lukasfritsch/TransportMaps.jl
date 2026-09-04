@@ -1,11 +1,14 @@
-using TransportMaps
-using Test
-using Random
-using Distributions
-using Optim
-using Statistics
+@testsnippet AdaptiveTransportMapSetup begin
+    using TransportMaps
+    using Test
+    using Random
+    using Distributions
+    using Optim
+    using Statistics
 
-@testset "Adaptive Transport Map" begin
+end
+
+@testitem "Adaptive Transport Map" setup = [AdaptiveTransportMapSetup] begin
     # Set random seed for reproducibility
     Random.seed!(42)
 
@@ -16,13 +19,13 @@ using Statistics
 
     @testset "Basic ATM Construction and Optimization" begin
         maxterms = [2, 2]  # 2 terms max for each component
-        opts = Optim.Options(iterations=10)  # Few iterations for fast testing
+        opts = Optim.Options(iterations = 10)  # Few iterations for fast testing
 
         M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
-            optimizer=LBFGS(),
-            options=opts
+            optimizer = LBFGS(),
+            options = opts
         )
 
         # Check that we get a PolynomialMap back
@@ -39,13 +42,13 @@ using Statistics
 
     @testset "History Tracking" begin
         maxterms = [2, 2]
-        opts = Optim.Options(iterations=5)
+        opts = Optim.Options(iterations = 5)
 
         M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
-            optimizer=LBFGS(),
-            options=opts
+            optimizer = LBFGS(),
+            options = opts
         )
 
         for (k, history) in enumerate(histories)
@@ -63,14 +66,14 @@ using Statistics
     @testset "Train/Test Split" begin
         maxterms = [2, 2]
         test_fraction = 0.2
-        opts = Optim.Options(iterations=5)
+        opts = Optim.Options(iterations = 5)
 
         M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
-            test_fraction=test_fraction,
-            optimizer=LBFGS(),
-            options=opts
+            test_fraction = test_fraction,
+            optimizer = LBFGS(),
+            options = opts
         )
 
         for history in histories
@@ -83,7 +86,7 @@ using Statistics
     @testset "Different Basis Functions and Rectifiers" begin
         maxterms = [2]  # 1D only for faster testing
         samples_1d = samples[:, 1:1]
-        opts = Optim.Options(iterations=5)
+        opts = Optim.Options(iterations = 5)
 
         # Test with LinearizedHermiteBasis (default)
         M1, h1 = optimize_adaptive_transportmap(
@@ -92,8 +95,8 @@ using Statistics
             LinearMap(),
             Softplus(),
             LinearizedHermiteBasis(),
-            optimizer=LBFGS(),
-            options=opts
+            optimizer = LBFGS(),
+            options = opts
         )
         @test M1 isa ComposedMap
         @test M1.polynomialmap isa PolynomialMap
@@ -106,8 +109,8 @@ using Statistics
             LinearMap(),
             ShiftedELU(),
             HermiteBasis(),
-            optimizer=LBFGS(),
-            options=opts
+            optimizer = LBFGS(),
+            options = opts
         )
         @test M2 isa ComposedMap
         @test M2.polynomialmap isa PolynomialMap
@@ -116,13 +119,13 @@ using Statistics
 
     @testset "Map Evaluation" begin
         maxterms = [2, 2]
-        opts = Optim.Options(iterations=5)
+        opts = Optim.Options(iterations = 5)
 
         M, histories = optimize_adaptive_transportmap(
             samples,
             maxterms;
-            optimizer=LBFGS(),
-            options=opts
+            optimizer = LBFGS(),
+            options = opts
         )
 
         # Evaluate the map on test samples
@@ -136,14 +139,14 @@ using Statistics
     @testset "K-Fold Cross Validation" begin
         maxterms = [2, 3]
         k_folds = 3
-        opts = Optim.Options(iterations=5)
+        opts = Optim.Options(iterations = 5)
 
         M, fold_histories, selected_terms = optimize_adaptive_transportmap(
             samples,
             maxterms,
             k_folds;
-            optimizer=LBFGS(),
-            options=opts,
+            optimizer = LBFGS(),
+            options = opts,
         )
 
         @test M isa ComposedMap

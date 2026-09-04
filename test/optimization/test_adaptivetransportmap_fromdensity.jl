@@ -1,9 +1,13 @@
-using TransportMaps
-using Test
-using Distributions
-using Optim
+@testsnippet AdaptiveTransportMapDensitySetup begin
+    using TransportMaps
+    using Test
+    using Distributions
+    using Optim
+    using Random
 
-@testset "Adaptive Transport Map from density" begin
+end
+
+@testitem "Adaptive Transport Map from density" setup = [AdaptiveTransportMapDensitySetup] begin
 
     # Define target and quadrature
     logtarget(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1]^2)
@@ -19,8 +23,10 @@ using Optim
     end
 
     @testset "Validation" begin
-        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms;
-            validation=LatinHypercubeWeights(10, 2))
+        T, hist = optimize_adaptive_transportmap(
+            target, quadrature, maxterms;
+            validation = LatinHypercubeWeights(10, 2)
+        )
 
         @test numbercoefficients(T) <= maxterms
         @test !iszero(hist.test_objectives[1])
@@ -30,8 +36,9 @@ using Optim
         T_init = DiagonalMap(2, 1)
         maxterms_exact = numbercoefficients(T_init)
 
-        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms_exact;
-            initial_map=T_init
+        T, hist = optimize_adaptive_transportmap(
+            target, quadrature, maxterms_exact;
+            initial_map = T_init
         )
         @test numbercoefficients(T) == maxterms_exact
         @test T.forwarddirection == :target
@@ -40,23 +47,27 @@ using Optim
         rng = MersenneTwister(123)
         TransportMaps.initializemapfromsamples!(T_init_reference, randn(rng, 10, 2))
         @test T_init_reference.forwarddirection == :reference
-        T_reference, _ = optimize_adaptive_transportmap(target, quadrature, maxterms;
-            initial_map=T_init_reference
+        T_reference, _ = optimize_adaptive_transportmap(
+            target, quadrature, maxterms;
+            initial_map = T_init_reference
         )
         @test T_reference.forwarddirection == :target
 
         @test_throws AssertionError optimize_adaptive_transportmap(
-            target, quadrature, maxterms; initial_map=PolynomialMap(2, 2))
+            target, quadrature, maxterms; initial_map = PolynomialMap(2, 2)
+        )
     end
 
     @testset "Options" begin
         rectifier = ShiftedELU()
         basis = HermiteBasis()
         optimizer = BFGS()
-        options = Optim.Options(iterations=10)
+        options = Optim.Options(iterations = 10)
 
-        T, hist = optimize_adaptive_transportmap(target, quadrature, maxterms;
-            rectifier=rectifier, basis=basis, optimizer=optimizer, options=options)
+        T, hist = optimize_adaptive_transportmap(
+            target, quadrature, maxterms;
+            rectifier = rectifier, basis = basis, optimizer = optimizer, options = options
+        )
 
         @test basistype(T[1].basisfunctions[1]) == typeof(basis)
         @test T[1].rectifier == rectifier

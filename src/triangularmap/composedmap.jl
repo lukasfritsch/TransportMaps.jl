@@ -1,5 +1,5 @@
 """
-    ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
+    ComposedMap{T <: AbstractLinearMap} <: AbstractComposedMap
 
 A composed transport map consisting of a linear map followed by a polynomial map.
 
@@ -13,7 +13,7 @@ polynomial map. The linear map can be a `LinearMap` or `LaplaceMap`.
 # Constructors
 - `ComposedMap(lm::AbstractLinearMap, pm::PolynomialMap)`
 """
-struct ComposedMap{T<:AbstractLinearMap} <: AbstractComposedMap
+struct ComposedMap{T <: AbstractLinearMap} <: AbstractComposedMap
     linearmap::T
     polynomialmap::PolynomialMap
 
@@ -34,7 +34,7 @@ end
 
 Evaluate the composed map: S(x) = M(L(x)).
 """
-function evaluate(C::ComposedMap{T}, x::AbstractVector{<:Real}) where T<:AbstractLinearMap
+function evaluate(C::ComposedMap{T}, x::AbstractVector{<:Real}) where {T <: AbstractLinearMap}
     y = evaluate(C.linearmap, x)
     return evaluate(C.polynomialmap, y)
 end
@@ -44,7 +44,7 @@ end
 
 Evaluate the composed map for multiple points (row-wise).
 """
-function evaluate(C::ComposedMap{T}, X::AbstractMatrix{<:Real}) where T<:AbstractLinearMap
+function evaluate(C::ComposedMap{T}, X::AbstractMatrix{<:Real}) where {T <: AbstractLinearMap}
     Y = evaluate(C.linearmap, X)
     return evaluate(C.polynomialmap, Y)
 end
@@ -54,7 +54,7 @@ end
 
 Invert the composed map: S⁻¹(z) = L⁻¹(M⁻¹(z)).
 """
-function inverse(C::ComposedMap{T}, z::AbstractVector{<:Real}) where T<:AbstractLinearMap
+function inverse(C::ComposedMap{T}, z::AbstractVector{<:Real}) where {T <: AbstractLinearMap}
     y = inverse(C.polynomialmap, z)
     return inverse(C.linearmap, y)
 end
@@ -64,7 +64,7 @@ end
 
 Invert the composed map for multiple points (row-wise).
 """
-function inverse(C::ComposedMap{T}, Z::AbstractMatrix{<:Real}) where T<:AbstractLinearMap
+function inverse(C::ComposedMap{T}, Z::AbstractMatrix{<:Real}) where {T <: AbstractLinearMap}
     Y = inverse(C.polynomialmap, Z)
     return inverse(C.linearmap, Y)
 end
@@ -74,7 +74,7 @@ end
 
 Compute the pullback density: π(S(x)) * |det(∇S(x))|.
 """
-function pullback(C::ComposedMap{T}, x::AbstractVector{<:Real}) where T<:AbstractLinearMap
+function pullback(C::ComposedMap{T}, x::AbstractVector{<:Real}) where {T <: AbstractLinearMap}
     y = evaluate(C.linearmap, x)
     return pullback(C.polynomialmap, y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
@@ -84,7 +84,7 @@ end
 
 Compute the pullback density for multiple points (row-wise).
 """
-function pullback(C::ComposedMap{T}, X::AbstractMatrix{<:Real}) where T<:AbstractLinearMap
+function pullback(C::ComposedMap{T}, X::AbstractMatrix{<:Real}) where {T <: AbstractLinearMap}
     Y = evaluate(C.linearmap, X)
     return pullback(C.polynomialmap, Y) ./ jacobian(C.linearmap)  # Adjust for map scaling
 end
@@ -94,17 +94,17 @@ end
 
 Return the number of dimensions of the composed map.
 """
-numberdimensions(C::ComposedMap{T}) where T<:AbstractLinearMap = numberdimensions(C.linearmap)
+numberdimensions(C::ComposedMap{T}) where {T <: AbstractLinearMap} = numberdimensions(C.linearmap)
 
-function Base.show(io::IO, C::ComposedMap{T}) where T<:AbstractLinearMap
+function Base.show(io::IO, C::ComposedMap{T}) where {T <: AbstractLinearMap}
     print(io, "ComposedMap{$(T)}(")
     print(io, "linearmap=$(C.linearmap), ")
     print(io, "polynomialmap=$(C.polynomialmap)")
-    print(io, ")")
+    return print(io, ")")
 end
 
-function Base.show(io::IO, ::MIME"text/plain", C::ComposedMap{T}) where T<:AbstractLinearMap
+function Base.show(io::IO, ::MIME"text/plain", C::ComposedMap{T}) where {T <: AbstractLinearMap}
     println(io, "ComposedMap{$(T)} with $(numberdimensions(C)) dimensions:")
     println(io, " linearmap: ", C.linearmap)
-    println(io, " polynomialmap: ", C.polynomialmap)
+    return println(io, " polynomialmap: ", C.polynomialmap)
 end

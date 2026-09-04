@@ -1,9 +1,12 @@
-using TransportMaps
-using Test
-using Random
-using LinearAlgebra
+@testsnippet MultithreadingSetup begin
+    using TransportMaps
+    using Test
+    using Random
+    using LinearAlgebra
 
-@testset "Multithreading Support" begin
+end
+
+@testitem "Multithreading Support" setup = [MultithreadingSetup] begin
     Random.seed!(42)
 
     @testset "Forward Evaluation" begin
@@ -27,7 +30,7 @@ using LinearAlgebra
         # Test consistency between single and matrix evaluation
         for i in 1:n_points
             individual_result = evaluate(M, Z_matrix[i, :])
-            @test isapprox(individual_result, results_matrix[i, :], atol=1e-12)
+            @test isapprox(individual_result, results_matrix[i, :], atol = 1.0e-12)
         end
     end
 
@@ -53,7 +56,7 @@ using LinearAlgebra
         # Test consistency
         for i in 1:n_points
             individual_jac = jacobian(M, Z_matrix[i, :])
-            @test isapprox(individual_jac, jacs_matrix[i], atol=1e-10)
+            @test isapprox(individual_jac, jacs_matrix[i], atol = 1.0e-10)
         end
     end
 
@@ -80,12 +83,12 @@ using LinearAlgebra
         # Test round-trip accuracy
         for i in 1:n_points
             round_trip_error = norm(Z_recovered_matrix[i, :] - Z_original[i, :])
-            @test round_trip_error < 1e-6  # Should be very small for good maps
+            @test round_trip_error < 1.0e-6  # Should be very small for good maps
         end
 
         # Test consistency between single and matrix inverse
         individual_inverse = inverse(M, x_single)
-        @test isapprox(individual_inverse, Z_recovered_matrix[1, :], atol=1e-10)
+        @test isapprox(individual_inverse, Z_recovered_matrix[1, :], atol = 1.0e-10)
     end
 
     @testset "Density Functions" begin
@@ -116,7 +119,7 @@ using LinearAlgebra
 
             # Test consistency
             individual_pf = pushforward(M, target, z_single)
-            @test isapprox(individual_pf, pfs_matrix[1], atol=1e-12)
+            @test isapprox(individual_pf, pfs_matrix[1], atol = 1.0e-12)
         end
 
         @testset "Pullback" begin
@@ -135,7 +138,7 @@ using LinearAlgebra
 
             # Test consistency
             individual_pb = pullback(M, x_single)
-            @test isapprox(individual_pb, pbs_matrix[1], atol=1e-12)
+            @test isapprox(individual_pb, pbs_matrix[1], atol = 1.0e-12)
         end
     end
 
@@ -162,7 +165,7 @@ using LinearAlgebra
 
         # Test consistency
         individual_inv_jac = inverse_jacobian(M, x_single)
-        @test isapprox(individual_inv_jac, inv_jacs_matrix[1], atol=1e-10)
+        @test isapprox(individual_inv_jac, inv_jacs_matrix[1], atol = 1.0e-10)
 
         # Test relationship: inv_jac(M, x) * jac(M, inv(M, x)) ≈ 1
         for i in 1:min(3, n_points)  # Test first few points
@@ -170,7 +173,7 @@ using LinearAlgebra
             z = inverse(M, x)
             inv_jac = inverse_jacobian(M, x)
             jac = jacobian(M, z)
-            @test isapprox(inv_jac * jac, 1.0, atol=1e-8)
+            @test isapprox(inv_jac * jac, 1.0, atol = 1.0e-8)
         end
     end
 
@@ -196,7 +199,7 @@ using LinearAlgebra
 
         # Test consistency
         individual_grad = gradient_zk(M, z_single)
-        @test isapprox(individual_grad, grads_matrix[1, :], atol=1e-12)
+        @test isapprox(individual_grad, grads_matrix[1, :], atol = 1.0e-12)
     end
 
     @testset "Dimension Mismatch Errors" begin

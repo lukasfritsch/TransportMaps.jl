@@ -1,12 +1,15 @@
-using TransportMaps
-using Test
-using Random
+@testsnippet MapFromSamplesSetup begin
+    using TransportMaps
+    using Test
+    using Random
 
-@testset "Map from Samples" begin
+end
+
+@testitem "Map from Samples" setup = [MapFromSamplesSetup] begin
 
     Random.seed!(789)
 
-    banana_density = function(x)
+    banana_density = function (x)
         return exp(-0.5 * x[1]^2) * exp(-0.5 * (x[2] - x[1]^2)^2)
     end
 
@@ -41,7 +44,7 @@ using Random
 
     samples_new = generate_banana_samples(100)
     M2 = PolynomialMap(2, 2)
-    result2 = optimize!(M2, samples_new, test_fraction=0.3)
+    result2 = optimize!(M2, samples_new, test_fraction = 0.3)
 
     @test result2.optimization_results[1].iterations > 0  # Check that optimization ran
     @test isfinite(result2.optimization_results[1].minimum)

@@ -27,17 +27,17 @@ the multi-index set across all components simultaneously.
 - `history::OptimizationHistory`: History of optimization iterations
 """
 function optimize_adaptive_transportmap(
-    target::AbstractMapDensity,
-    quadrature::AbstractQuadratureWeights,
-    maxterms::Int;
-    initial_map::Union{Nothing,PolynomialMap}=nothing,
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis(),
-    reference_density::Distributions.UnivariateDistribution=Normal(),
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options(),
-    validation::Union{AbstractQuadratureWeights,Nothing}=nothing
-)
+        target::AbstractMapDensity,
+        quadrature::AbstractQuadratureWeights,
+        maxterms::Int;
+        initial_map::Union{Nothing, PolynomialMap} = nothing,
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis(),
+        reference_density::Distributions.UnivariateDistribution = Normal(),
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        validation::Union{AbstractQuadratureWeights, Nothing} = nothing
+    )
     d = size(quadrature.points, 2)
 
     if isnothing(initial_map)
@@ -51,7 +51,7 @@ function optimize_adaptive_transportmap(
     end
 
     num_initial_coefficients = numbercoefficients(M)
-    @debug "Initialized adaptive map" initial_coefficients=num_initial_coefficients maxterms
+    @debug "Initialized adaptive map" initial_coefficients = num_initial_coefficients maxterms
 
     # Initialize history tracking
     history = MapOptimizationResult(maxterms - num_initial_coefficients + 1)
@@ -60,15 +60,15 @@ function optimize_adaptive_transportmap(
     precomp = PrecomputedMapBasis(M, quadrature.points, quadrature.weights)
 
     # Optimize initial map
-    res = optimize!(M, target, precomp, optimizer=optimizer, options=options)
+    res = optimize!(M, target, precomp, optimizer = optimizer, options = options)
     train_obj = Optim.minimum(res)
 
-    @debug "Initial training KL divergence" objective=train_obj
+    @debug "Initial training KL divergence" objective = train_obj
 
     # Perform validation if not set to nothing
     if !isnothing(validation)
         validation_obj = kldivergence(M, target, validation)
-        @debug "Initial validation KL divergence" objective=validation_obj
+        @debug "Initial validation KL divergence" objective = validation_obj
     else
         validation_obj = NaN
     end
@@ -84,11 +84,11 @@ function optimize_adaptive_transportmap(
     )
 
     # Greedy optimization loop
-    for iteration in (num_initial_coefficients+1):maxterms
+    for iteration in (num_initial_coefficients + 1):maxterms
         @debug "Starting adaptive term selection" iteration maxterms
 
         # Collect all candidate terms from reduced margins of all components
-        candidates = Vector{Tuple{Int,Vector{Int}}}()  # (component_idx, multi_index)
+        candidates = Vector{Tuple{Int, Vector{Int}}}()  # (component_idx, multi_index)
 
         for k in 1:d
             Λᵣₘᵏ = reduced_margin(getmultivariateindices(M[k]))
@@ -97,7 +97,7 @@ function optimize_adaptive_transportmap(
             end
         end
 
-        @debug "Evaluating candidate terms" iteration candidates=length(candidates)
+        @debug "Evaluating candidate terms" iteration candidates = length(candidates)
 
         # Evaluate all candidates by computing gradient magnitude of KL divergence
         gradient_metrics = zeros(Float64, length(candidates))
@@ -113,7 +113,7 @@ function optimize_adaptive_transportmap(
 
             # Get gradient component corresponding to the new coefficient (last one for component k)
             # Find position of new coefficient in the full coefficient vector
-            coeff_offset = k == 1 ? 0 : sum(numbercoefficients(M_cand[j]) for j in 1:(k-1))
+            coeff_offset = k == 1 ? 0 : sum(numbercoefficients(M_cand[j]) for j in 1:(k - 1))
             new_coeff_idx = coeff_offset + numbercoefficients(M_cand[k])
 
             # Use absolute value of gradient as metric
@@ -121,19 +121,19 @@ function optimize_adaptive_transportmap(
         end
 
         # Try candidates in descending order of gradient magnitude and keep the first converged one
-        sorted_candidate_indices = sortperm(gradient_metrics, rev=true)
+        sorted_candidate_indices = sortperm(gradient_metrics, rev = true)
         candidate_selected = false
 
         for cand_idx in sorted_candidate_indices
             k_cand, α_cand = candidates[cand_idx]
 
-            @debug "Trying candidate term" iteration component=k_cand multiindex=α_cand gradient=gradient_metrics[cand_idx]
+            @debug "Trying candidate term" iteration component = k_cand multiindex = α_cand gradient = gradient_metrics[cand_idx]
 
             M_trial = deepcopy(M)
             update_multiindexset!(M_trial, α_cand, k_cand)
 
             precomp_trial = PrecomputedMapBasis(M_trial, quadrature.points, quadrature.weights)
-            res_trial = optimize!(M_trial, target, precomp_trial, optimizer=optimizer, options=options)
+            res_trial = optimize!(M_trial, target, precomp_trial, optimizer = optimizer, options = options)
 
             if Optim.converged(res_trial)
                 M = M_trial
@@ -142,18 +142,18 @@ function optimize_adaptive_transportmap(
                 candidate_selected = true
                 break
             else
-                @debug "Candidate did not converge" iteration component=k_cand multiindex=α_cand
+                @debug "Candidate did not converge" iteration component = k_cand multiindex = α_cand
             end
         end
 
         if candidate_selected
             # Compute objectives for accepted candidate
             train_obj = Optim.minimum(res)
-            @debug "Accepted adaptive term" iteration training_objective=train_obj
+            @debug "Accepted adaptive term" iteration training_objective = train_obj
 
             if !isnothing(validation)
                 validation_obj = kldivergence(M, target, validation)
-                @debug "Validation KL divergence" iteration objective=validation_obj
+                @debug "Validation KL divergence" iteration objective = validation_obj
             else
                 validation_obj = NaN
             end
@@ -179,10 +179,10 @@ function optimize_adaptive_transportmap(
     # Select model with best KL divergence
     if !isnothing(validation)
         best_iteration = argmin(history.test_objectives)
-        @info "Selected best adaptive map" iteration=best_iteration training_objective=history.train_objectives[best_iteration] validation_objective=history.test_objectives[best_iteration]
+        @info "Selected best adaptive map" iteration = best_iteration training_objective = history.train_objectives[best_iteration] validation_objective = history.test_objectives[best_iteration]
     else
         best_iteration = argmin(history.train_objectives)
-        @info "Selected best adaptive map" iteration=best_iteration training_objective=history.train_objectives[best_iteration]
+        @info "Selected best adaptive map" iteration = best_iteration training_objective = history.train_objectives[best_iteration]
     end
 
     # Get best map
@@ -193,10 +193,10 @@ end
 
 # Update the polynomial map with a new multi-index α in component k
 function update_multiindexset!(
-    M::PolynomialMap,
-    α::Vector{Int},
-    k::Int,
-)
+        M::PolynomialMap,
+        α::Vector{Int},
+        k::Int,
+    )
     # Get k-th component to update
     component = M[k]
     coeffs = getcoefficients(component)
@@ -207,6 +207,6 @@ function update_multiindexset!(
 
     # Reconstruct map component with updated multi-index set
     M.components[k] = PolynomialMapComponent(Λ, component.rectifier, getbasis(component), M.reference.densitytype)
-    setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
+    return setcoefficients!(M.components[k], [coeffs..., 0.0])  # Initialize new coefficient to zero
 
 end

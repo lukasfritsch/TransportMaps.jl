@@ -1,7 +1,10 @@
-using TransportMaps
-using Test
+@testsnippet GaussianWeightedBasisSetup begin
+    using TransportMaps
+    using Test
 
-@testset "GaussianWeightedHermiteBasis" begin
+end
+
+@testitem "GaussianWeightedHermiteBasis" setup = [GaussianWeightedBasisSetup] begin
     gb = GaussianWeightedHermiteBasis()
     # Basic basisfunction behavior compared to hermite * gaussian weight
     @test basisfunction(gb, 2, 2.0) ≈ hermite_polynomial(2, 2.0) * exp(-0.25 * 2.0^2)

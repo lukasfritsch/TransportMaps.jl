@@ -26,15 +26,15 @@ Adaptively optimize a triangular transport map by greedily enriching the multi-i
 - `iteration_histories::Vector{OptimizationHistory}`: History of optimization for each component
 """
 function optimize_adaptive_transportmap(
-    samples::Matrix{Float64},
-    maxterms::Vector{Int64},
-    lm::AbstractLinearMap=LinearMap(samples),
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options(),
-    test_fraction::Float64=0.2
-)
+        samples::Matrix{Float64},
+        maxterms::Vector{Int64},
+        lm::AbstractLinearMap = LinearMap(samples),
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis();
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options(),
+        test_fraction::Float64 = 0.2
+    )
     @assert length(maxterms) == size(samples, 2) "Length of maxterms must equal number of dimensions in samples"
     # Extract number of dimensions from samples
     d = size(samples, 2)
@@ -49,7 +49,7 @@ function optimize_adaptive_transportmap(
     train_samples, test_samples = _test_train_split(samples, test_fraction)
 
     for k in 1:d
-        @info "Starting adaptive component optimization" component=k maxterms=maxterms[k]
+        @info "Starting adaptive component optimization" component = k maxterms = maxterms[k]
         component, history = optimize_adaptive_transportmapcomponent(
             train_samples[:, 1:k],
             test_samples[:, 1:k],
@@ -64,7 +64,7 @@ function optimize_adaptive_transportmap(
     end
 
     # Construct final map from optimized components
-    M = PolynomialMap(map_components; forwarddirection=:reference)
+    M = PolynomialMap(map_components; forwarddirection = :reference)
 
     # Return composed map (including linear standardization) and histories
     return ComposedMap(lm, M), iteration_histories
@@ -95,15 +95,15 @@ select the number of terms per component.
 - `selected_fold::Vector{Int}`: Index of the best fold for each component
 """
 function optimize_adaptive_transportmap(
-    samples::Matrix{Float64},
-    maxterms::Vector{Int64},
-    k_folds::Int,
-    lm::AbstractLinearMap=LinearMap(samples),
-    rectifier::AbstractRectifierFunction=Softplus(),
-    basis::AbstractPolynomialBasis=LinearizedHermiteBasis();
-    optimizer::Optim.AbstractOptimizer=LBFGS(),
-    options::Optim.Options=Optim.Options()
-)
+        samples::Matrix{Float64},
+        maxterms::Vector{Int64},
+        k_folds::Int,
+        lm::AbstractLinearMap = LinearMap(samples),
+        rectifier::AbstractRectifierFunction = Softplus(),
+        basis::AbstractPolynomialBasis = LinearizedHermiteBasis();
+        optimizer::Optim.AbstractOptimizer = LBFGS(),
+        options::Optim.Options = Optim.Options()
+    )
     @assert length(maxterms) == size(samples, 2) "Length of maxterms must equal number of dimensions in samples"
     @assert k_folds >= 2 "k_folds must be at least 2"
     @assert k_folds <= size(samples, 1) "k_folds cannot exceed the number of samples"
@@ -119,7 +119,7 @@ function optimize_adaptive_transportmap(
     folds = _kfold_indices(size(samples, 1), k_folds)
 
     for k in 1:d
-        @info "Starting k-fold adaptive component optimization" component=k folds=k_folds maxterms=maxterms[k]
+        @info "Starting k-fold adaptive component optimization" component = k folds = k_folds maxterms = maxterms[k]
         component_histories = Vector{OptimizationHistory}(undef, k_folds)
 
         for fold_id in 1:k_folds
@@ -129,7 +129,7 @@ function optimize_adaptive_transportmap(
             train_samples_fold = samples[train_idx, 1:k]
             test_samples_fold = samples[test_idx, 1:k]
 
-            @debug "Optimizing cross-validation fold" component=k fold=fold_id folds=k_folds
+            @debug "Optimizing cross-validation fold" component = k fold = fold_id folds = k_folds
             _, history_fold = optimize_adaptive_transportmapcomponent(
                 train_samples_fold,
                 test_samples_fold,
@@ -155,20 +155,20 @@ function optimize_adaptive_transportmap(
             deepcopy(component_histories[best_fold].terms[best_iteration])
         )
 
-        @info "Selected cross-validation model" component=k fold=best_fold terms=selected_terms[k] validation_objective=mean_test_objectives[best_iteration]
+        @info "Selected cross-validation model" component = k fold = best_fold terms = selected_terms[k] validation_objective = mean_test_objectives[best_iteration]
 
         component = PolynomialMapComponent(Λ_best, rectifier, basis, samples[:, 1:k])
         res = optimize!(component, samples[:, 1:k], optimizer, options)
 
         train_obj = objective(component, samples[:, 1:k]) / size(samples, 1)
-        @debug "Finished full-data component optimization" component=k objective=train_obj converged=Optim.converged(res) iterations=Optim.iterations(res)
+        @debug "Finished full-data component optimization" component = k objective = train_obj converged = Optim.converged(res) iterations = Optim.iterations(res)
 
         map_components[k] = component
         fold_histories[k] = component_histories
     end
 
     # Construct final map from optimized components
-    M = PolynomialMap(map_components; forwarddirection=:reference)
+    M = PolynomialMap(map_components; forwarddirection = :reference)
 
     # Return composed map (including linear standardization) and histories
     return ComposedMap(lm, M), fold_histories, selected_terms, selected_fold
@@ -193,14 +193,14 @@ Adaptively optimize a single transport map component by greedily enriching the m
 - `history::OptimizationHistory`: Optimization history for this component
 """
 function optimize_adaptive_transportmapcomponent(
-    train_samples::Matrix{Float64},
-    test_samples::Matrix{Float64},
-    maxterms::Int,
-    rectifier::AbstractRectifierFunction,
-    basis::AbstractPolynomialBasis,
-    optimizer::Optim.AbstractOptimizer,
-    options::Optim.Options
-)
+        train_samples::Matrix{Float64},
+        test_samples::Matrix{Float64},
+        maxterms::Int,
+        rectifier::AbstractRectifierFunction,
+        basis::AbstractPolynomialBasis,
+        optimizer::Optim.AbstractOptimizer,
+        options::Optim.Options
+    )
 
     d = size(train_samples, 2)
     # Initialize multi-index set to contain only zero index (constant term)
@@ -210,7 +210,7 @@ function optimize_adaptive_transportmapcomponent(
     history = OptimizationHistory(maxterms)
 
     # Initialize component with the multi-index set
-    @debug "Optimizing initial adaptive term" term=1 maxterms
+    @debug "Optimizing initial adaptive term" term = 1 maxterms
     component = PolynomialMapComponent(Λ, rectifier, basis, train_samples)
 
     # Precompute basis for training samples
@@ -221,7 +221,7 @@ function optimize_adaptive_transportmapcomponent(
 
     # Compute and store first iteration
     train_obj = objective(component, train_precomp) / size(train_samples, 1)
-    test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.
+    test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.0
     update_optimization_history!(history, Λ, train_obj, test_obj, Float64[], res, 1)
 
     # start greedy optimization
@@ -255,7 +255,7 @@ function optimize_adaptive_transportmapcomponent(
         push!(Λ, α⁺)
 
         # Update component with new multi-index set
-        @debug "Adding adaptive term" term=t maxterms multiindex=α⁺ gradient=maximum(gradients)
+        @debug "Adding adaptive term" term = t maxterms multiindex = α⁺ gradient = maximum(gradients)
         component = PolynomialMapComponent(Λ, rectifier, basis, train_samples)
         setcoefficients!(component, [coeffs..., 0.0]) # set coefficients for existing terms
 
@@ -267,7 +267,7 @@ function optimize_adaptive_transportmapcomponent(
 
         # Compute and store iteration
         train_obj = objective(component, train_precomp) / size(train_samples, 1)
-        test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.
+        test_obj = !isnothing(test_precomp) ? objective(component, test_precomp) / size(test_samples, 1) : 0.0
         update_optimization_history!(history, Λ, train_obj, test_obj, gradients, res, t)
     end
 

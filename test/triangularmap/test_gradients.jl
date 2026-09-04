@@ -1,11 +1,14 @@
-using Test
-using TransportMaps
-using Distributions
-using Random
-using LinearAlgebra
-using Optim
+@testsnippet GradientComputationSetup begin
+    using Test
+    using TransportMaps
+    using Distributions
+    using Random
+    using LinearAlgebra
+    using Optim
 
-@testset "Gradient Computation Tests" begin
+end
+
+@testitem "Gradient computation" setup = [GradientComputationSetup] begin
 
     @testset "KL Divergence Gradient Accuracy" begin
         Random.seed!(42)
@@ -16,7 +19,7 @@ using Optim
         setcoefficients!(M, initial_coeffs)
 
         # Simple target density
-        target_density_func(x) = logpdf(Normal(), x[1].^2) + logpdf(Normal(), x[2])
+        target_density_func(x) = logpdf(Normal(), x[1] .^ 2) + logpdf(Normal(), x[2])
         target_density = MapTargetDensity(target_density_func)
 
         # Small quadrature for testing
@@ -31,7 +34,7 @@ using Optim
             return TransportMaps.kldivergence(M, target_density, quadrature)
         end
 
-        ε = 1e-6
+        ε = 1.0e-6
         n_coeffs = length(initial_coeffs)
         numerical_grad = zeros(n_coeffs)
 
@@ -45,7 +48,7 @@ using Optim
 
         # Check gradient accuracy - should be very close
         for i in 1:n_coeffs
-            rel_error = abs(analytical_grad[i] - numerical_grad[i]) / (abs(numerical_grad[i]) + 1e-12)
+            rel_error = abs(analytical_grad[i] - numerical_grad[i]) / (abs(numerical_grad[i]) + 1.0e-12)
             @test rel_error < 0.01  # 1% tolerance
         end
 
@@ -58,7 +61,7 @@ using Optim
         map_configs = [
             (2, 1, :normal, Softplus(), HermiteBasis()),
             (2, 1, :normal, IdentityRectifier(), HermiteBasis()),
-            (2, 2, :normal, Softplus(), HermiteBasis())  # Higher degree
+            (2, 2, :normal, Softplus(), HermiteBasis()),  # Higher degree
         ]
 
         target_density_func(x) = logpdf(Normal(), x[1]) + logpdf(Normal(), x[2] - x[1])
@@ -106,7 +109,7 @@ using Optim
             analytical_grad = TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
             # Check gradient for first coefficient using central differences
-            ε = 1e-6
+            ε = 1.0e-6
             coeffs_plus = copy(coeffs)
             coeffs_minus = copy(coeffs)
             coeffs_plus[1] += ε
@@ -116,7 +119,7 @@ using Optim
             obj_minus = objective(coeffs_minus)
             numerical_grad_1 = (obj_plus - obj_minus) / (2ε)
 
-            rel_error = abs(analytical_grad[1] - numerical_grad_1) / (abs(numerical_grad_1) + 1e-12)
+            rel_error = abs(analytical_grad[1] - numerical_grad_1) / (abs(numerical_grad_1) + 1.0e-12)
             @test rel_error < 0.05  # 5% tolerance for different starting points
         end
 
@@ -148,7 +151,7 @@ using Optim
             return result
         end
 
-        ε = 1e-7
+        ε = 1.0e-7
         for i in 1:length(coeffs)
             coeffs_plus = copy(coeffs)
             coeffs_plus[i] += ε
@@ -159,7 +162,7 @@ using Optim
             numerical_grad = (eval_plus - eval_base) / ε
 
             # Should be reasonably close (finite differences can be less accurate for components)
-            rel_error = abs(grad[i] - numerical_grad) / (abs(numerical_grad) + 1e-10)
+            rel_error = abs(grad[i] - numerical_grad) / (abs(numerical_grad) + 1.0e-10)
             @test rel_error < 0.1  # 10% tolerance for component-level gradients
         end
 
@@ -267,7 +270,7 @@ using Optim
 
         # Analytical and finite difference gradients should be close
         for i in 1:length(grad1)
-            rel_error = abs(grad1[i] - grad1_fd[i]) / (abs(grad1_fd[i]) + 1e-12)
+            rel_error = abs(grad1[i] - grad1_fd[i]) / (abs(grad1_fd[i]) + 1.0e-12)
             @test rel_error < 0.05  # 5% tolerance between analytical and FD target gradients
         end
 
@@ -305,15 +308,15 @@ using Optim
         target_density_quad_fd = MapTargetDensity(quadratic_density)
         grad3_fd = TransportMaps.kldivergence_gradient(M, target_density_quad_fd, quadrature)
         for i in 1:length(grad3)
-            rel_error = abs(grad3[i] - grad3_fd[i]) / (abs(grad3_fd[i]) + 1e-12)
+            rel_error = abs(grad3[i] - grad3_fd[i]) / (abs(grad3_fd[i]) + 1.0e-12)
             @test rel_error < 0.05  # 5% tolerance between analytical and FD target gradients
         end
 
         # Test 4: Verify consistency - different target densities should give different gradients
         # (unless the map is already perfectly adapted, which is unlikely with random coefficients)
-        @test !isapprox(grad1, grad2, rtol=0.1)
-        @test !isapprox(grad1, grad3, rtol=0.1)
-        @test !isapprox(grad2, grad3, rtol=0.1)
+        @test !isapprox(grad1, grad2, rtol = 0.1)
+        @test !isapprox(grad1, grad3, rtol = 0.1)
+        @test !isapprox(grad2, grad3, rtol = 0.1)
 
         # Test 5: Verify that gradient computation is consistent across different coefficient settings
         coeffs_alternative = 0.2 * randn(numbercoefficients(M))
@@ -321,7 +324,7 @@ using Optim
 
         grad1_alt = TransportMaps.kldivergence_gradient(M, target_density, quadrature)
         @test all(isfinite.(grad1_alt))
-        @test !isapprox(grad1, grad1_alt, rtol=0.1)  # Different coefficients should give different gradients
+        @test !isapprox(grad1, grad1_alt, rtol = 0.1)  # Different coefficients should give different gradients
 
         # Test 6: Higher degree map with analytical gradient
         M_deg2 = PolynomialMap(2, 2, :normal, Softplus(), HermiteBasis())
@@ -343,7 +346,7 @@ using Optim
         quadrature = LatinHypercubeWeights(20, 2)
 
         # Test with very small coefficients
-        setcoefficients!(M, 1e-8 * ones(numbercoefficients(M)))
+        setcoefficients!(M, 1.0e-8 * ones(numbercoefficients(M)))
         @test_nowarn TransportMaps.kldivergence_gradient(M, target_density, quadrature)
 
         # Test with larger coefficients

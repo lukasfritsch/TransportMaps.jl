@@ -1,11 +1,14 @@
-using TransportMaps
-using Test
-using Distributions
-using LinearAlgebra
-using Random
-using Optim
+@testsnippet MapFromDensitySetup begin
+    using TransportMaps
+    using Test
+    using Distributions
+    using LinearAlgebra
+    using Random
+    using Optim
 
-@testset "Map from Density" begin
+end
+
+@testitem "Map from Density" setup = [MapFromDensitySetup] begin
 
     @testset "KL Divergence Computation" begin
         # Test with simple 1D linear map and normal target
@@ -39,7 +42,7 @@ using Optim
         @test all(isfinite.(grad))
 
         # Test finite difference approximation of gradient
-        ε = 1e-6
+        ε = 1.0e-6
         coeffs = getcoefficients(M)
         grad_fd = similar(grad)
 
@@ -55,14 +58,14 @@ using Optim
             setcoefficients!(M, coeffs_minus)
             kl_minus = TransportMaps.kldivergence(M, target, quadrature)
 
-            grad_fd[i] = (kl_plus - kl_minus) / (2*ε)
+            grad_fd[i] = (kl_plus - kl_minus) / (2 * ε)
         end
 
         # Reset coefficients
         setcoefficients!(M, coeffs)
 
         # Analytical and finite difference gradients should be close
-        @test grad ≈ grad_fd atol=1e-4
+        @test grad ≈ grad_fd atol = 1.0e-4
     end
 
     @testset "Linear Map Optimization" begin
@@ -114,7 +117,7 @@ using Optim
         M = PolynomialMap(2, 2, :normal, Softplus())
 
         # Banana density: π(x) ∝ exp(-x₁²/2) * exp(-(x₂ - x₁²)²/2)
-        banana_density = function(x)
+        banana_density = function (x)
             return (-0.5 * x[1]^2) + (-0.5 * (x[2] - x[1]^2)^2)
         end
 
@@ -173,7 +176,7 @@ using Optim
             # 2D mixture of two Gaussians
             M = PolynomialMap(2, 2, :normal, Softplus())
 
-            mixture_target = function(x)
+            mixture_target = function (x)
                 # Mixture of two 2D normals
                 μ1 = [-1.0, -1.0]
                 μ2 = [1.0, 1.0]

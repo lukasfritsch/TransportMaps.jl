@@ -55,7 +55,7 @@ println("Initial coefficients: ", getcoefficients(M))
 # For optimization, you need to define your target probability density.
 # Let's start with a simple correlated Gaussian:
 
-function correlated_gaussian(x; ρ=0.8)
+function correlated_gaussian(x; ρ = 0.8)
     Σ = [1.0 ρ; ρ 1.0]
     return logpdf(MvNormal(zeros(2), Σ), x)
 end
@@ -101,15 +101,19 @@ target_samples = evaluate(M, reference_samples)
 #
 # Let's plot both the reference and target samples:
 
-p1 = scatter(reference_samples[:, 1], reference_samples[:, 2],
-    alpha=0.6, title="Reference Samples",
-    xlabel="Z₁", ylabel="Z₂", legend=false, aspect_ratio=:equal)
+p1 = scatter(
+    reference_samples[:, 1], reference_samples[:, 2],
+    alpha = 0.6, title = "Reference Samples",
+    xlabel = "Z₁", ylabel = "Z₂", legend = false, aspect_ratio = :equal
+)
 
-p2 = scatter(target_samples[:, 1], target_samples[:, 2],
-    alpha=0.6, title="Target Samples",
-    xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
+p2 = scatter(
+    target_samples[:, 1], target_samples[:, 2],
+    alpha = 0.6, title = "Target Samples",
+    xlabel = "X₁", ylabel = "X₂", legend = false, aspect_ratio = :equal
+)
 
-plot(p1, p2, layout=(1, 2), size=(800, 400))
+plot(p1, p2, layout = (1, 2), size = (800, 400))
 #md savefig("samples.svg"); nothing # hide
 # ![Transport Map Samples](samples.svg)
 
@@ -156,14 +160,16 @@ result_banana = optimize!(M_banana, target_density_banana, quadrature)
 banana_samples = evaluate(M_banana, reference_samples)
 
 # Visualize the banana distribution
-x1_grid = range(-3, 3, length=100)
-x2_grid = range(-3, 6, length=100)
+x1_grid = range(-3, 3, length = 100)
+x2_grid = range(-3, 6, length = 100)
 posterior_values = [banana_density([x₁, x₂]) for x₂ in x2_grid, x₁ in x1_grid]
 
-scatter(banana_samples[:, 1], banana_samples[:, 2],
-    alpha=0.6, title="Banana Distribution Samples",
-    xlabel="X₁", ylabel="X₂", legend=false, aspect_ratio=:equal)
-contour!(x1_grid, x2_grid, posterior_values, colormap=:viridis, label="Posterior Density")
+scatter(
+    banana_samples[:, 1], banana_samples[:, 2],
+    alpha = 0.6, title = "Banana Distribution Samples",
+    xlabel = "X₁", ylabel = "X₂", legend = false, aspect_ratio = :equal
+)
+contour!(x1_grid, x2_grid, posterior_values, colormap = :viridis, label = "Posterior Density")
 #md savefig("banana_samples.svg"); nothing # hide
 # ![Banana Distribution Samples](banana_samples.svg)
 

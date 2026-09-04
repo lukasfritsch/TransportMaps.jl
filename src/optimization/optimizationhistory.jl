@@ -28,19 +28,19 @@ struct OptimizationHistory
 end
 
 function update_optimization_history!(
-    history::OptimizationHistory,
-    term::Vector{Vector{Int64}},
-    train_objective::Float64,
-    test_objective::Float64,
-    gradient::Vector{Float64},
-    optimization_result::Optim.MultivariateOptimizationResults,
-    iteration::Int
-)
+        history::OptimizationHistory,
+        term::Vector{Vector{Int64}},
+        train_objective::Float64,
+        test_objective::Float64,
+        gradient::Vector{Float64},
+        optimization_result::Optim.MultivariateOptimizationResults,
+        iteration::Int
+    )
     history.terms[iteration] = permutedims(hcat(term...))
     history.train_objectives[iteration] = train_objective
     history.test_objectives[iteration] = test_objective
     history.gradients[iteration] = gradient
-    history.optimization_results[iteration] = optimization_result
+    return history.optimization_results[iteration] = optimization_result
 end
 
 function Base.show(io::IO, history::OptimizationHistory)
@@ -52,6 +52,7 @@ function Base.show(io::IO, history::OptimizationHistory)
         println(io, "  Train Objective: ", history.train_objectives[i])
         println(io, "  Test Objective: ", history.test_objectives[i])
     end
+    return
 end
 
 """
@@ -79,15 +80,15 @@ struct OptimizationResult
 end
 
 function update_optimization_result!(
-    result::OptimizationResult,
-    component_index::Int,
-    train_objective::Float64,
-    test_objective::Float64,
-    optimization_result::Optim.MultivariateOptimizationResults
-)
+        result::OptimizationResult,
+        component_index::Int,
+        train_objective::Float64,
+        test_objective::Float64,
+        optimization_result::Optim.MultivariateOptimizationResults
+    )
     result.train_objectives[component_index] = train_objective
     result.test_objectives[component_index] = test_objective
-    result.optimization_results[component_index] = optimization_result
+    return result.optimization_results[component_index] = optimization_result
 end
 
 function Base.show(io::IO, result::OptimizationResult)
@@ -98,6 +99,7 @@ function Base.show(io::IO, result::OptimizationResult)
         println(io, "  Train : ", result.train_objectives[i])
         println(io, "  Test  : ", result.test_objectives[i])
     end
+    return
 end
 
 """
@@ -132,19 +134,19 @@ struct MapOptimizationResult
 end
 
 function update_optimization_history!(
-    result::MapOptimizationResult,
-    map::PolynomialMap,
-    train_objective::Float64,
-    test_objective::Float64,
-    gradient::Vector{Float64},
-    optimization_result::Optim.MultivariateOptimizationResults,
-    iteration::Int
-)
+        result::MapOptimizationResult,
+        map::PolynomialMap,
+        train_objective::Float64,
+        test_objective::Float64,
+        gradient::Vector{Float64},
+        optimization_result::Optim.MultivariateOptimizationResults,
+        iteration::Int
+    )
     result.maps[iteration] = map
     result.train_objectives[iteration] = train_objective
     result.test_objectives[iteration] = test_objective
     result.gradients[iteration] = gradient
-    result.optimization_results[iteration] = optimization_result
+    return result.optimization_results[iteration] = optimization_result
 end
 
 function Base.show(io::IO, result::MapOptimizationResult)
@@ -155,4 +157,5 @@ function Base.show(io::IO, result::MapOptimizationResult)
         println(io, "  Train : ", result.train_objectives[i])
         println(io, "  Test  : ", result.test_objectives[i])
     end
+    return
 end

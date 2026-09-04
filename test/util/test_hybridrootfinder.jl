@@ -1,7 +1,10 @@
-using TransportMaps
-using Test
+@testsnippet HybridRootFinderSetup begin
+    using TransportMaps
+    using Test
 
-@testset "Hybrid Root Finder" begin
+end
+
+@testitem "Hybrid Root Finder" setup = [HybridRootFinderSetup] begin
     @testset "_inverse_bound Function" begin
         # Test with simple linear function
         f_linear(x) = x - 1.0  # Root at x = 1
@@ -28,8 +31,8 @@ using Test
         ∂f_linear(x) = 1.0    # Derivative is constant 1
 
         root, fval, dfval = hybridrootfinder(f_linear, ∂f_linear, 0.0, 5.0)
-        @test root ≈ 2.0 atol = 1e-6
-        @test abs(fval) < 1e-6
+        @test root ≈ 2.0 atol = 1.0e-6
+        @test abs(fval) < 1.0e-6
         @test dfval ≈ 1.0
 
         # Test with quadratic function (positive root)
@@ -38,18 +41,18 @@ using Test
 
         # Find positive root
         root, fval, dfval = hybridrootfinder(f_quad, ∂f_quad, 0.0, 5.0)
-        @test root ≈ 3.0 atol = 1e-6
-        @test abs(fval) < 1e-6
-        @test dfval ≈ 6.0 atol = 1e-6
+        @test root ≈ 3.0 atol = 1.0e-6
+        @test abs(fval) < 1.0e-6
+        @test dfval ≈ 6.0 atol = 1.0e-6
 
         # Test with cubic function
         f_cubic(x) = x^3 - 8.0  # Root at x = 2
         ∂f_cubic(x) = 3 * x^2
 
         root, fval, dfval = hybridrootfinder(f_cubic, ∂f_cubic, 1.0, 3.0)
-        @test root ≈ 2.0 atol = 1e-6
-        @test abs(fval) < 1e-6
-        @test dfval ≈ 12.0 atol = 1e-6
+        @test root ≈ 2.0 atol = 1.0e-6
+        @test abs(fval) < 1.0e-6
+        @test dfval ≈ 12.0 atol = 1.0e-6
     end
 
     @testset "Robust Root Finding" begin
@@ -58,24 +61,24 @@ using Test
         ∂f_exp(x) = exp(x)
 
         root, fval, dfval = hybridrootfinder(f_exp, ∂f_exp, 0.0, 1.0)
-        @test root ≈ log(2.0) atol = 1e-6
-        @test abs(fval) < 1e-6
+        @test root ≈ log(2.0) atol = 1.0e-6
+        @test abs(fval) < 1.0e-6
 
         # Test with function where root is at boundary
         f_boundary(x) = x  # Root at x = 0
         ∂f_boundary(x) = 1.0
 
         root, fval, dfval = hybridrootfinder(f_boundary, ∂f_boundary, -1.0, 1.0)
-        @test root ≈ 0.0 atol = 1e-6
-        @test abs(fval) < 1e-6
+        @test root ≈ 0.0 atol = 1.0e-6
+        @test abs(fval) < 1.0e-6
 
         # Test with tight tolerance
         f_test(x) = x^2 - 4.0
         ∂f_test(x) = 2 * x
 
-        root, fval, dfval = hybridrootfinder(f_test, ∂f_test, 1.0, 3.0, ftol=1e-12, xtol=1e-12)
-        @test root ≈ 2.0 atol = 1e-10
-        @test abs(fval) < 1e-12
+        root, fval, dfval = hybridrootfinder(f_test, ∂f_test, 1.0, 3.0, ftol = 1.0e-12, xtol = 1.0e-12)
+        @test root ≈ 2.0 atol = 1.0e-10
+        @test abs(fval) < 1.0e-12
     end
 
     @testset "Convergence Properties" begin
@@ -88,9 +91,9 @@ using Test
         # Test with narrow bounds
         root2, _, _ = hybridrootfinder(f_convergence, ∂f_convergence, 1.0, 2.0)
 
-        @test abs(root1 - root2) < 1e-6  # Should converge to same root
-        @test abs(f_convergence(root1)) < 1e-6
-        @test abs(f_convergence(root2)) < 1e-6
+        @test abs(root1 - root2) < 1.0e-6  # Should converge to same root
+        @test abs(f_convergence(root1)) < 1.0e-6
+        @test abs(f_convergence(root2)) < 1.0e-6
 
         # Test function returning proper number of values
         root, fval, dfval = hybridrootfinder(f_convergence, ∂f_convergence, 1.0, 2.0)
@@ -104,6 +107,6 @@ using Test
         f_flat(x) = x^3 - 3x + 2  # Has root at x = 1
         ∂f_flat(x) = 3x^2 - 3
 
-        @test_warn "Maximum iterations reached in hybridrootfinder" hybridrootfinder(f_flat, ∂f_flat, 1.0, 3.0; maxiter=5)
+        @test_warn "Maximum iterations reached in hybridrootfinder" hybridrootfinder(f_flat, ∂f_flat, 1.0, 3.0; maxiter = 5)
     end
 end

@@ -57,9 +57,9 @@ using TransportMaps # hide
 basis = HermiteBasis()
 z = -3:0.01:3
 
-p1 = plot(xlabel="z", ylabel="Basis function", title="Standard Hermite Basis")
+p1 = plot(xlabel = "z", ylabel = "Basis function", title = "Standard Hermite Basis")
 for degree in 0:4
-    plot!(p1, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p1, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("hermite_basis_standard.svg"); nothing # hide
 # ![Standard Hermite Basis](hermite_basis_standard.svg)
@@ -67,9 +67,9 @@ end
 # If we zoom out, we can see that the tails grow quickly for large $|z|$:
 z = -7:0.1:7
 
-p2 = plot(xlabel="z", ylabel="Basis function", title="Standard Hermite Basis")
+p2 = plot(xlabel = "z", ylabel = "Basis function", title = "Standard Hermite Basis")
 for degree in 0:4
-    plot!(p2, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p2, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("hermite_basis_standard_zoom.svg"); nothing # hide
 # ![Standard Hermite Basis](hermite_basis_standard_zoom.svg)
@@ -95,9 +95,9 @@ end
 basis = LinearizedHermiteBasis(Normal(), 4, 1)
 println("Linearization bounds: ", basis.linearizationbounds)
 
-p3 = plot(xlabel="z", ylabel="Basis function", title="Linearized Hermite Basis")
+p3 = plot(xlabel = "z", ylabel = "Basis function", title = "Linearized Hermite Basis")
 for degree in 0:4
-    plot!(p3, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p3, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("hermite_basis_linearized.svg"); nothing # hide
 # ![Linearized Hermite Basis](hermite_basis_linearized.svg)
@@ -112,9 +112,9 @@ end
 # ```
 basis = GaussianWeightedHermiteBasis()
 
-p4 = plot(xlabel="z", ylabel="Basis function", title="Gaussian-Weighted Hermite Basis")
+p4 = plot(xlabel = "z", ylabel = "Basis function", title = "Gaussian-Weighted Hermite Basis")
 for degree in 0:4
-    plot!(p4, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p4, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("hermite_basis_gaussian.svg"); nothing # hide
 # ![Gaussian Weighted Hermite Basis](hermite_basis_gaussian.svg)
@@ -133,9 +133,9 @@ end
 # ```
 basis = CubicSplineHermiteBasis(Normal())
 
-p5 = plot(xlabel="z", ylabel="Basis function", title="Cubic Spline Weighted Hermite Basis")
+p5 = plot(xlabel = "z", ylabel = "Basis function", title = "Cubic Spline Weighted Hermite Basis")
 for degree in 0:4
-    plot!(p5, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p5, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("hermite_basis_cubic.svg"); nothing # hide
 # ![Cubic Spline Weighted Hermite Basis](hermite_basis_cubic.svg)
@@ -156,9 +156,9 @@ end
 basis = LegendreBasis()
 
 z = -1:0.01:1
-p = plot(xlabel="z", ylabel="Basis function", title="Legendre Basis on [-1, 1]")
+p = plot(xlabel = "z", ylabel = "Basis function", title = "Legendre Basis on [-1, 1]")
 for degree in 0:4
-    plot!(p, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("legendre.svg"); nothing # hide
 # ![Legendre Basis](legendre.svg)
@@ -176,9 +176,9 @@ end
 basis = ShiftedLegendreBasis()
 
 z = 0:0.01:1
-p = plot(xlabel="z", ylabel="Basis function", title="Shifted Legendre Basis on [0, 1]")
+p = plot(xlabel = "z", ylabel = "Basis function", title = "Shifted Legendre Basis on [0, 1]")
 for degree in 0:4
-    plot!(p, z, map(x -> basisfunction(basis, degree, x), z), label="degree $degree")
+    plot!(p, z, map(x -> basisfunction(basis, degree, x), z), label = "degree $degree")
 end
 #md savefig("shifted_legendre.svg"); nothing # hide
 # ![Shifted Legendre Basis](shifted_legendre.svg)

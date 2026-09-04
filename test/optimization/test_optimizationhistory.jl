@@ -1,8 +1,11 @@
-using TransportMaps
-using Test
-using Optim
+@testsnippet OptimizationHistorySetup begin
+    using TransportMaps
+    using Test
+    using Optim
 
-@testset "OptimizationHistory" begin
+end
+
+@testitem "OptimizationHistory" setup = [OptimizationHistorySetup] begin
     # Test constructor
     max_iterations = 5
     history = OptimizationHistory(max_iterations)
@@ -19,7 +22,7 @@ using Optim
     gradient = [0.1, 0.2, 0.3]
 
     # Create a dummy optimization result
-    result = optimize(x -> sum(x.^2), [1.0, 2.0], LBFGS())
+    result = optimize(x -> sum(x .^ 2), [1.0, 2.0], LBFGS())
 
     TransportMaps.update_optimization_history!(history, term, train_obj, test_obj, gradient, result, 1)
 
@@ -32,7 +35,7 @@ using Optim
     @test_nowarn show(history)
 end
 
-@testset "OptimizationResult" begin
+@testitem "OptimizationResult" setup = [OptimizationHistorySetup] begin
     dim = 3
     result = OptimizationResult(dim)
 
@@ -43,7 +46,7 @@ end
     @test_nowarn show(result)
 end
 
-@testset "MapOptimizationResult" begin
+@testitem "MapOptimizationResult" setup = [OptimizationHistorySetup] begin
     maxiter = 5
     result = MapOptimizationResult(maxiter)
 

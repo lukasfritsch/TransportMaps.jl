@@ -1,8 +1,11 @@
-# This file will contain tests for general MultivariateBasis logic, not specific to Hermite
-using TransportMaps
-using Test
+@testsnippet MultivariateBasisSetup begin
+    # This file will contain tests for general MultivariateBasis logic, not specific to Hermite
+    using TransportMaps
+    using Test
 
-@testset "MultivariateBasis General" begin
+end
+
+@testitem "MultivariateBasis General" setup = [MultivariateBasisSetup] begin
     @testset "Multi-index generation" begin
         idx = multivariate_indices(2, 2)
         @test length(idx) > 0
@@ -18,7 +21,7 @@ using Test
 
 end
 
-@testset "MultivariateBasis - Hermite specific" begin
+@testitem "MultivariateBasis - Hermite specific" setup = [MultivariateBasisSetup] begin
     # Test multivariate Psi (using HermiteBasis)
     alpha = [0, 1]
     x = [1.0, 2.0]

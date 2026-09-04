@@ -1,7 +1,7 @@
 # Multivariate index set generation and reduced margin of multi-index sets
 
 """
-    multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
+    multivariate_indices(p::Int, k::Int; mode::Symbol = :total, q::Real = 1.0)
 
 Generate multi-index sets Λ for multivariate polynomial bases.
 
@@ -22,7 +22,7 @@ Generate multi-index sets Λ for multivariate polynomial bases.
 [marzouk2016](@cite), [blatman2011](@cite)
 
 """
-function multivariate_indices(p::Int, k::Int; mode::Symbol=:total, q::Real=1.0)
+function multivariate_indices(p::Int, k::Int; mode::Symbol = :total, q::Real = 1.0)
     @assert p >= 0 "Degree p must be non-negative"
     @assert k >= 1 "Dimension k must be at least 1"
     @assert mode in [:total, :diagonal, :no_mixed, :hyperbolic] "Unknown mode: $mode. Supported modes are :total, :diagonal, :no_mixed, :hyperbolic"
@@ -82,12 +82,12 @@ function total_order_indices(p::Int, k::Int)
 end
 
 function _fill_total_order_product_order!(
-    inds::Vector{Vector{Int}},
-    current::Vector{Int},
-    pos::Int,
-    partial_sum::Int,
-    p::Int
-)
+        inds::Vector{Vector{Int}},
+        current::Vector{Int},
+        pos::Int,
+        partial_sum::Int,
+        p::Int
+    )
     remaining = p - partial_sum
     remaining < 0 && return
 
@@ -105,6 +105,7 @@ function _fill_total_order_product_order!(
         current[pos] = a
         _fill_total_order_product_order!(inds, current, pos - 1, partial_sum + a, p)
     end
+    return
 end
 
 function hyperbolic_truncation(p::Int, k::Int, q::Real)
@@ -115,7 +116,7 @@ function hyperbolic_truncation(p::Int, k::Int, q::Real)
 
     inds = Vector{Vector{Int}}()
     for α in total_order_indices(p, k)
-        if q_norm(α, q) <= p + 1e-12
+        if q_norm(α, q) <= p + 1.0e-12
             push!(inds, α)
         end
     end
@@ -150,7 +151,7 @@ function reduced_margin(Λ::Vector{<:Vector{Int}})
     present = Set(tuple(α...) for α in Λ)
 
     # Generate candidates: all multi-indices one step above elements in Λ
-    candidates = Set{NTuple{d,Int}}()
+    candidates = Set{NTuple{d, Int}}()
     for β in Λ
         for i in 1:d
             α = copy(β)

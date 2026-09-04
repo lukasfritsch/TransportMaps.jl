@@ -105,33 +105,41 @@ mapped_banana_samples = inverse(C, norm_samples)
 # Let's create a scatter plot comparing the original samples with
 # the mapped samples to see how well our transport map learned the distribution:
 
-p11 = scatter(new_samples[:, 1], new_samples[:, 2],
-    label="Original Samples", alpha=0.5, color=1,
-    title="Original Banana Distribution Samples",
-    xlabel="x₁", ylabel="x₂")
+p11 = scatter(
+    new_samples[:, 1], new_samples[:, 2],
+    label = "Original Samples", alpha = 0.5, color = 1,
+    title = "Original Banana Distribution Samples",
+    xlabel = "x₁", ylabel = "x₂"
+)
 
-scatter!(p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
-    label="Mapped Samples", alpha=0.5, color=2,
-    title="Transport Map Generated Samples",
-    xlabel="x₁", ylabel="x₂")
+scatter!(
+    p11, mapped_banana_samples[:, 1], mapped_banana_samples[:, 2],
+    label = "Mapped Samples", alpha = 0.5, color = 2,
+    title = "Transport Map Generated Samples",
+    xlabel = "x₁", ylabel = "x₂"
+)
 
-plot(p11, size=(600, 400))
+plot(p11, size = (600, 400))
 #md savefig("samples-comparison-target.svg"); nothing # hide
 # ![Sample Comparison](samples-comparison-target.svg)
 
 # and the resulting samples in standard normal space:
 
-p12 = scatter(norm_samples[:, 1], norm_samples[:, 2],
-    label="Original Samples", alpha=0.5, color=1,
-    title="Original Banana Distribution Samples",
-    xlabel="x₁", ylabel="x₂")
+p12 = scatter(
+    norm_samples[:, 1], norm_samples[:, 2],
+    label = "Original Samples", alpha = 0.5, color = 1,
+    title = "Original Banana Distribution Samples",
+    xlabel = "x₁", ylabel = "x₂"
+)
 
-scatter!(p12, mapped_samples[:, 1], mapped_samples[:, 2],
-    label="Mapped Samples", alpha=0.5, color=2,
-    title="Transport Map Generated Samples",
-    xlabel="x₁", ylabel="x₂")
+scatter!(
+    p12, mapped_samples[:, 1], mapped_samples[:, 2],
+    label = "Mapped Samples", alpha = 0.5, color = 2,
+    title = "Transport Map Generated Samples",
+    xlabel = "x₁", ylabel = "x₂"
+)
 
-plot(p12, size=(600, 400), aspect_ratio=1)
+plot(p12, size = (600, 400), aspect_ratio = 1)
 #md savefig("samples-comparison-reference.svg"); nothing # hide
 # ![Sample Comparison](samples-comparison-reference.svg)
 
@@ -139,8 +147,8 @@ plot(p12, size=(600, 400), aspect_ratio=1)
 #
 # We can also compare the learned density (via pullback) with the true density:
 
-x₁ = range(-3, 3, length=100)
-x₂ = range(-2.5, 4.0, length=100)
+x₁ = range(-3, 3, length = 100)
+x₂ = range(-2.5, 4.0, length = 100)
 
 # True banana density values:
 true_density = [banana_density([x1, x2]) for x2 in x₂, x1 in x₁]
@@ -151,17 +159,21 @@ learned_density = [pullback(C, [x1, x2]) for x2 in x₂, x1 in x₁]
 #md nothing # hide
 
 # Create contour plots for comparison:
-p3 = contour(x₁, x₂, true_density,
-    title="True Banana Density",
-    xlabel="x₁", ylabel="x₂",
-    colormap=:viridis, levels=10)
+p3 = contour(
+    x₁, x₂, true_density,
+    title = "True Banana Density",
+    xlabel = "x₁", ylabel = "x₂",
+    colormap = :viridis, levels = 10
+)
 
-p4 = contour(x₁, x₂, learned_density,
-    title="Learned Density (Pullback)",
-    xlabel="x₁", ylabel="x₂",
-    colormap=:viridis, levels=10)
+p4 = contour(
+    x₁, x₂, learned_density,
+    title = "Learned Density (Pullback)",
+    xlabel = "x₁", ylabel = "x₂",
+    colormap = :viridis, levels = 10
+)
 
-plot(p3, p4, layout=(1, 2), size=(800, 400))
+plot(p3, p4, layout = (1, 2), size = (800, 400))
 #md savefig("density-comparison.svg"); nothing # hide
 # ![Density Comparison](density-comparison.svg)
 
@@ -170,14 +182,18 @@ plot(p3, p4, layout=(1, 2), size=(800, 400))
 # Finally, let's create a combined plot showing both the original samples
 # and the density contours:
 
-scatter(target_samples[:, 1], target_samples[:, 2],
-    label="Original Samples", alpha=0.3, color=1,
-    xlabel="x₁", ylabel="x₂",
-    title="Banana Distribution: Samples and Learned Density")
+scatter(
+    target_samples[:, 1], target_samples[:, 2],
+    label = "Original Samples", alpha = 0.3, color = 1,
+    xlabel = "x₁", ylabel = "x₂",
+    title = "Banana Distribution: Samples and Learned Density"
+)
 
-contour!(x₁, x₂, learned_density ./ maximum(learned_density),
-    levels=5, colormap=:viridis, alpha=0.8,
-    label="Learned Density Contours")
+contour!(
+    x₁, x₂, learned_density ./ maximum(learned_density),
+    levels = 5, colormap = :viridis, alpha = 0.8,
+    label = "Learned Density Contours"
+)
 
 xlims!(-3, 3)
 ylims!(-2.5, 4.0)
@@ -190,10 +206,10 @@ ylims!(-2.5, 4.0)
 # statistics of the original and mapped samples:
 
 println("Sample Statistics Comparison:")
-println("Original samples - Mean: ", Distributions.mean(target_samples, dims=1))
-println("Original samples - Std:  ", Distributions.std(target_samples, dims=1))
-println("Mapped samples - Mean:   ", Distributions.mean(mapped_banana_samples, dims=1))
-println("Mapped samples - Std:    ", Distributions.std(mapped_banana_samples, dims=1))
+println("Original samples - Mean: ", Distributions.mean(target_samples, dims = 1))
+println("Original samples - Std:  ", Distributions.std(target_samples, dims = 1))
+println("Mapped samples - Mean:   ", Distributions.mean(mapped_banana_samples, dims = 1))
+println("Mapped samples - Std:    ", Distributions.std(mapped_banana_samples, dims = 1))
 
 # ### Interpretation
 #

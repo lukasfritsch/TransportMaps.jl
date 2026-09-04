@@ -24,7 +24,7 @@ end
 
 # Derivative of univariate Hermite polynomial
 @inline function hermite_derivative(n::Int64, z::Real)
-    n == 0 ? 0.0 : n * hermite_polynomial(n - 1, z)
+    return n == 0 ? 0.0 : n * hermite_polynomial(n - 1, z)
 end
 
 """
@@ -46,7 +46,7 @@ Evaluate derivative of `HermiteBasis` with degree `αᵢ` at `zᵢ`.
 end
 
 function Base.show(io::IO, ::HermiteBasis)
-    print(io, "HermiteBasis()")
+    return print(io, "HermiteBasis()")
 end
 
 support(basis::HermiteBasis) = RealInterval(-Inf, Inf)

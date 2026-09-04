@@ -1,6 +1,9 @@
-using Aqua
-using TransportMaps
+@testsnippet AquaSetup begin
+    using Aqua
+    using TransportMaps
 
-@testset "Aqua.jl" begin
+end
+
+@testitem "Package quality checks" setup = [AquaSetup] begin
     Aqua.test_all(TransportMaps)
 end

@@ -1,10 +1,14 @@
-using TransportMaps
-using Test
-using Distributions
-using Optim
-import Mooncake
+@testsnippet MapDensitySetup begin
+    using TransportMaps
+    using Test
+    using Distributions
+    using Optim
+    import Mooncake
+    import DifferentiationInterface: AutoFiniteDiff, AutoForwardDiff, AutoMooncake, GradientPrep
 
-@testset "Map Density" begin
+end
+
+@testitem "Map Density" setup = [MapDensitySetup] begin
 
     @testset "MapTargetDensity" begin
         # Analytical gradient constructor
@@ -67,7 +71,7 @@ import Mooncake
     end
 
     @testset "MapTargetDensity with isvectorized flag" begin
-        function logπ(X::Union{AbstractVector{<:Real},AbstractMatrix{<:Real}})
+        function logπ(X::Union{AbstractVector{<:Real}, AbstractMatrix{<:Real}})
             if X isa Vector
                 return logpdf(Normal(), X[1]) + logpdf(Normal(), X[2])
             else
@@ -80,7 +84,7 @@ import Mooncake
             end
         end
 
-        function grad_logπ(X::Union{AbstractVector{<:Real},AbstractMatrix{<:Real}})
+        function grad_logπ(X::Union{AbstractVector{<:Real}, AbstractMatrix{<:Real}})
             if X isa Vector
                 return [-X[1], -X[2]]
             else
@@ -100,7 +104,7 @@ import Mooncake
         ]
 
         @testset "Analytical gradient" begin
-            target_vectorized = MapTargetDensity(logπ, grad_logπ; isvectorized=true)
+            target_vectorized = MapTargetDensity(logπ, grad_logπ; isvectorized = true)
             @test target_vectorized.isvectorized == true
             @test isnothing(target_vectorized.ad_backend)
 
@@ -121,7 +125,7 @@ import Mooncake
         end
 
         @testset "AutoForwardDiff gradient" begin
-            target_vectorized = MapTargetDensity(logπ; isvectorized=true)
+            target_vectorized = MapTargetDensity(logπ; isvectorized = true)
             @test target_vectorized.isvectorized == true
             @test target_vectorized.ad_backend == AutoForwardDiff()
 
@@ -139,7 +143,7 @@ import Mooncake
         @testset "Map Optimization with vectorized density" begin
             tm = PolynomialMap(2, 1)
             quad = GaussHermiteWeights(3, 2)
-            target = MapTargetDensity(logπ; isvectorized=true)
+            target = MapTargetDensity(logπ; isvectorized = true)
             res = optimize!(tm, target, quad)
             @test Optim.converged(res)
         end
@@ -203,7 +207,7 @@ import Mooncake
         # Test gradient
         grad = grad_logpdf(ref1, x)
         # Gradient of constant log-density should be zero
-        @test all(abs.(grad) .< 1e-10)
+        @test all(abs.(grad) .< 1.0e-10)
     end
 
     @testset "Show Methods" begin

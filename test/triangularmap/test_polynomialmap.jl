@@ -1,9 +1,12 @@
-using TransportMaps
-using Test
-using Distributions
-using LinearAlgebra
+@testsnippet PolynomialMapSetup begin
+    using TransportMaps
+    using Test
+    using Distributions
+    using LinearAlgebra
 
-@testset "Polynomial Map" begin
+end
+
+@testitem "Polynomial Map" setup = [PolynomialMapSetup] begin
     @testset "Construction" begin
         # Test basic construction
         pm = PolynomialMap(2, 2)  # 2D map, degree 2
@@ -150,7 +153,7 @@ using LinearAlgebra
         try
             x_inv_1d = inverse(pm_1d, z_1d)
             if all(isfinite.(x_inv_1d))
-                @test x_inv_1d ≈ x_1d atol = 1e-2
+                @test x_inv_1d ≈ x_1d atol = 1.0e-2
             end
         catch
             # Skip test if inverse fails due to numerical issues
@@ -163,7 +166,7 @@ using LinearAlgebra
         try
             x_inv_origin_1d = inverse(pm_1d, z_origin_1d)
             if all(isfinite.(x_inv_origin_1d))
-                @test x_inv_origin_1d ≈ x_origin_1d atol = 1e-3
+                @test x_inv_origin_1d ≈ x_origin_1d atol = 1.0e-3
             end
         catch
             @test true  # Mark as passing
@@ -248,7 +251,7 @@ using LinearAlgebra
             [1.0, 0.0],
             [0.0, 1.0],
             [-1.0, 1.0],
-            [2.0, -1.0]
+            [2.0, -1.0],
         ]
 
         for point in test_points
@@ -358,13 +361,13 @@ using LinearAlgebra
         n_coeffs_comp2 = length(pm.components[2].coefficients)
 
         # Component 1 gradient should be zero for component 2's coefficients
-        @test all(grad_matrix[1, n_coeffs_comp1+1:end] .== 0)
+        @test all(grad_matrix[1, (n_coeffs_comp1 + 1):end] .== 0)
 
         # Component 1 gradient should be non-zero for its own coefficients
         @test any(grad_matrix[1, 1:n_coeffs_comp1] .!= 0)
 
         # Verify gradient using finite differences
-        ε = 1e-8
+        ε = 1.0e-8
         numerical_grad = zeros(size(grad_matrix))
 
         for j in 1:n_total_coeffs
@@ -386,7 +389,7 @@ using LinearAlgebra
         end
 
         # Check agreement within tolerance
-        @test all(abs.(grad_matrix - numerical_grad) .< 1e-6)
+        @test all(abs.(grad_matrix - numerical_grad) .< 1.0e-6)
 
         # Test with 1D map (simpler case)
         pm_1d = PolynomialMap(1, 2, :normal, Softplus())
@@ -414,10 +417,10 @@ using LinearAlgebra
         n_coeffs_3d_comp3 = length(pm_3d.components[3].coefficients)
 
         # Component 1 should only depend on its own coefficients
-        @test all(grad_3d[1, n_coeffs_3d_comp1+1:end] .== 0)
+        @test all(grad_3d[1, (n_coeffs_3d_comp1 + 1):end] .== 0)
 
         # Component 2 should be zero for component 3's coefficients
-        @test all(grad_3d[2, n_coeffs_3d_comp1+n_coeffs_3d_comp2+1:end] .== 0)
+        @test all(grad_3d[2, (n_coeffs_3d_comp1 + n_coeffs_3d_comp2 + 1):end] .== 0)
 
         # Test dimension mismatch
         @test_throws AssertionError gradient_coefficients(pm, [0.5])  # Wrong dimension
@@ -431,7 +434,7 @@ using LinearAlgebra
 
         x_1d = [0.5]
         inv_jac_1d = inverse_jacobian(pm_1d, x_1d)
-        @test inv_jac_1d ≈ 1.0 atol = 1e-10  # For identity map, inverse jacobian should be 1
+        @test inv_jac_1d ≈ 1.0 atol = 1.0e-10  # For identity map, inverse jacobian should be 1
 
         # Test 2D case with simple map
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -440,7 +443,7 @@ using LinearAlgebra
 
         x_2d = [0.3, 0.7]
         inv_jac_2d = inverse_jacobian(pm_2d, x_2d)
-        @test inv_jac_2d ≈ 1.0 atol = 1e-10  # For identity-like map, inverse jacobian should be 1
+        @test inv_jac_2d ≈ 1.0 atol = 1.0e-10  # For identity-like map, inverse jacobian should be 1
 
         # Test with Softplus rectifier (should be positive)
         pm_softplus = PolynomialMap(2, 2, :normal, Softplus())
@@ -466,7 +469,7 @@ using LinearAlgebra
             forward_jac = jacobian(pm_test, z)
             inv_jac_direct = inverse_jacobian(pm_test, x_consistency)
 
-            @test abs(1.0 / forward_jac - inv_jac_direct) < 1e-10
+            @test abs(1.0 / forward_jac - inv_jac_direct) < 1.0e-10
         catch
             @test true  # Skip if numerical issues
         end
@@ -485,7 +488,7 @@ using LinearAlgebra
         pb_1d = pullback(pm_1d, x_1d)
         # For identity map, pullback should equal reference density at x
         ref_1d = pdf(MvNormal([0.0], I(1)), x_1d)
-        @test pb_1d ≈ ref_1d atol = 1e-10
+        @test pb_1d ≈ ref_1d atol = 1.0e-10
 
         # Test 2D case with identity-like map
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -495,7 +498,7 @@ using LinearAlgebra
         x_2d = [0.3, 0.7]
         pb_2d = pullback(pm_2d, x_2d)
         ref_2d = pdf(MvNormal(zeros(2), I(2)), x_2d)
-        @test pb_2d ≈ ref_2d atol = 1e-10
+        @test pb_2d ≈ ref_2d atol = 1.0e-10
 
         # Test mathematical consistency: pullback(M, x) = reference_density(inverse(M, x)) * |inverse_jacobian(M, x)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())
@@ -510,7 +513,7 @@ using LinearAlgebra
                 inv_jac = inverse_jacobian(pm_test, x)
                 expected = ref_val * abs(inv_jac)
 
-                @test abs(pb_val - expected) < 1e-10
+                @test abs(pb_val - expected) < 1.0e-10
                 @test pb_val ≥ 0  # Density should be non-negative
                 @test isfinite(pb_val)
             catch
@@ -550,7 +553,7 @@ using LinearAlgebra
         z_1d = [0.5]
         pf_1d = pushforward(pm_1d, target, z_1d)
         # For identity map with standard normal target, pushforward should equal target at z
-        @test pf_1d ≈ pdf(target, z_1d) atol = 1e-10
+        @test pf_1d ≈ pdf(target, z_1d) atol = 1.0e-10
 
         # Test 2D case
         pm_2d = PolynomialMap(2, 1, :normal, IdentityRectifier(), HermiteBasis())
@@ -559,7 +562,7 @@ using LinearAlgebra
 
         z_2d = [0.3, 0.7]
         pf_2d = pushforward(pm_2d, target, z_2d)
-        @test pf_2d ≈ pdf(target, z_2d) atol = 1e-10
+        @test pf_2d ≈ pdf(target, z_2d) atol = 1.0e-10
 
         # Test mathematical consistency: pushforward(M, π, z) = π(M(z)) * |jacobian(M, z)|
         pm_test = PolynomialMap(2, 2, :normal, Softplus())
@@ -574,7 +577,7 @@ using LinearAlgebra
                 jac_val = jacobian(pm_test, z)
                 expected = target_val * abs(jac_val)
 
-                @test abs(pf_val - expected) < 1e-10
+                @test abs(pf_val - expected) < 1.0e-10
                 @test pf_val ≥ 0  # Density should be non-negative
                 @test isfinite(pf_val)
             catch
@@ -783,14 +786,14 @@ using LinearAlgebra
         # Vector{Float32}
         z_f32 = Float32[0.5, 1.2]
         result_f32 = pm(z_f32)
-        @test isapprox(result_f32, pm(Float64.(z_f32)), atol=1e-5, rtol=1e-5)
+        @test isapprox(result_f32, pm(Float64.(z_f32)), atol = 1.0e-5, rtol = 1.0e-5)
         @test typeof(result_f32) == Vector{Float64}
         @test length(result_f32) == length(pm)
 
         # Matrix{Int}
         Z_int = [1 2; 3 4; 5 6]
         result_matrix_int = pm(Z_int)
-        @test isapprox(result_matrix_int, pm(Float64.(Z_int)), atol=1e-10)
+        @test isapprox(result_matrix_int, pm(Float64.(Z_int)), atol = 1.0e-10)
         @test typeof(result_matrix_int) == Matrix{Float64}
         @test size(result_matrix_int, 2) == length(pm)
         @test size(result_matrix_int, 1) == size(Z_int, 1)
@@ -798,7 +801,7 @@ using LinearAlgebra
         # Matrix{Float32}
         Z_f32 = Float32[0.5 1.2; 2.3 3.4; 4.5 5.6]
         result_matrix_f32 = pm(Z_f32)
-        @test isapprox(result_matrix_f32, pm(Float64.(Z_f32)), atol=1e-5, rtol=1e-5)
+        @test isapprox(result_matrix_f32, pm(Float64.(Z_f32)), atol = 1.0e-5, rtol = 1.0e-5)
         @test typeof(result_matrix_f32) == Matrix{Float64}
         @test size(result_matrix_f32, 2) == length(pm)
         @test size(result_matrix_f32, 1) == size(Z_f32, 1)
@@ -806,51 +809,51 @@ using LinearAlgebra
         # Gradient: Vector{Int}
         result_grad_int = gradient_zk(pm, z_int)
         result_grad_float = gradient_zk(pm, Float64.(z_int))
-        @test isapprox(result_grad_int, result_grad_float, atol=1e-10)
+        @test isapprox(result_grad_int, result_grad_float, atol = 1.0e-10)
         @test typeof(result_grad_int) == Vector{Float64}
 
         # Gradient: Matrix{Int}
         result_grad_matrix_int = gradient_zk(pm, Z_int)
         result_grad_matrix_float = gradient_zk(pm, Float64.(Z_int))
-        @test isapprox(result_grad_matrix_int, result_grad_matrix_float, atol=1e-10)
+        @test isapprox(result_grad_matrix_int, result_grad_matrix_float, atol = 1.0e-10)
         @test typeof(result_grad_matrix_int) == Matrix{Float64}
 
         # Jacobian: Vector{Int}
         result_jac_int = jacobian(pm, z_int)
         result_jac_float = jacobian(pm, Float64.(z_int))
-        @test isapprox(result_jac_int, result_jac_float, atol=1e-10)
+        @test isapprox(result_jac_int, result_jac_float, atol = 1.0e-10)
         @test typeof(result_jac_int) == Float64
 
         # Jacobian: Matrix{Int}
         result_jac_matrix_int = jacobian(pm, Z_int)
         result_jac_matrix_float = jacobian(pm, Float64.(Z_int))
-        @test isapprox(result_jac_matrix_int, result_jac_matrix_float, atol=1e-10)
+        @test isapprox(result_jac_matrix_int, result_jac_matrix_float, atol = 1.0e-10)
         @test typeof(result_jac_matrix_int) == Vector{Float64}
 
         # Inverse: Vector{Int}
         x_int = [2, 3]
         result_inv_int = inverse(pm, x_int)
         result_inv_float = inverse(pm, Float64.(x_int))
-        @test isapprox(result_inv_int, result_inv_float, atol=1e-10)
+        @test isapprox(result_inv_int, result_inv_float, atol = 1.0e-10)
         @test typeof(result_inv_int) == Vector{Float64}
 
         # Inverse: Matrix{Int}
         X_int = [2 3; 4 5; 6 7]
         result_inv_matrix_int = inverse(pm, X_int)
         result_inv_matrix_float = inverse(pm, Float64.(X_int))
-        @test isapprox(result_inv_matrix_int, result_inv_matrix_float, atol=1e-10)
+        @test isapprox(result_inv_matrix_int, result_inv_matrix_float, atol = 1.0e-10)
         @test typeof(result_inv_matrix_int) == Matrix{Float64}
 
         # Inverse Jacobian: Vector{Int}
         result_inv_jac_int = inverse_jacobian(pm, x_int)
         result_inv_jac_float = inverse_jacobian(pm, Float64.(x_int))
-        @test isapprox(result_inv_jac_int, result_inv_jac_float, atol=1e-10)
+        @test isapprox(result_inv_jac_int, result_inv_jac_float, atol = 1.0e-10)
         @test typeof(result_inv_jac_int) == Float64
 
         # Inverse Jacobian: Matrix{Int}
         result_inv_jac_matrix_int = inverse_jacobian(pm, X_int)
         result_inv_jac_matrix_float = inverse_jacobian(pm, Float64.(X_int))
-        @test isapprox(result_inv_jac_matrix_int, result_inv_jac_matrix_float, atol=1e-10)
+        @test isapprox(result_inv_jac_matrix_int, result_inv_jac_matrix_float, atol = 1.0e-10)
         @test typeof(result_inv_jac_matrix_int) == Vector{Float64}
 
         # Pullback: Vector{Int}
