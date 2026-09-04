@@ -257,7 +257,7 @@ function _nonlinear_penalty_mask(M::PolynomialMap; interactions_only::Bool = fal
 end
 
 function _regularization_penalty(a, pen, λ1, λ2, l1_eps)
-    a_pen = @view a[pen]
+    a_pen = a[pen]
     l1_penalty = λ1 == 0 ? zero(eltype(a)) : λ1 * sum(
             (sqrt(abs2(c) + l1_eps^2) for c in a_pen); init = zero(eltype(a)),
         )
